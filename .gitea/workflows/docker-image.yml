@@ -1,12 +1,14 @@
-# Builds and pushes UniHomelabDash to the Gitea container registry.
+# Builds and pushes UniHomelabDash to the Gitea container registry only (not GHCR).
 #
 # Secrets (repo settings):
 #   REGISTRY_USERNAME — Gitea user or bot with package write access
 #   REGISTRY_TOKEN    — Gitea token with write:package (or equivalent)
 #
+# Registry: git.pike.homes/alex/unihomelabdash
+#
 # Tags:
-#   push to main        → git.pike.homes/alex/unihomelabdash:latest
-#   push tag v*.*.*     → :{tag} and :latest (e.g. v0.1.0)
+#   push to main        → :latest
+#   push tag v*.*.*     → :vX.Y.Z, :X.Y.Z, :latest (e.g. v0.1.0 → v0.1.0, 0.1.0, latest)
 
 name: Build Docker Image
 
@@ -30,6 +32,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Determine tags
+        id: tags
+        run: |
+          if [[ "${{ gitea.ref }}" == refs/heads/main ]]; then
+            echo "tags=${IMAGE}:latest" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ gitea.ref }}" == refs/tags/* ]]; then
+            name="${{ gitea.ref_name }}"
+            semver="${name#v}"
+            echo "tags=${IMAGE}:${name},${IMAGE}:${semver},${IMAGE}:latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "No tags for ref ${{ gitea.ref }}" >&2
+            exit 1
+          fi
+        env:
+          IMAGE: ${{ env.IMAGE }}
+
       - name: Login to Gitea Container Registry
         uses: docker/login-action@v3
         with:
@@ -37,22 +55,18 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_TOKEN }}
 
-      - name: Build and push latest
-        if: startsWith(gitea.ref, 'refs/heads/main')
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64
           push: true
-          tags: ${{ env.IMAGE }}:latest
-
-      - name: Build and push version tag
-        if: startsWith(gitea.ref, 'refs/tags/')
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64
-          push: true
-          tags: |
-            ${{ env.IMAGE }}:${{ gitea.ref_name }}
-            ${{ env.IMAGE }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.title=UniHomelabDash
+            org.opencontainers.image.description=A self-hosted mobile-first homelab dashboard PWA for manual services, health checks, and future control-plane integrations.
+            org.opencontainers.image.source=https://github.com/uniskela/UniHomelabDash
+            org.opencontainers.image.documentation=https://github.com/uniskela/UniHomelabDash#readme
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.vendor=Uniskela
+            org.opencontainers.image.url=https://github.com/uniskela/UniHomelabDash

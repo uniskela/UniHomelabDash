@@ -96,6 +96,20 @@ Include:
 
 Prefer read-only status first. Destructive or disruptive actions require confirmation UI and should not ship without authentication.
 
+## Release checklist (maintainers)
+
+Before announcing a release:
+
+1. Create and push a Git tag `vX.Y.Z` on GitHub (triggers GHCR build and optional Docker Hub if configured).
+2. Confirm the [GitHub Actions docker workflow](.github/workflows/docker-image.yml) succeeded.
+3. In GitHub **Packages** → `unihomelabdash` → **Package settings**, connect the package to `uniskela/UniHomelabDash` and verify OCI labels (title, source, license) appear on GHCR.
+4. Verify pulls work:
+   - `docker pull ghcr.io/uniskela/unihomelabdash:vX.Y.Z`
+   - `docker pull ghcr.io/uniskela/unihomelabdash:X.Y.Z`
+5. If you also push tags to Gitea, confirm [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml) succeeded and `git.pike.homes/alex/unihomelabdash` tags match.
+6. Confirm [README.md](README.md) **Container Images** pull commands and tag table are still accurate.
+7. Include image pull examples in GitHub release notes.
+
 ## Questions
 
 Open a [GitHub issue](https://github.com/uniskela/UniHomelabDash/issues) for bugs, feature ideas, or integration proposals.

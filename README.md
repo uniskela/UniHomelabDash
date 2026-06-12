@@ -22,11 +22,29 @@ HOST_PORT=3003 docker compose up --build
 
 Copy [.env.example](.env.example) for optional environment variables (`DATABASE_PATH`, `HOST_PORT`, `ALLOWED_DEV_ORIGIN`).
 
-## Pre-built container images
+## Container Images
 
-CI builds images on every push to `main` and on version tags (`v0.1.0`, etc.). See [.github/workflows/docker-image.yml](.github/workflows/docker-image.yml), [.github/workflows/ci.yml](.github/workflows/ci.yml), and [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml) (maintainer Gitea builds).
+CI builds OCI images on every push to `main` and on version tags (`v0.1.0`, etc.). Workflows: [.github/workflows/docker-image.yml](.github/workflows/docker-image.yml) (GHCR, optional Docker Hub), [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml) (maintainer Gitea registry), [.github/workflows/ci.yml](.github/workflows/ci.yml) (app CI).
 
-### GitHub Container Registry (GHCR)
+### Registries
+
+| Registry | Image | Notes |
+|----------|-------|--------|
+| **GHCR** (primary) | `ghcr.io/uniskela/unihomelabdash` | Built by GitHub Actions |
+| **Gitea** (maintainer) | `git.pike.homes/alex/unihomelabdash` | Separate registry; optional mirror |
+| **Docker Hub** | `docker.io/<username>/unihomelabdash` | Optional; enabled when `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` are set in GitHub Actions |
+
+### Tags
+
+| Tag | When published | Example |
+|-----|----------------|---------|
+| `latest` | Every push to `main`; also updated on release tags | `ghcr.io/uniskela/unihomelabdash:latest` |
+| `vX.Y.Z` | Git tag `vX.Y.Z` | `ghcr.io/uniskela/unihomelabdash:v0.1.0` |
+| `X.Y.Z` | Same release (semver without `v` prefix) | `ghcr.io/uniskela/unihomelabdash:0.1.0` |
+
+Pin a release with either `v0.1.0` or `0.1.0` — both point at the same image.
+
+### docker run (GHCR)
 
 ```bash
 docker pull ghcr.io/uniskela/unihomelabdash:latest
@@ -37,37 +55,32 @@ docker run -d --name unihomelabdash \
   ghcr.io/uniskela/unihomelabdash:latest
 ```
 
-Pin a release: `ghcr.io/uniskela/unihomelabdash:v0.1.0`
-
-### Docker Hub (optional)
-
-If the maintainer configures Docker Hub secrets in GitHub Actions:
-
-```bash
-docker pull docker.io/<username>/unihomelabdash:latest
-```
-
-Replace `<username>` with the configured Docker Hub namespace.
-
-### Gitea registry (maintainer builds)
-
-Pre-built images from the maintainer’s private Gitea instance (optional mirror):
+Gitea mirror:
 
 ```bash
 docker pull git.pike.homes/alex/unihomelabdash:latest
 ```
 
-Pin a release: `git.pike.homes/alex/unihomelabdash:v0.1.0`
+### docker-compose (pre-built image)
 
-### Compose with a pre-built image
-
-Use an override file or set `image` instead of `build`:
+Use `image` instead of `build` (for example in `docker-compose.override.yml`):
 
 ```yaml
 services:
   unihomelabdash:
     image: ghcr.io/uniskela/unihomelabdash:latest
-    # image: git.pike.homes/alex/unihomelabdash:latest  # maintainer Gitea mirror
+    # image: git.pike.homes/alex/unihomelabdash:latest  # Gitea mirror
+    container_name: unihomelabdash
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    environment:
+      DATABASE_PATH: /app/data/unihomelabdash.sqlite
+    volumes:
+      - unihomelabdash-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  unihomelabdash-data:
 ```
 
 ### CI secrets
