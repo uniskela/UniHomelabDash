@@ -1,0 +1,14 @@
+services:
+  unihomelabdash:
+    build: .
+    container_name: unihomelabdash
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    environment:
+      DATABASE_PATH: /app/data/unihomelabdash.sqlite
+    volumes:
+      - unihomelabdash-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  unihomelabdash-data:
