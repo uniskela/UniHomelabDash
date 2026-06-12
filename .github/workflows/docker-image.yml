@@ -43,6 +43,9 @@ jobs:
           images="ghcr.io/${owner}/unihomelabdash"
           if [ -n "$DOCKERHUB_USERNAME" ]; then
             images="${images},docker.io/${DOCKERHUB_USERNAME}/unihomelabdash"
+            echo "DOCKERHUB_ENABLED=true" >> "$GITHUB_ENV"
+          else
+            echo "DOCKERHUB_ENABLED=false" >> "$GITHUB_ENV"
           fi
           echo "IMAGES=${images}" >> "$GITHUB_ENV"
 
@@ -54,7 +57,7 @@ jobs:
           password: ${{ secrets.REGISTRY_TOKEN != '' && secrets.REGISTRY_TOKEN || github.token }}
 
       - name: Login to Docker Hub
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+        if: env.DOCKERHUB_ENABLED == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

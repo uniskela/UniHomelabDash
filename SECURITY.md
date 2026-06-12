@@ -33,4 +33,6 @@ Health checks are **server-side HTTP GET** requests to URLs you configure. The U
 
 ## Reporting issues
 
-Open an issue in the project repository with steps to reproduce. Do not include real homelab URLs or credentials.
+For **security vulnerabilities**, use [GitHub Security Advisories](https://github.com/uniskela/UniHomelabDash/security/advisories/new) on the public repository. Do not open public issues for undisclosed security problems.
+
+For other bugs, open a [GitHub issue](https://github.com/uniskela/UniHomelabDash/issues) with steps to reproduce. Do not include real homelab URLs or credentials.

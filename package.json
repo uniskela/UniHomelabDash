@@ -4,9 +4,10 @@
   "description": "Self-hosted homelab PWA for manual services and on-demand health checks",
   "license": "MIT",
   "private": true,
+  "homepage": "https://github.com/uniskela/UniHomelabDash",
   "repository": {
     "type": "git",
-    "url": "https://git.pike.homes/alex/UniHomelabDash.git"
+    "url": "https://github.com/uniskela/UniHomelabDash.git"
   },
   "scripts": {
     "dev": "next dev",

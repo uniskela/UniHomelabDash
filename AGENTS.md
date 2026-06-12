@@ -72,7 +72,7 @@ Use a split architecture:
 * Local database
 * Background worker/jobs system
 
-Suggested folders:
+Suggested folders (future monorepo option):
 
 ```txt
 /apps/web
@@ -83,7 +83,7 @@ Suggested folders:
 /docs
 ```
 
-For a simpler MVP, a single Next.js app with API routes is acceptable.
+**Current repo layout:** a single Next.js app at the repository root with API routes, `src/`, and `docs/`. A monorepo split can come later if the project outgrows one app.
 
 ## Provider System
 
@@ -118,33 +118,39 @@ Each provider should define:
 
 ## MVP Integrations
 
-Start with only:
+### Shipped (v0.1.0)
 
-1. Manual services/bookmarks
-2. Docker container status via Docker socket or API proxy
+1. Manual services/bookmarks with on-demand HTTP health checks
+
+### Planned (not in v0.1.0)
+
+2. Docker container status via a controlled API proxy (not raw socket access without auth)
 3. Portainer integration if practical
 
-Do not start with Proxmox, Arr stack, Jellyfin, Immich, Home Assistant, Kubernetes, or AI until the base app is usable.
+Do not start with Proxmox, Arr stack, Jellyfin, Immich, Home Assistant, Kubernetes, or AI until the base app is usable and authenticated where needed.
 
 ## MVP Features
 
-The first public MVP should include:
+### Shipped in v0.1.0
 
 * Installable PWA
-* Dashboard grid/list
-* Service cards
-* Service health status
-* Manual service links
-* Docker/Portainer container list
-* Container start/stop/restart actions
-* Confirmation modal for actions
-* Basic logs viewer
+* Dashboard grid with service cards
+* On-demand service health checks (manual Check / Check all)
+* Manual service links (add, edit, delete)
 * Dark mode
 * Mobile-first layout
 * Basic settings screen
 * Local SQLite database
-* Docker Compose deployment
+* Docker Compose deployment (no Docker socket mount)
 * README with screenshots
+
+### Planned (future phases)
+
+* Docker/Portainer container list and read-only status
+* Container start/stop/restart actions with confirmation modals
+* Basic logs viewer
+* Authentication and session management
+* Background health polling and alerts
 
 ## Safety Rules
 
@@ -206,13 +212,13 @@ Avoid:
 * Tiny buttons
 * Actions hidden behind unclear icons
 
-Main navigation:
+Main navigation (v0.1.0):
 
 * Dashboard
 * Services
-* Actions
-* Alerts
 * Settings
+
+Future navigation may add Actions and Alerts when those features ship.
 
 ## Dashboard Card Ideas
 
@@ -235,9 +241,9 @@ Example actions:
 * View logs
 * More
 
-## Development Rules for Codex
+## Development Rules
 
-When modifying this project:
+When modifying this project (contributors and automation alike):
 
 1. Read AGENTS.md and ROADMAP.md first.
 2. Keep changes small and reviewable.
@@ -250,93 +256,22 @@ When modifying this project:
 9. Update ROADMAP.md when features are completed or changed.
 10. Add documentation for setup/config changes.
 
-## Codex and Cursor Workflow
+Human contributors should also read [CONTRIBUTING.md](CONTRIBUTING.md).
 
-This project may be worked on using both Cursor and Codex CLI.
+## AI-assisted development
 
-### Cursor Role
+AI coding tools are welcome if they follow the same rules as human contributors. Before making changes, read AGENTS.md, ROADMAP.md, and ARCHITECTURE.md. Keep diffs small, do not expand scope without an issue or ROADMAP update, and never commit secrets. When handing work between people and tools, leave a short note: goal, files touched, what works, what is broken, and what to do next.
 
-Cursor should be treated as the main development environment and UI/UX iteration tool.
-
-Use Cursor for:
-
-* Visual UI/UX refinement.
-* Component layout.
-* Mobile responsiveness.
-* Design polish.
-* Copy and microcopy improvements.
-* Refactoring React components.
-* Reviewing how the app feels to use.
-* Small interactive improvements.
-* Developer-guided edits.
-
-Cursor should prioritise:
-
-* Mobile-first usability.
-* Clean dashboard layout.
-* Simple navigation.
-* Accessible controls.
-* Clear empty states.
-* Consistent spacing.
-* Avoiding clutter.
-
-### Codex CLI Role
-
-Codex CLI should be treated as the structured implementation and review agent.
-
-Use Codex CLI for:
-
-* Scaffolding features from ROADMAP.md.
-* Implementing database/schema changes.
-* Adding backend/API/provider logic.
-* Running tests, linting, type checks, and builds.
-* Reviewing code for errors.
-* Updating documentation.
-* Performing focused implementation tasks.
-
-Codex CLI should prioritise:
-
-* Correctness.
-* Type safety.
-* Small reviewable changes.
-* Security boundaries.
-* Documentation updates.
-* Keeping scope aligned with AGENTS.md, ROADMAP.md, and ARCHITECTURE.md.
-
-### Handover Rules
-
-Before handing work from Cursor to Codex CLI, create a short task note containing:
-
-* Current goal.
-* Files changed.
-* What is working.
-* What is broken or unfinished.
-* What Codex should do next.
-* What Codex must not touch.
-
-Before handing work from Codex CLI to Cursor, Codex should provide:
-
-* Summary of changes.
-* Commands run.
-* Known issues.
-* UI areas needing polish.
-* Files/components most relevant for Cursor to inspect.
-
-### Conflict Rules
-
-If Cursor and Codex disagree:
+If guidance conflicts:
 
 1. AGENTS.md wins for project rules.
 2. ARCHITECTURE.md wins for infrastructure decisions.
 3. ROADMAP.md wins for feature scope.
 4. README.md should reflect the current runnable state.
-5. Do not add major features just because one agent suggests them.
 
-### Scope Control
+## Scope boundaries
 
-Neither Cursor nor Codex should implement future integrations unless explicitly requested.
-
-Do not implement yet:
+Do not implement the following unless explicitly requested in an issue or ROADMAP update:
 
 * Proxmox
 * Docker socket access
@@ -347,9 +282,6 @@ Do not implement yet:
 * AI assistant
 * Notifications
 * Native mobile apps
-
-The current priority is a polished PWA MVP with manual services.
-
 
 ## Definition of Done
 
@@ -365,6 +297,12 @@ A feature is done when:
 
 ## Current Priority
 
-Build the first working PWA shell with manual services and a clean provider system foundation.
+v0.1.0 shipped: a polished manual-services PWA with on-demand health checks, SQLite persistence, and Docker Compose deployment (no login, no Docker socket).
 
-Do not chase every homelab integration yet.
+Next focus (see ROADMAP.md):
+
+* Authentication and safer deployment defaults
+* Provider system foundation for future integrations
+* Docker/Portainer read-only status only when explicitly scoped and behind auth
+
+Do not chase every homelab integration at once.

@@ -60,21 +60,21 @@ Success criteria:
 ---
 ## Phase 0.6 — Development Workflow
 
-Status: In Progress
+Status: Completed
 
-Goal: Define how Cursor and Codex CLI should collaborate.
+Goal: Define a consistent workflow for human contributors and automation tools.
 
 Decisions:
 
-* Cursor is the main workspace and UI/UX refinement tool.
-* Codex CLI is the structured implementation, review, and validation agent.
-* All agents must follow AGENTS.md, ROADMAP.md, and ARCHITECTURE.md.
-* Handoffs must include a short summary of what changed, what works, what is broken, and what should happen next.
+* [CONTRIBUTING.md](CONTRIBUTING.md) is the entry point for human contributors.
+* [AGENTS.md](AGENTS.md) holds shared rules for contributors and AI-assisted development.
+* AGENTS.md, ROADMAP.md, and ARCHITECTURE.md are the source of truth for scope and design.
+* Changes stay small and reviewable; handoffs (human or tool) include goal, files touched, status, and next steps.
 
 Success criteria:
 
-* Cursor can polish UI without accidentally expanding scope.
-* Codex CLI can implement/review features without overriding UI intent.
+* New contributors can onboard without private maintainer context.
+* UI polish and backend work stay aligned on ROADMAP scope.
 * The project remains understandable for a solo maintainer.
 
 ---

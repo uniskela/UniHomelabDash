@@ -24,38 +24,50 @@ Copy [.env.example](.env.example) for optional environment variables (`DATABASE_
 
 ## Pre-built container images
 
-CI builds images on every push to `main` and on version tags (`v0.1.0`, etc.). See [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml) and [.github/workflows/docker-image.yml](.github/workflows/docker-image.yml).
+CI builds images on every push to `main` and on version tags (`v0.1.0`, etc.). See [.github/workflows/docker-image.yml](.github/workflows/docker-image.yml), [.github/workflows/ci.yml](.github/workflows/ci.yml), and [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml) (maintainer Gitea builds).
 
-### Gitea registry (primary)
+### GitHub Container Registry (GHCR)
 
 ```bash
-docker pull git.pike.homes/alex/unihomelabdash:latest
+docker pull ghcr.io/uniskela/unihomelabdash:latest
 docker run -d --name unihomelabdash \
   -p 3000:3000 \
   -v unihomelabdash-data:/app/data \
   --restart unless-stopped \
-  git.pike.homes/alex/unihomelabdash:latest
+  ghcr.io/uniskela/unihomelabdash:latest
+```
+
+Pin a release: `ghcr.io/uniskela/unihomelabdash:v0.1.0`
+
+### Docker Hub (optional)
+
+If the maintainer configures Docker Hub secrets in GitHub Actions:
+
+```bash
+docker pull docker.io/<username>/unihomelabdash:latest
+```
+
+Replace `<username>` with the configured Docker Hub namespace.
+
+### Gitea registry (maintainer builds)
+
+Pre-built images from the maintainer’s private Gitea instance (optional mirror):
+
+```bash
+docker pull git.pike.homes/alex/unihomelabdash:latest
 ```
 
 Pin a release: `git.pike.homes/alex/unihomelabdash:v0.1.0`
 
-### GitHub mirrors (when Actions is configured)
-
-```bash
-docker pull ghcr.io/<owner>/unihomelabdash:latest
-docker pull docker.io/<username>/unihomelabdash:latest   # optional, if Docker Hub secrets are set
-```
-
-Replace `<owner>` with your GitHub username or org (lowercase). Replace `<username>` with your Docker Hub namespace.
-
 ### Compose with a pre-built image
 
-Use a override file or set `image` instead of `build`:
+Use an override file or set `image` instead of `build`:
 
 ```yaml
 services:
   unihomelabdash:
-    image: git.pike.homes/alex/unihomelabdash:latest
+    image: ghcr.io/uniskela/unihomelabdash:latest
+    # image: git.pike.homes/alex/unihomelabdash:latest  # maintainer Gitea mirror
 ```
 
 ### CI secrets
@@ -179,6 +191,14 @@ Authentication is planned for Phase 4. This build has no privileged integrations
 - Do not expose to the internet without proxy auth — see [SECURITY.md](SECURITY.md)
 - Health checks perform server-side HTTP requests to URLs you configure
 - Secrets must remain server-side only; do not store API tokens in service fields
+
+## Contributing
+
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) for setup, PR expectations, and scope rules.
+
+- [ROADMAP.md](ROADMAP.md) and [ARCHITECTURE.md](ARCHITECTURE.md) explain project direction and technical decisions
+- [AGENTS.md](AGENTS.md) holds principles, safety rules, and guidance for contributors and AI-assisted work
+- Report security issues via [SECURITY.md](SECURITY.md) and [GitHub Security Advisories](https://github.com/uniskela/UniHomelabDash/security/advisories/new)
 
 ## License
 
