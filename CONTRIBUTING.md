@@ -100,15 +100,26 @@ Prefer read-only status first. Destructive or disruptive actions require confirm
 
 Before announcing a release:
 
-1. Create and push a Git tag `vX.Y.Z` on GitHub (triggers GHCR build and optional Docker Hub if configured).
+1. Create and push a Git tag `vX.Y.Z` on GitHub (triggers GHCR and Docker Hub builds when secrets are configured).
 2. Confirm the [GitHub Actions docker workflow](.github/workflows/docker-image.yml) succeeded.
 3. In GitHub **Packages** → `unihomelabdash` → **Package settings**, connect the package to `uniskela/UniHomelabDash` and verify OCI labels (title, source, license) appear on GHCR.
-4. Verify pulls work:
+4. Verify pulls work (GHCR and [Docker Hub](https://hub.docker.com/r/uniskela/unihomelabdash)):
    - `docker pull ghcr.io/uniskela/unihomelabdash:vX.Y.Z`
    - `docker pull ghcr.io/uniskela/unihomelabdash:X.Y.Z`
-5. If you also push tags to Gitea, confirm [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml) succeeded and `git.pike.homes/alex/unihomelabdash` tags match.
-6. Confirm [README.md](README.md) **Container Images** pull commands and tag table are still accurate.
-7. Include image pull examples in GitHub release notes.
+   - `docker pull uniskela/unihomelabdash:vX.Y.Z`
+   - `docker pull uniskela/unihomelabdash:X.Y.Z`
+5. Confirm [README.md](README.md) **Container Images** pull commands and tag table are still accurate.
+6. Include image pull examples in GitHub release notes.
+
+### Internal infrastructure (maintainers only)
+
+If you push release tags to the maintainer’s **private** Gitea instance (LAN/Tailscale only, not a public resource):
+
+1. Push the same `vX.Y.Z` tag to the internal remote when on the maintainer network.
+2. Confirm [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml) succeeded.
+3. Verify internal registry tags (`git.pike.homes/alex/unihomelabdash`) match the GHCR release.
+
+Do not mention internal hostnames in public release notes or contributor-facing issues.
 
 ## Questions
 

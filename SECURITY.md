@@ -8,6 +8,11 @@ UniHomelabDash v0.1.0 is a **manual-services dashboard** without login. Read thi
 - Single-operator or small household where everyone on the network is trusted
 - Docker Compose with the default setup (no Docker socket mount)
 
+## Software sources
+
+- **Official releases:** [GitHub](https://github.com/uniskela/UniHomelabDash) source; container images on `ghcr.io/uniskela/unihomelabdash` and [Docker Hub](https://hub.docker.com/r/uniskela/unihomelabdash) (`uniskela/unihomelabdash`)
+- Do not rely on unlisted third-party mirrors or internal maintainer registries for production installs
+
 ## Unsupported use
 
 - **Public internet exposure** without authentication in front of the app

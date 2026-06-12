@@ -1,5 +1,5 @@
-# Builds and pushes UniHomelabDash to GHCR (and optionally Docker Hub).
-# Canonical public image: ghcr.io/uniskela/unihomelabdash
+# Builds and pushes UniHomelabDash to GHCR and Docker Hub (when secrets are set).
+# Public images: ghcr.io/uniskela/unihomelabdash, docker.io/uniskela/unihomelabdash
 #
 # GHCR secrets (optional; falls back to github.actor / github.token):
 #   REGISTRY_USERNAME — GitHub username for ghcr.io

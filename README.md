@@ -24,27 +24,34 @@ Copy [.env.example](.env.example) for optional environment variables (`DATABASE_
 
 ## Container Images
 
-CI builds OCI images on every push to `main` and on version tags (`v0.1.0`, etc.). Workflows: [.github/workflows/docker-image.yml](.github/workflows/docker-image.yml) (GHCR, optional Docker Hub), [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml) (maintainer Gitea registry), [.github/workflows/ci.yml](.github/workflows/ci.yml) (app CI).
+Public source code and releases: [github.com/uniskela/UniHomelabDash](https://github.com/uniskela/UniHomelabDash).
+
+CI builds OCI images on every push to `main` and on version tags (`v0.1.0`, etc.) via [.github/workflows/docker-image.yml](.github/workflows/docker-image.yml) (GHCR and [Docker Hub](https://hub.docker.com/r/uniskela/unihomelabdash)) and [.github/workflows/ci.yml](.github/workflows/ci.yml) (app CI).
 
 ### Registries
 
 | Registry | Image | Notes |
 |----------|-------|--------|
-| **GHCR** (primary) | `ghcr.io/uniskela/unihomelabdash` | Built by GitHub Actions |
-| **Gitea** (maintainer) | `git.pike.homes/alex/unihomelabdash` | Separate registry; optional mirror |
-| **Docker Hub** | `docker.io/<username>/unihomelabdash` | Optional; enabled when `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` are set in GitHub Actions |
+| **GHCR** | `ghcr.io/uniskela/unihomelabdash` | Built by GitHub Actions |
+| **Docker Hub** | `uniskela/unihomelabdash` | [hub.docker.com/r/uniskela/unihomelabdash](https://hub.docker.com/r/uniskela/unihomelabdash) — same tags as GHCR |
+
+Either registry works for installs. Use whichever is easier on your network.
 
 ### Tags
 
-| Tag | When published | Example |
-|-----|----------------|---------|
-| `latest` | Every push to `main`; also updated on release tags | `ghcr.io/uniskela/unihomelabdash:latest` |
-| `vX.Y.Z` | Git tag `vX.Y.Z` | `ghcr.io/uniskela/unihomelabdash:v0.1.0` |
-| `X.Y.Z` | Same release (semver without `v` prefix) | `ghcr.io/uniskela/unihomelabdash:0.1.0` |
+The same tags are published to GHCR and Docker Hub:
+
+| Tag | When published | GHCR | Docker Hub |
+|-----|----------------|------|------------|
+| `latest` | Every push to `main`; also updated on release tags | `ghcr.io/uniskela/unihomelabdash:latest` | `uniskela/unihomelabdash:latest` |
+| `vX.Y.Z` | Git tag `vX.Y.Z` | `ghcr.io/uniskela/unihomelabdash:v0.1.0` | `uniskela/unihomelabdash:v0.1.0` |
+| `X.Y.Z` | Same release (semver without `v` prefix) | `ghcr.io/uniskela/unihomelabdash:0.1.0` | `uniskela/unihomelabdash:0.1.0` |
 
 Pin a release with either `v0.1.0` or `0.1.0` — both point at the same image.
 
-### docker run (GHCR)
+### docker run
+
+GHCR:
 
 ```bash
 docker pull ghcr.io/uniskela/unihomelabdash:latest
@@ -55,10 +62,15 @@ docker run -d --name unihomelabdash \
   ghcr.io/uniskela/unihomelabdash:latest
 ```
 
-Gitea mirror:
+Docker Hub:
 
 ```bash
-docker pull git.pike.homes/alex/unihomelabdash:latest
+docker pull uniskela/unihomelabdash:latest
+docker run -d --name unihomelabdash \
+  -p 3000:3000 \
+  -v unihomelabdash-data:/app/data \
+  --restart unless-stopped \
+  uniskela/unihomelabdash:latest
 ```
 
 ### docker-compose (pre-built image)
@@ -69,7 +81,7 @@ Use `image` instead of `build` (for example in `docker-compose.override.yml`):
 services:
   unihomelabdash:
     image: ghcr.io/uniskela/unihomelabdash:latest
-    # image: git.pike.homes/alex/unihomelabdash:latest  # Gitea mirror
+    # image: uniskela/unihomelabdash:latest  # Docker Hub
     container_name: unihomelabdash
     ports:
       - "${HOST_PORT:-3000}:3000"
@@ -83,27 +95,28 @@ volumes:
   unihomelabdash-data:
 ```
 
-### CI secrets
-
-**Gitea** (`git.pike.homes`):
-
-| Secret | Purpose |
-|--------|---------|
-| `REGISTRY_USERNAME` | Gitea user or bot with package write |
-| `REGISTRY_TOKEN` | Gitea personal access token with package write scope |
-
-**GitHub**:
+### CI secrets (GitHub)
 
 | Secret | Required | Purpose |
 |--------|----------|---------|
 | `REGISTRY_USERNAME` | Optional | GitHub username for GHCR (defaults to the workflow actor) |
 | `REGISTRY_TOKEN` | Optional | GitHub PAT with `write:packages` (defaults to the automatic workflow token) |
-| `DOCKERHUB_USERNAME` | Optional | Docker Hub namespace |
-| `DOCKERHUB_TOKEN` | Optional | Docker Hub access token |
+| `DOCKERHUB_USERNAME` | For Docker Hub push | Docker Hub namespace (`uniskela`) |
+| `DOCKERHUB_TOKEN` | For Docker Hub push | Docker Hub access token |
 
 Secret names must be alphanumeric or underscore only, and cannot start with `GITHUB_`. Use `REGISTRY_TOKEN` for a custom GHCR PAT — not `GITHUB_TOKEN`.
 
 For the first GHCR push, set **Settings → Actions → General → Workflow permissions → Read and write permissions**.
+
+### Maintainer-only: internal infrastructure
+
+The project maintainer may also build images to a **private** self-hosted Gitea registry on an internal network (LAN/Tailscale only). This is **not** a public distribution channel — contributors and users should use GitHub, GHCR, or Docker Hub only.
+
+- Workflow: [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml)
+- Internal registry image: `git.pike.homes/alex/unihomelabdash` (reachable only on maintainer network)
+- Secrets: `REGISTRY_USERNAME`, `REGISTRY_TOKEN` (Gitea package write)
+
+Do not document or share internal hostnames in issues, PRs, or release notes intended for the public.
 
 ## What it does
 
