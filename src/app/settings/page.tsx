@@ -43,6 +43,11 @@ export default function SettingsPage() {
             <p>Android Chrome: browser menu, then Install app or Add to Home screen.</p>
             <p>Desktop Chrome/Edge: use the install icon in the address bar or browser menu.</p>
             <p>
+              iOS and Android may require <strong>HTTPS</strong> for full PWA install and service
+              worker support when not using localhost. Use a reverse proxy with TLS on your homelab
+              host, or test install from localhost during development.
+            </p>
+            <p>
               For the closest experience to production, use{" "}
               <code className="text-xs">docker compose up --build</code> on your homelab host.
             </p>

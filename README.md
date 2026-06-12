@@ -1,6 +1,26 @@
 # UniHomelabDash
 
-UniHomelabDash is a self-hosted PWA homelab dashboard. Add your services, open them quickly from your phone, and run on-demand health checks — without exposing Docker sockets or other privileged integrations.
+Self-hosted homelab dashboard — save your services, check health on demand, open everything from your phone.
+
+> **Security:** v0.1.0 has **no login**. Use on a trusted homelab network only. Do not expose to the public internet without a reverse proxy and access control (Authelia, VPN, etc.). See [SECURITY.md](SECURITY.md).
+
+## Quick start (Docker)
+
+```bash
+docker compose up --build
+```
+
+Open [http://localhost:3000](http://localhost:3000). Rebuild after pulling changes so the image includes the latest UI and PWA assets.
+
+The Compose file mounts a named volume at `/app/data` for SQLite persistence. It intentionally does not mount `/var/run/docker.sock`.
+
+If port 3000 is already in use:
+
+```bash
+HOST_PORT=3003 docker compose up --build
+```
+
+Copy [.env.example](.env.example) for optional environment variables (`DATABASE_PATH`, `HOST_PORT`, `ALLOWED_DEV_ORIGIN`).
 
 ## What it does
 
@@ -27,12 +47,26 @@ UniHomelabDash is a self-hosted PWA homelab dashboard. Add your services, open t
 |------------------|
 | ![Add service](docs/screenshots/add-service.png) |
 
-Regenerate after UI changes:
+Demo data only (`example.local` URLs). Regenerate after UI changes:
 
 ```bash
 npm run build
 npm run screenshots
 ```
+
+## Health checks
+
+When adding or editing a service, set an optional **health check URL**. Use the service root or a dedicated endpoint (for example `/health`). Tap **Check** on a card or **Check all** on the dashboard.
+
+Behaviour in v0.1.0:
+
+- **GET** requests only, **5 second** timeout
+- HTTP **2xx–3xx** responses count as healthy; other codes show as degraded with the status message
+- Checks run **on demand** when you tap Check — there is no background polling
+- The UniHomelabDash server must be able to reach the URL from the host or container
+- LAN-only hostnames work when the app runs on the same network
+
+Edit and delete services from the **Services** page (overflow menu on each card). The dashboard is for quick open and health overview.
 
 ## Development
 
@@ -47,15 +81,13 @@ Manual services are stored in SQLite at `data/unihomelabdash.sqlite` by default.
 
 ### LAN / phone testing (dev)
 
-To test from another device on your network:
-
 ```bash
 npm run dev:lan
 ```
 
 Then open `http://<your-host-ip>:3004` (find your IP with `hostname -I` or `ip a`).
 
-Next.js blocks cross-origin dev assets by default. This project configures `allowedDevOrigins` in `next.config.ts` for common private LAN ranges. If you still see `webpack-hmr` WebSocket errors, set a specific host:
+Next.js blocks cross-origin dev assets by default. This project configures `allowedDevOrigins` in `next.config.ts` for common private LAN ranges. If you still see `webpack-hmr` WebSocket errors:
 
 ```bash
 ALLOWED_DEV_ORIGIN=192.168.0.7 npm run dev:lan
@@ -63,11 +95,9 @@ ALLOWED_DEV_ORIGIN=192.168.0.7 npm run dev:lan
 
 See the [Next.js allowedDevOrigins docs](https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins).
 
-For the closest experience to production (no HMR, matches Docker deploy):
+For production-like testing without HMR:
 
 ```bash
-docker compose up --build
-# or
 npm run build && npm run start:lan
 ```
 
@@ -84,37 +114,13 @@ npm run db:generate
 npm run screenshots  # capture docs/screenshots (requires build)
 ```
 
-## Docker Compose
+## Security
 
-```bash
-docker compose up --build
-```
+Authentication is planned for Phase 4. This build has no privileged integrations.
 
-Rebuild after pulling changes so the image includes the latest UI and PWA assets:
-
-```bash
-docker compose up --build
-```
-
-The Compose file mounts a named volume at `/app/data` for SQLite persistence. It intentionally does not mount `/var/run/docker.sock`.
-
-If port 3000 is already in use:
-
-```bash
-HOST_PORT=3003 docker compose up --build
-```
-
-## Health checks
-
-When adding or editing a service, set an optional **health check URL**. Use the service root or a dedicated endpoint (for example `/health`). Tap **Check** on a card or **Check all** on the dashboard.
-
-The UniHomelabDash server must be able to reach the URL. LAN-only hostnames work when the app runs on the same network.
-
-## Security Notes
-
-Authentication is planned for a future release. This build has no privileged integrations. Do not add Docker, Portainer, Proxmox, or other privileged actions before authentication exists.
-
-Secrets must remain server-side only. Manual services should not store credentials or API tokens.
+- Do not expose to the internet without proxy auth — see [SECURITY.md](SECURITY.md)
+- Health checks perform server-side HTTP requests to URLs you configure
+- Secrets must remain server-side only; do not store API tokens in service fields
 
 ## License
 

@@ -241,9 +241,13 @@ Authentication decision:
 
 UniHomelabDash is a control-plane app. It must treat integrations and actions as privileged operations.
 
+**Current state (v0.1.0):** The public manual-services release ships **without authentication**. It is intended for trusted homelab networks only. See [SECURITY.md](SECURITY.md) for deployment guidance.
+
+**Target state (Phase 4+):** Authentication before dashboard access, then privileged integrations behind confirmed actions.
+
 Required rules:
 
-* Require authentication before all dashboard access.
+* Require authentication before all dashboard access (target; not yet implemented in v0.1.0).
 * Store secrets server-side only.
 * Never store API tokens in frontend localStorage.
 * Redact secrets from logs and error messages.

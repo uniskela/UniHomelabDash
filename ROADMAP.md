@@ -12,7 +12,7 @@ The short-term goal is much smaller: ship a polished PWA MVP that is genuinely u
 
 ## Phase 0 — Project Foundation
 
-Status: Planned
+Status: Completed
 
 Goals:
 
@@ -24,6 +24,11 @@ Goals:
 * Create Docker Compose dev setup.
 * Add licence.
 * Add basic contribution notes.
+
+Completed for v0.1.0:
+
+* README, LICENSE (MIT), Docker Compose, `.env.example`, SECURITY.md
+* Contribution notes still optional (see nice-to-have)
 
 Recommended licence:
 
@@ -55,7 +60,7 @@ Success criteria:
 ---
 ## Phase 0.6 — Development Workflow
 
-Status: Planned
+Status: In Progress
 
 Goal: Define how Cursor and Codex CLI should collaborate.
 
@@ -153,6 +158,7 @@ Completed:
 * Improve primary screen copy to focus on managing services.
 * Add 192x192, 512x512, and Apple touch PWA icons.
 * Add simple installation instructions in Settings.
+* v0.1.0 release polish: attention-first dashboard sort, LAN dev HMR fix, nav IA (Alerts demoted), SECURITY.md, demo screenshots, exposure warnings.
 
 Out of scope:
 
@@ -177,21 +183,26 @@ Status: In Progress
 
 Goal: Store app configuration properly.
 
-Features:
+Completed:
 
-* SQLite database.
-* Services table.
+* SQLite database with services table.
+* Runtime schema bootstrap and column migrations in [src/lib/db/client.ts](src/lib/db/client.ts).
+* Docker volume persistence for `/app/data`.
+* User-facing Settings with Advanced section for operators.
+
+Remaining:
+
 * Providers table.
 * Credentials/secrets metadata.
 * Settings table.
-* Basic migration system.
+* Formal migration system (Drizzle migrations).
 * Backup/export option.
 
 Success criteria:
 
-* App state persists reliably.
-* Config survives container restarts.
-* Secrets are not exposed to frontend code.
+* App state persists reliably. (met for services)
+* Config survives container restarts. (met via Compose volume)
+* Secrets are not exposed to frontend code. (met; no secrets storage yet)
 
 ---
 
