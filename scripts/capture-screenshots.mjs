@@ -135,6 +135,30 @@ async function waitForStyledPage(page) {
   await page.locator("nav.fixed.bottom-0").waitFor({ state: "visible", timeout: 15000 });
 }
 
+/** Playwright duplicates position:fixed elements on each full-page slice; pin nav once at the bottom. */
+async function pinFixedBottomNavForFullPageCapture(page) {
+  await page.evaluate(() => {
+    const nav = document.querySelector("nav.fixed.inset-x-0.bottom-0");
+    if (!(nav instanceof HTMLElement)) return;
+
+    const docHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight
+    );
+    nav.style.position = "absolute";
+    nav.style.top = `${docHeight - nav.offsetHeight}px`;
+    nav.style.bottom = "auto";
+    nav.style.left = "0";
+    nav.style.right = "0";
+
+    const captureHeight = nav.offsetTop + nav.offsetHeight;
+    for (const element of [document.documentElement, document.body]) {
+      element.style.minHeight = "0";
+      element.style.height = `${captureHeight}px`;
+    }
+  });
+}
+
 function startServer(databasePath) {
   prepareStandaloneAssets();
 
@@ -197,9 +221,15 @@ async function main() {
       }
 
       await page.waitForTimeout(300);
+
+      const useFullPage = capture.name !== "add-service";
+      if (useFullPage) {
+        await pinFixedBottomNavForFullPageCapture(page);
+      }
+
       await page.screenshot({
         path: path.join(outputDir, `${capture.name}.png`),
-        fullPage: true,
+        fullPage: useFullPage,
       });
       await page.close();
     }

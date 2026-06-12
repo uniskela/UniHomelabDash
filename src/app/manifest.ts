@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "A self-hosted homelab dashboard for manual services first.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0f0f10",
-    theme_color: "#0f0f10",
+    background_color: "#121214",
+    theme_color: "#121214",
     icons: [
       {
         src: "/icon-192.png",
@@ -16,10 +16,15 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
       },
       {
-        src: "/icon-512.png",
+        src: "/icon-512-maskable.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
+      },
+      {
+        src: "/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
       },
       {
         src: "/icon.svg",

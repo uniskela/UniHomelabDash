@@ -18,7 +18,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "screenshots": "node scripts/capture-screenshots.mjs"
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "icons:export": "node scripts/export-icons.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.16",
@@ -41,6 +42,7 @@
   },
   "devDependencies": {
     "playwright": "^1.60.0",
+    "sharp": "^0.34.5",
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",

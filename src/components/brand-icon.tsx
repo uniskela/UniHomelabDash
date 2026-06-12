@@ -1,0 +1,24 @@
+import { cn } from "@/lib/utils";
+
+type BrandIconProps = {
+  className?: string;
+  title?: string;
+};
+
+export function BrandIcon({ className, title = "UniHomelabDash" }: BrandIconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+      role="img"
+      aria-label={title}
+      className={cn("shrink-0", className)}
+    >
+      <rect width="512" height="512" rx="96" fill="#121214" />
+      <rect x="104" y="148" width="24" height="44" rx="12" fill="#e11d48" />
+      <rect x="144" y="132" width="264" height="76" rx="22" fill="#3f3f46" />
+      <rect x="104" y="232" width="304" height="76" rx="22" fill="#52525b" />
+      <rect x="104" y="332" width="304" height="76" rx="22" fill="#71717a" />
+    </svg>
+  );
+}

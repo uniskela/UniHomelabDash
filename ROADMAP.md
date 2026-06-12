@@ -156,7 +156,8 @@ Completed:
 * Add dashboard health summary counts.
 * Create a shared ServiceCard component for Dashboard and Services.
 * Improve primary screen copy to focus on managing services.
-* Add 192x192, 512x512, and Apple touch PWA icons.
+* Add 192x192, 512x512, maskable, Apple touch, and favicon PWA icons (see `docs/branding/`).
+* Brand identity: charcoal/ruby/burgundy palette, Control Rail icon, wordmark SVGs, GitHub avatar concepts.
 * Add simple installation instructions in Settings.
 * v0.1.0 release polish: attention-first dashboard sort, LAN dev HMR fix, nav IA (Alerts demoted), SECURITY.md, demo screenshots, exposure warnings.
 

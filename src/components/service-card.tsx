@@ -208,7 +208,7 @@ export function HealthBadge({ status }: { status: HealthStatus }) {
       variant="outline"
       className={cn(
         "capitalize",
-        status === "healthy" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+        status === "healthy" && "border-rose-400/40 bg-rose-400/10 text-rose-300",
         status === "degraded" && "border-amber-500/40 bg-amber-500/10 text-amber-300",
         status === "unknown" && "border-border bg-muted/40 text-muted-foreground"
       )}

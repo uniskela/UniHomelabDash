@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Home, Settings, Server } from "lucide-react";
+import { Home, Settings, Server } from "lucide-react";
+import { BrandIcon } from "@/components/brand-icon";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -60,12 +61,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 function Brand() {
   return (
     <Link href="/" className="flex items-center gap-3">
-      <span className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground">
-        <Activity className="size-5" />
-      </span>
+      <BrandIcon className="size-9 rounded-lg" />
       <span>
         <span className="block text-sm font-semibold">UniHomelabDash</span>
-        <span className="block text-xs text-muted-foreground">Homelab dashboard</span>
+        <span className="block text-xs text-muted-foreground">Homelab control plane</span>
       </span>
     </Link>
   );

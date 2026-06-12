@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 96" role="img" aria-label="UniHomelabDash">
+  <rect x="0" y="8" width="80" height="80" rx="18" fill="#121214"/>
+  <rect x="12" y="30" width="6" height="22" rx="3" fill="#e11d48"/>
+  <rect x="22" y="22" width="50" height="18" rx="6" fill="#3f3f46"/>
+  <rect x="12" y="46" width="56" height="18" rx="6" fill="#52525b"/>
+  <rect x="12" y="70" width="56" height="18" rx="6" fill="#71717a"/>
+  <text x="96" y="58" fill="#f4f4f5" font-family="Geist, ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="600" letter-spacing="-0.02em">UniHomelabDash</text>
+  <rect x="128" y="66" width="220" height="3" rx="1.5" fill="#9f1239"/>
+</svg>

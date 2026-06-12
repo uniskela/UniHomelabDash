@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="UniHomelabDash Hearth Node icon">
+  <rect width="512" height="512" rx="96" fill="#121214"/>
+  <circle cx="256" cy="256" r="144" fill="#7f1d1d"/>
+  <line x1="256" y1="112" x2="256" y2="176" stroke="#27272a" stroke-width="16" stroke-linecap="round"/>
+  <line x1="133" y1="328" x2="189" y2="296" stroke="#27272a" stroke-width="16" stroke-linecap="round"/>
+  <line x1="379" y1="328" x2="323" y2="296" stroke="#27272a" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="20" fill="#e11d48"/>
+</svg>

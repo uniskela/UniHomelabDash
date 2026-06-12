@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="UniHomelabDash Uni Frame icon">
+  <rect width="512" height="512" rx="96" fill="#121214"/>
+  <path fill="#f4f4f5" d="M156 148h64v164c0 44.2 35.8 80 80 80s80-35.8 80-80V148h64v168c0 79.5-64.5 144-144 144S156 395.5 156 316V148z"/>
+  <rect x="156" y="268" width="200" height="20" rx="10" fill="#e11d48"/>
+</svg>

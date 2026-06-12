@@ -1,6 +1,12 @@
+<p align="center">
+  <img src="docs/branding/logo-wordmark-stacked.svg" alt="UniHomelabDash" width="280" />
+</p>
+
 # UniHomelabDash
 
-Self-hosted homelab dashboard — save your services, check health on demand, open everything from your phone.
+Self-hosted homelab control plane — save your services, check health on demand, open everything from your phone.
+
+Brand assets and palette: [docs/branding/BRAND.md](docs/branding/BRAND.md)
 
 > **Security:** v0.1.0 has **no login**. Use on a trusted homelab network only. Do not expose to the public internet without a reverse proxy and access control (Authelia, VPN, etc.). See [SECURITY.md](SECURITY.md).
 
@@ -143,9 +149,10 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 |------------------|
 | ![Add service](docs/screenshots/add-service.png) |
 
-Demo data only (`example.local` URLs). Regenerate after UI changes:
+Demo data only (`example.local` URLs). Regenerate after UI or branding changes:
 
 ```bash
+npm run icons:export   # when brand SVG assets change
 npm run build
 npm run screenshots
 ```
