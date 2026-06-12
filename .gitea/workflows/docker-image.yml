@@ -1,3 +1,13 @@
+# Builds and pushes UniHomelabDash to the Gitea container registry.
+#
+# Secrets (repo settings):
+#   REGISTRY_USERNAME — Gitea user or bot with package write access
+#   REGISTRY_TOKEN    — Gitea token with write:package (or equivalent)
+#
+# Tags:
+#   push to main        → git.pike.homes/alex/unihomelabdash:latest
+#   push tag v*.*.*     → :{tag} and :latest (e.g. v0.1.0)
+
 name: Build Docker Image
 
 on:
@@ -7,9 +17,14 @@ on:
     tags:
       - "v*.*.*"
 
+env:
+  IMAGE: git.pike.homes/alex/unihomelabdash
+
 jobs:
   docker:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
 
     steps:
       - name: Checkout
@@ -27,15 +42,17 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          platforms: linux/amd64
           push: true
-          tags: git.pike.homes/alex/unihomelabdash:latest
+          tags: ${{ env.IMAGE }}:latest
 
       - name: Build and push version tag
         if: startsWith(gitea.ref, 'refs/tags/')
         uses: docker/build-push-action@v5
         with:
           context: .
+          platforms: linux/amd64
           push: true
           tags: |
-            git.pike.homes/alex/unihomelabdash:${{ gitea.ref_name }}
-            git.pike.homes/alex/unihomelabdash:latest
+            ${{ env.IMAGE }}:${{ gitea.ref_name }}
+            ${{ env.IMAGE }}:latest

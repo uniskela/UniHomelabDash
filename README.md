@@ -22,6 +22,64 @@ HOST_PORT=3003 docker compose up --build
 
 Copy [.env.example](.env.example) for optional environment variables (`DATABASE_PATH`, `HOST_PORT`, `ALLOWED_DEV_ORIGIN`).
 
+## Pre-built container images
+
+CI builds images on every push to `main` and on version tags (`v0.1.0`, etc.). See [.gitea/workflows/docker-image.yml](.gitea/workflows/docker-image.yml) and [.github/workflows/docker-image.yml](.github/workflows/docker-image.yml).
+
+### Gitea registry (primary)
+
+```bash
+docker pull git.pike.homes/alex/unihomelabdash:latest
+docker run -d --name unihomelabdash \
+  -p 3000:3000 \
+  -v unihomelabdash-data:/app/data \
+  --restart unless-stopped \
+  git.pike.homes/alex/unihomelabdash:latest
+```
+
+Pin a release: `git.pike.homes/alex/unihomelabdash:v0.1.0`
+
+### GitHub mirrors (when Actions is configured)
+
+```bash
+docker pull ghcr.io/<owner>/unihomelabdash:latest
+docker pull docker.io/<username>/unihomelabdash:latest   # optional, if Docker Hub secrets are set
+```
+
+Replace `<owner>` with your GitHub username or org (lowercase). Replace `<username>` with your Docker Hub namespace.
+
+### Compose with a pre-built image
+
+Use a override file or set `image` instead of `build`:
+
+```yaml
+services:
+  unihomelabdash:
+    image: git.pike.homes/alex/unihomelabdash:latest
+```
+
+### CI secrets
+
+**Gitea** (`git.pike.homes`):
+
+| Secret | Purpose |
+|--------|---------|
+| `REGISTRY_USERNAME` | Gitea user or bot with package write |
+| `REGISTRY_TOKEN` | Gitea personal access token with package write scope |
+
+**GitHub**:
+
+| Secret | Required | Purpose |
+|--------|----------|---------|
+| `REGISTRY_USERNAME` | Optional | GitHub username for GHCR (defaults to the workflow actor) |
+| `REGISTRY_TOKEN` | Optional | GitHub PAT with `write:packages` (defaults to the automatic workflow token) |
+| `DOCKERHUB_USERNAME` | Optional | Docker Hub namespace |
+| `DOCKERHUB_TOKEN` | Optional | Docker Hub access token |
+
+Secret names must be alphanumeric or underscore only, and cannot start with `GITHUB_`. Use `REGISTRY_TOKEN` for a custom GHCR PAT — not `GITHUB_TOKEN`.
+
+For the first GHCR push, set **Settings → Actions → General → Workflow permissions → Read and write permissions**.
+
 ## What it does
 
 - Mobile-first dashboard with service cards and health status
