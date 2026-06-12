@@ -41,3 +41,15 @@ Health checks are **server-side HTTP GET** requests to URLs you configure. The U
 For **security vulnerabilities**, use [GitHub Security Advisories](https://github.com/uniskela/UniHomelabDash/security/advisories/new) on the public repository. Do not open public issues for undisclosed security problems.
 
 For other bugs, open a [GitHub issue](https://github.com/uniskela/UniHomelabDash/issues) with steps to reproduce. Do not include real homelab URLs or credentials.
+
+## Known dependency advisories
+
+### PostCSS (transitive via Next.js)
+
+`npm audit` may report a moderate PostCSS advisory ([GHSA-qx2v-qp2m-jg93](https://github.com/advisories/GHSA-qx2v-qp2m-jg93)) via `next@16.2.x`, which bundles `postcss@8.4.31`. This affects **build-time CSS processing only** — not the production Docker image runtime (standalone Next.js output).
+
+A fix is available in Next.js 16.3+ preview releases. We track this until a stable Next.js patch ships with `postcss >= 8.5.10`. Do not upgrade to canary/preview solely for this advisory before v0.1.0.
+
+### esbuild (drizzle-kit dev tooling)
+
+Stable `drizzle-kit@0.31.x` previously pulled a vulnerable nested `esbuild` via deprecated `@esbuild-kit/*` packages. This project uses an npm `overrides` entry to force `esbuild ^0.25.12` for development tooling. The production container does not run drizzle-kit or the esbuild development server.
