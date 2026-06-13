@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
-import { isAuthDisabled } from "@/lib/auth/constants";
+import { isAuthDisabled, MAX_USERNAME_LENGTH } from "@/lib/auth/constants";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
   createSessionToken,
@@ -37,6 +37,10 @@ export async function setupAdminAction(
     return { ok: false, message: "Username must be at least 3 characters." };
   }
 
+  if (username.length > MAX_USERNAME_LENGTH) {
+    return { ok: false, message: "Username must be at most 50 characters." };
+  }
+
   if (password.length < 8) {
     return { ok: false, message: "Password must be at least 8 characters." };
   }
@@ -58,7 +62,7 @@ export async function setupAdminAction(
     .insert(users)
     .values({
       id: userId,
-      username: limit(username, 50),
+      username,
       passwordHash,
       createdAt: now,
       updatedAt: now,
@@ -135,8 +139,4 @@ export async function logoutAction() {
 function readField(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
-}
-
-function limit(value: string, length: number) {
-  return value.slice(0, length);
 }

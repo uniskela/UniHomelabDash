@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { AuthActionState } from "@/lib/auth/types";
 import { loginAction } from "@/lib/auth/actions";
+import { sanitizeLocalRedirectPath } from "@/lib/auth/safe-redirect-path";
 
 const initialState: AuthActionState = { ok: false, message: "" };
 
@@ -27,7 +28,7 @@ export function LoginForm() {
   useEffect(() => {
     if (state.ok && !hasNavigatedRef.current) {
       hasNavigatedRef.current = true;
-      const next = searchParams.get("next") || "/";
+      const next = sanitizeLocalRedirectPath(searchParams.get("next"));
       router.replace(next);
     }
   }, [state.ok, searchParams, router]);

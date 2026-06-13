@@ -1,6 +1,7 @@
 export const SESSION_COOKIE_NAME = "uh_session";
 export const SETUP_COOKIE_NAME = "uh_setup";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+export const MAX_USERNAME_LENGTH = 50;
 
 export function isAuthDisabled() {
   return process.env.AUTH_DISABLED === "true";
