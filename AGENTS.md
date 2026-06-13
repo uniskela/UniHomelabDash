@@ -178,14 +178,13 @@ Do not allow:
 
 ## Authentication
 
-For MVP, keep auth simple but do not skip it.
+Shipped in v0.2.0:
 
-Acceptable options:
-
-* Single admin user
-* Password-based login
-* Session cookie
-* Optional reverse-proxy auth compatibility
+* Single admin user with first-run `/setup`
+* Password-based login at `/login`
+* Signed HTTP-only session cookie
+* Middleware protection for all dashboard routes
+* `SESSION_SECRET` required in production; `COOKIE_SECURE=true` when behind HTTPS
 
 Later:
 
@@ -297,11 +296,10 @@ A feature is done when:
 
 ## Current Priority
 
-v0.1.0 shipped: a polished manual-services PWA with on-demand health checks, SQLite persistence, and Docker Compose deployment (no login, no Docker socket).
+v0.2.0 shipped: manual-services PWA with on-demand health checks, SQLite persistence, Docker Compose deployment, and single-admin authentication.
 
 Next focus (see ROADMAP.md):
 
-* Authentication and safer deployment defaults
 * Provider system foundation for future integrations
 * Docker/Portainer read-only status only when explicitly scoped and behind auth
 

@@ -8,7 +8,7 @@ Self-hosted homelab control plane — save your services, check health on demand
 
 Brand assets and palette: [docs/branding/BRAND.md](docs/branding/BRAND.md)
 
-> **Security:** v0.1.0 has **no login**. Use on a trusted homelab network only. Do not expose to the public internet without a reverse proxy and access control (Authelia, VPN, etc.). See [SECURITY.md](SECURITY.md).
+> **Security:** Authentication is required for dashboard access. On first run, create the admin account at `/setup`. Set `SESSION_SECRET` in production. Do not expose to the public internet without HTTPS and access control. See [SECURITY.md](SECURITY.md).
 
 ## Quick start (Docker)
 
@@ -16,7 +16,14 @@ Brand assets and palette: [docs/branding/BRAND.md](docs/branding/BRAND.md)
 docker compose up --build
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Rebuild after pulling changes so the image includes the latest UI and PWA assets.
+Open [http://localhost:3000](http://localhost:3000). On first visit you will be prompted to create an admin account at `/setup`.
+
+For Docker Compose, create a `.env` file with a strong `SESSION_SECRET` (see [.env.example](.env.example)):
+
+```bash
+echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
+docker compose up --build
+```
 
 The Compose file mounts a named volume at `/app/data` for SQLite persistence. It intentionally does not mount `/var/run/docker.sock`.
 
@@ -26,7 +33,14 @@ If port 3000 is already in use:
 HOST_PORT=3003 docker compose up --build
 ```
 
-Copy [.env.example](.env.example) for optional environment variables (`DATABASE_PATH`, `HOST_PORT`, `ALLOWED_DEV_ORIGIN`).
+### Upgrading from v0.1.0
+
+1. Add `SESSION_SECRET` to your `.env` (see [.env.example](.env.example)).
+2. Rebuild and restart: `docker compose up --build -d`.
+3. On first visit, complete `/setup` to create the admin account (existing services data in the SQLite volume is preserved).
+4. If you serve over HTTPS via a reverse proxy, set `COOKIE_SECURE=true`.
+
+Copy [.env.example](.env.example) for optional environment variables (`DATABASE_PATH`, `HOST_PORT`, `SESSION_SECRET`, `COOKIE_SECURE`, `ALLOWED_DEV_ORIGIN`).
 
 ## Container Images
 
@@ -131,10 +145,11 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - On-demand HTTP health checks with last-checked timestamps
 - Installable PWA (home screen / desktop shortcut)
 - SQLite persistence and Docker Compose deployment
+- Single-admin authentication with first-run setup and session cookies
 
 ## What it does not do (yet)
 
-- Authentication or multi-user access
+- Multi-user access or OIDC
 - Docker, Portainer, or Proxmox integrations
 - Push notifications or alerts
 - Automatic background health polling
@@ -214,14 +229,17 @@ npm run typecheck
 npm run build
 npm run start:lan    # production server on 0.0.0.0:3004
 npm run db:generate
+npm run db:migrate
+npm run test
 npm run screenshots  # capture docs/screenshots (requires build)
 ```
 
 ## Security
 
-Authentication is planned for Phase 4. This build has no privileged integrations.
+Authentication is required before dashboard access. Privileged integrations are not enabled yet.
 
-- Do not expose to the internet without proxy auth — see [SECURITY.md](SECURITY.md)
+- Set `SESSION_SECRET` in production — see [SECURITY.md](SECURITY.md)
+- Do not expose to the internet without HTTPS and proxy access control
 - Health checks perform server-side HTTP requests to URLs you configure
 - Secrets must remain server-side only; do not store API tokens in service fields
 

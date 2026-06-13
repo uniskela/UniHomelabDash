@@ -180,7 +180,7 @@ Success criteria:
 
 ## Phase 3 — Local Database and Settings
 
-Status: In Progress
+Status: Completed
 
 Goal: Store app configuration properly.
 
@@ -190,14 +190,14 @@ Completed:
 * Runtime schema bootstrap and column migrations in [src/lib/db/client.ts](src/lib/db/client.ts).
 * Docker volume persistence for `/app/data`.
 * User-facing Settings with Advanced section for operators.
+* Drizzle migrations in `drizzle/` with startup migrator in [src/lib/db/migrate.ts](src/lib/db/migrate.ts).
+* `settings` and `users` tables for app config and admin account.
 
-Remaining:
+Deferred:
 
 * Providers table.
 * Credentials/secrets metadata.
-* Settings table.
-* Formal migration system (Drizzle migrations).
-* Backup/export option.
+* JSON backup/export option.
 
 Success criteria:
 
@@ -209,18 +209,19 @@ Success criteria:
 
 ## Phase 4 — Authentication
 
-Status: Planned
+Status: Completed
 
 Goal: Add basic protection before action-based integrations.
 
-Features:
+Completed:
 
-* Single admin account.
-* Password login.
-* Secure session cookie.
-* Logout.
-* First-run setup screen.
-* Warning if app is exposed without HTTPS/reverse proxy.
+* Single admin account with first-run `/setup`.
+* Password login at `/login`.
+* Signed HTTP-only session cookie.
+* Logout from Settings.
+* Middleware route protection.
+* Exposure warning in Settings when HTTPS is not detected.
+* `SESSION_SECRET` required in production; `AUTH_DISABLED` dev escape hatch.
 
 Future:
 
@@ -231,9 +232,9 @@ Future:
 
 Success criteria:
 
-* No unauthenticated access to the dashboard.
-* Actions cannot be triggered without login.
-* Setup remains simple.
+* No unauthenticated access to the dashboard. (met)
+* Actions cannot be triggered without login. (met)
+* Setup remains simple. (met)
 
 ---
 

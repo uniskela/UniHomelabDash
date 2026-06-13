@@ -15,8 +15,10 @@ import { cn } from "@/lib/utils";
 
 export function SettingsAdvanced({
   databasePath,
+  authEnabled = true,
 }: {
   databasePath: string;
+  authEnabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -71,7 +73,9 @@ export function SettingsAdvanced({
               <li className="rounded-lg border bg-muted/30 p-3">Proxmox and media apps</li>
             </ul>
             <p className="mt-2 text-muted-foreground">
-              These require authentication and a safer provider model before they ship.
+              {authEnabled
+                ? "Authentication is enabled. Privileged integrations still require the provider system before they ship."
+                : "These require authentication and a safer provider model before they ship."}
             </p>
           </div>
         </CardContent>

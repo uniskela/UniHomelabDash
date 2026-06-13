@@ -3,6 +3,8 @@ import path from "node:path";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "@/lib/db/schema";
+import { runMigrations } from "@/lib/db/migrate";
+import { assertSessionSecretConfigured } from "@/lib/auth/constants";
 
 let sqlite: Database.Database | null = null;
 let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
@@ -13,6 +15,8 @@ export function getDatabasePath() {
 }
 
 export function getDb() {
+  assertSessionSecretConfigured();
+
   if (!sqlite) {
     const databasePath = getDatabasePath();
     fs.mkdirSync(path.dirname(databasePath), { recursive: true });
@@ -20,25 +24,8 @@ export function getDb() {
   }
 
   if (!initialized) {
-    sqlite.exec(`
-      CREATE TABLE IF NOT EXISTS services (
-        id TEXT PRIMARY KEY NOT NULL,
-        name TEXT NOT NULL,
-        url TEXT NOT NULL,
-        category TEXT NOT NULL DEFAULT 'General',
-        host TEXT NOT NULL DEFAULT '',
-        icon TEXT NOT NULL DEFAULT '',
-        notes TEXT NOT NULL DEFAULT '',
-        health_url TEXT NOT NULL DEFAULT '',
-        health_status TEXT NOT NULL DEFAULT 'unknown',
-        last_checked_at TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-      );
-    `);
-    ensureColumn("services", "health_status", "TEXT NOT NULL DEFAULT 'unknown'");
-    ensureColumn("services", "health_error_message", "TEXT NOT NULL DEFAULT ''");
-    ensureColumn("services", "last_checked_at", "TEXT");
+    runMigrations(sqlite);
+    ensureLegacyServiceColumns(sqlite);
     initialized = true;
   }
 
@@ -49,16 +36,18 @@ export function getDb() {
   return db;
 }
 
-function ensureColumn(table: string, column: string, definition: string) {
-  if (!sqlite) {
-    return;
-  }
+function ensureLegacyServiceColumns(database: Database.Database) {
+  ensureColumn(database, "services", "health_status", "TEXT NOT NULL DEFAULT 'unknown'");
+  ensureColumn(database, "services", "health_error_message", "TEXT NOT NULL DEFAULT ''");
+  ensureColumn(database, "services", "last_checked_at", "TEXT");
+}
 
-  const existingColumns = sqlite
+function ensureColumn(database: Database.Database, table: string, column: string, definition: string) {
+  const existingColumns = database
     .prepare(`PRAGMA table_info(${table})`)
     .all() as Array<{ name: string }>;
 
   if (!existingColumns.some((item) => item.name === column)) {
-    sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
   }
 }

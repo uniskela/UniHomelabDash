@@ -6,6 +6,7 @@ services:
       - "${HOST_PORT:-3000}:3000"
     environment:
       DATABASE_PATH: /app/data/unihomelabdash.sqlite
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in a .env file or shell environment}
     volumes:
       - unihomelabdash-data:/app/data
     restart: unless-stopped

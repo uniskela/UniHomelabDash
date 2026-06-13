@@ -1,0 +1,69 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "00000000-0000-0000-0000-000000000001",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "services": {
+      "name": "services",
+      "columns": {
+        "id": { "name": "id", "type": "text", "primaryKey": true, "notNull": true, "autoincrement": false },
+        "name": { "name": "name", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "url": { "name": "url", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "category": { "name": "category", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "'General'" },
+        "host": { "name": "host", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "''" },
+        "icon": { "name": "icon", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "''" },
+        "notes": { "name": "notes", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "''" },
+        "health_url": { "name": "health_url", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "''" },
+        "health_status": { "name": "health_status", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "'unknown'" },
+        "health_error_message": { "name": "health_error_message", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false, "default": "''" },
+        "last_checked_at": { "name": "last_checked_at", "type": "text", "primaryKey": false, "notNull": false, "autoincrement": false },
+        "created_at": { "name": "created_at", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "updated_at": { "name": "updated_at", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "settings": {
+      "name": "settings",
+      "columns": {
+        "key": { "name": "key", "type": "text", "primaryKey": true, "notNull": true, "autoincrement": false },
+        "value": { "name": "value", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "updated_at": { "name": "updated_at", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": { "name": "id", "type": "text", "primaryKey": true, "notNull": true, "autoincrement": false },
+        "username": { "name": "username", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "password_hash": { "name": "password_hash", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "created_at": { "name": "created_at", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false },
+        "updated_at": { "name": "updated_at", "type": "text", "primaryKey": false, "notNull": true, "autoincrement": false }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": { "users_username_unique": { "name": "users_username_unique", "columns": ["username"], "nullsNotDistinct": false } },
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
