@@ -174,3 +174,14 @@ export function getClearSessionCookieOptions() {
     maxAge: 0,
   };
 }
+
+export function getClearSetupCookieOptions() {
+  return {
+    name: SETUP_COOKIE_NAME,
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: isCookieSecureEnabled(),
+    path: "/",
+    maxAge: 0,
+  };
+}

@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrlFromRequest(request, "/setup"));
     }
     if (pathname.startsWith("/setup") && setupComplete) {
-      return NextResponse.redirect(redirectUrlFromRequest(request, "/login"));
+      return NextResponse.redirect(redirectUrlFromRequest(request, "/api/auth/sync-setup"));
     }
     return NextResponse.next();
   }

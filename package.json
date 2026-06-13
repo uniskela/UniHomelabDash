@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
-    "test": "node --import tsx --test src/lib/auth/*.test.ts",
+    "test": "node --import tsx --test src/lib/auth/*.test.ts src/lib/request/*.test.ts",
     "screenshots": "node scripts/capture-screenshots.mjs",
     "icons:export": "node scripts/export-icons.mjs"
   },

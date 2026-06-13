@@ -32,7 +32,8 @@ self.addEventListener("fetch", (event) => {
         }
 
         if (request.mode === "navigate") {
-          return caches.match("/login");
+          const loginUrl = new URL("/login", request.url).href;
+          return Response.redirect(loginUrl, 302);
         }
 
         return undefined;

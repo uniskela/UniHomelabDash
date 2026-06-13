@@ -12,18 +12,14 @@ Brand assets and palette: [docs/branding/BRAND.md](docs/branding/BRAND.md)
 
 ## Quick start (Docker)
 
-```bash
-docker compose up --build
-```
-
-Open [http://localhost:3000](http://localhost:3000). On first visit you will be prompted to create an admin account at `/setup`.
-
-For Docker Compose, create a `.env` file with a strong `SESSION_SECRET` (see [.env.example](.env.example)):
+Create a `.env` file with a strong `SESSION_SECRET` (see [.env.example](.env.example)), then start the stack:
 
 ```bash
 echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
 docker compose up --build
 ```
+
+Open [http://localhost:3000](http://localhost:3000). On first visit you will be prompted to create an admin account at `/setup`.
 
 The Compose file mounts a named volume at `/app/data` for SQLite persistence. It intentionally does not mount `/var/run/docker.sock`.
 
@@ -38,9 +34,9 @@ HOST_PORT=3003 docker compose up --build
 1. Add `SESSION_SECRET` to your `.env` (see [.env.example](.env.example)).
 2. Rebuild and restart: `docker compose up --build -d`.
 3. On first visit, complete `/setup` to create the admin account (existing services data in the SQLite volume is preserved).
-4. If you serve over HTTPS via a reverse proxy, set `COOKIE_SECURE=true`.
+4. If you serve over HTTPS via a reverse proxy, set `COOKIE_SECURE=true` and `PUBLIC_URL` to your public origin (see [.env.example](.env.example)).
 
-Copy [.env.example](.env.example) for optional environment variables (`DATABASE_PATH`, `HOST_PORT`, `SESSION_SECRET`, `COOKIE_SECURE`, `ALLOWED_DEV_ORIGIN`).
+Copy [.env.example](.env.example) for optional environment variables (`DATABASE_PATH`, `HOST_PORT`, `SESSION_SECRET`, `COOKIE_SECURE`, `PUBLIC_URL`, `TRUST_PROXY_HEADERS`, `ALLOWED_HOSTS`, `ALLOWED_DEV_ORIGIN`).
 
 ## Container Images
 

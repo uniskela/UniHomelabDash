@@ -26,6 +26,9 @@ UniHomelabDash requires authentication for dashboard access. Read this before de
 |----------|----------|---------|
 | `SESSION_SECRET` | **Yes in production** | HMAC secret for session and setup cookies |
 | `COOKIE_SECURE` | No | Set to `true` only when served over HTTPS (reverse proxy with TLS). Default off for LAN HTTP. |
+| `PUBLIC_URL` | No | Public origin for auth redirects behind a reverse proxy (e.g. `https://dash.pike.homes`). Preferred over trusting proxy headers. |
+| `TRUST_PROXY_HEADERS` | No | Set to `true` only behind a reverse proxy that strips spoofed `X-Forwarded-*` headers. Requires `ALLOWED_HOSTS`. Default off. |
+| `ALLOWED_HOSTS` | No | Comma-separated hostnames allowed in `X-Forwarded-Host` when `TRUST_PROXY_HEADERS=true`. |
 | `AUTH_DISABLED` | No | Set to `true` to bypass auth in development only |
 
 Production startup fails if `SESSION_SECRET` is missing while authentication is enabled.
