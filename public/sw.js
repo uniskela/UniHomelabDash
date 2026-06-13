@@ -1,8 +1,8 @@
-const CACHE_NAME = "unihomelabdash-shell-v1";
-const SHELL_URLS = ["/", "/services", "/alerts", "/settings", "/manifest.webmanifest"];
+const CACHE_NAME = "unihomelabdash-shell-v2";
+const PUBLIC_SHELL_URLS = ["/login", "/setup", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_URLS)));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PUBLIC_SHELL_URLS)));
   self.skipWaiting();
 });
 
@@ -26,7 +26,17 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     fetch(request).catch(() =>
-      caches.match(request).then((cached) => cached ?? caches.match("/"))
+      caches.match(request).then((cached) => {
+        if (cached) {
+          return cached;
+        }
+
+        if (request.mode === "navigate") {
+          return caches.match("/login");
+        }
+
+        return undefined;
+      })
     )
   );
 });

@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { users } from "@/lib/db/schema";
+import { settings, users } from "@/lib/db/schema";
 import { isAuthDisabled, MAX_USERNAME_LENGTH } from "@/lib/auth/constants";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
@@ -14,7 +14,8 @@ import {
   getSetupCookieOptions,
   verifySetupToken,
 } from "@/lib/auth/session";
-import { isSetupComplete, markSetupComplete } from "@/lib/settings/store";
+import { isSetupComplete } from "@/lib/settings/store";
+import { SETTING_KEYS } from "@/lib/settings/keys";
 import type { AuthActionState } from "@/lib/auth/types";
 
 export async function setupAdminAction(
@@ -49,27 +50,61 @@ export async function setupAdminAction(
     return { ok: false, message: "Passwords do not match." };
   }
 
-  const existingUsers = getDb().select({ id: users.id }).from(users).limit(1).all();
-  if (existingUsers.length > 0) {
-    return { ok: false, message: "An admin account already exists." };
-  }
-
   const now = new Date().toISOString();
   const userId = crypto.randomUUID();
   const passwordHash = await hashPassword(password);
 
-  getDb()
-    .insert(users)
-    .values({
-      id: userId,
-      username,
-      passwordHash,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .run();
+  try {
+    getDb().transaction((tx) => {
+      const existingUsers = tx.select({ id: users.id }).from(users).limit(1).all();
+      if (existingUsers.length > 0) {
+        throw new SetupConflictError("An admin account already exists.");
+      }
 
-  markSetupComplete();
+      const [setupRow] = tx
+        .select({ value: settings.value })
+        .from(settings)
+        .where(eq(settings.key, SETTING_KEYS.setupComplete))
+        .limit(1)
+        .all();
+
+      if (setupRow?.value === "true") {
+        throw new SetupConflictError("Setup has already been completed.");
+      }
+
+      tx.insert(users)
+        .values({
+          id: userId,
+          username,
+          passwordHash,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+
+      tx.insert(settings)
+        .values({
+          key: SETTING_KEYS.setupComplete,
+          value: "true",
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: settings.key,
+          set: { value: "true", updatedAt: now },
+        })
+        .run();
+    });
+  } catch (error) {
+    if (error instanceof SetupConflictError) {
+      return { ok: false, message: error.message };
+    }
+
+    if (isUniqueConstraintError(error)) {
+      return { ok: false, message: "An admin account already exists." };
+    }
+
+    throw error;
+  }
 
   const cookieStore = await cookies();
   const sessionToken = await createSessionToken(userId);
@@ -139,4 +174,20 @@ export async function logoutAction() {
 function readField(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
+}
+
+class SetupConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SetupConflictError";
+  }
+}
+
+function isUniqueConstraintError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "SQLITE_CONSTRAINT_UNIQUE"
+  );
 }
