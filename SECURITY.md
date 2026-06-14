@@ -1,11 +1,11 @@
 # Security
 
-UniHomelabDash v0.1.0 is a **manual-services dashboard** without login. Read this before deploying.
+UniHomelabDash requires authentication for dashboard access. Read this before deploying.
 
 ## Supported use
 
 - Self-hosted on a **trusted homelab network** (LAN or VPN)
-- Single-operator or small household where everyone on the network is trusted
+- Single-operator or small household where the admin credentials are protected
 - Docker Compose with the default setup (no Docker socket mount)
 
 ## Software sources
@@ -13,20 +13,42 @@ UniHomelabDash v0.1.0 is a **manual-services dashboard** without login. Read thi
 - **Official releases:** [GitHub](https://github.com/uniskela/UniHomelabDash) source; container images on `ghcr.io/uniskela/unihomelabdash` and [Docker Hub](https://hub.docker.com/r/uniskela/unihomelabdash) (`uniskela/unihomelabdash`)
 - Do not rely on unlisted third-party mirrors or internal maintainer registries for production installs
 
+## Authentication
+
+- First visit runs **first-run setup** at `/setup` to create a single admin account.
+- Subsequent visits require **username and password** login.
+- Sessions use a signed, HTTP-only cookie (`uh_session`) backed by `SESSION_SECRET`.
+- Setup completion is tracked with a signed cookie (`uh_setup`) so middleware can route correctly without database access on the edge.
+
+### Environment variables
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `SESSION_SECRET` | **Yes in production** | HMAC secret for session and setup cookies |
+| `COOKIE_SECURE` | No | Set to `true` only when served over HTTPS (reverse proxy with TLS). Default off for LAN HTTP. |
+| `PUBLIC_URL` | No | Public origin for auth redirects behind a reverse proxy (e.g. `https://dash.pike.homes`). Preferred over trusting proxy headers. |
+| `TRUST_PROXY_HEADERS` | No | Set to `true` only behind a reverse proxy that strips spoofed `X-Forwarded-*` headers. Requires `ALLOWED_HOSTS`. Default off. |
+| `ALLOWED_HOSTS` | No | Comma-separated hostnames allowed in `X-Forwarded-Host` when `TRUST_PROXY_HEADERS=true`. |
+| `AUTH_DISABLED` | No | Set to `true` to bypass auth in development only |
+
+Production startup fails if `SESSION_SECRET` is missing while authentication is enabled.
+
+**Never set `AUTH_DISABLED=true` in production.**
+
 ## Unsupported use
 
-- **Public internet exposure** without authentication in front of the app
-- Multi-tenant or shared hosting where untrusted users can reach the UI
+- **Public internet exposure** without HTTPS and additional access control in front of the app
+- Multi-tenant or shared hosting where untrusted users can reach the login page
 - Storing API tokens, passwords, or secrets in service notes (not designed for secrets)
 
-Anyone who can open the dashboard can add, edit, delete services and trigger health checks.
+Anyone with valid admin credentials can manage services and trigger health checks.
 
 ## Before exposing beyond your LAN
 
-1. Put UniHomelabDash behind a reverse proxy (nginx, Caddy, Traefik).
-2. Add access control (Authelia, Authentik, OAuth2 proxy, or VPN-only access).
-3. Prefer **HTTPS** for PWA install and service worker behaviour on mobile devices.
-4. Do not mount `/var/run/docker.sock` until authentication and action safety ship.
+1. Put UniHomelabDash behind a reverse proxy (nginx, Caddy, Traefik) with **HTTPS**.
+2. Add access control (Authelia, Authentik, OAuth2 proxy, or VPN-only access) if the login page could be reached by untrusted users.
+3. Set a long random `SESSION_SECRET` (for example `openssl rand -base64 32`).
+4. Do not mount `/var/run/docker.sock` until provider integrations and action safety ship.
 
 ## Health checks
 
@@ -34,7 +56,7 @@ Health checks are **server-side HTTP GET** requests to URLs you configure. The U
 
 - Only add URLs you trust the server to request.
 - LAN-only hostnames must be reachable from the host or container running UniHomelabDash.
-- There is no SSRF allowlist in v0.1.0; untrusted users should not have dashboard access.
+- There is no SSRF allowlist yet; restrict who can reach the dashboard.
 
 ## Reporting issues
 

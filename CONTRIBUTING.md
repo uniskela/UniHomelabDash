@@ -74,7 +74,7 @@ npm run screenshots
 
 ## Security
 
-v0.1.0 has **no login**. Anyone who can reach the dashboard can manage services and trigger health checks.
+v0.2.0 requires **single-admin login** for dashboard access. Set `SESSION_SECRET` in production and complete first-run setup at `/setup`.
 
 * Read [SECURITY.md](SECURITY.md) before deploying or changing server-side fetch behaviour.
 * Do not commit `.env`, credentials, or real homelab URLs in issues or PRs.

@@ -2,6 +2,8 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { AuthError } from "@/lib/auth/types";
+import { requireAuth } from "@/lib/auth/session-user";
 import { getDb } from "@/lib/db/client";
 import { services } from "@/lib/db/schema";
 import { checkServiceHealth } from "@/lib/services/health";
@@ -15,6 +17,15 @@ export async function createServiceAction(
   _previousState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  try {
+    await requireAuth();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { ok: false, message: error.message };
+    }
+    throw error;
+  }
+
   const parsed = parseServiceForm(formData);
 
   if (!parsed.ok) {
@@ -42,6 +53,15 @@ export async function updateServiceAction(
   _previousState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  try {
+    await requireAuth();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { ok: false, message: error.message };
+    }
+    throw error;
+  }
+
   const id = readField(formData, "id");
   const parsed = parseServiceForm(formData);
 
@@ -83,6 +103,12 @@ export async function updateServiceAction(
 }
 
 export async function deleteServiceAction(formData: FormData) {
+  try {
+    await requireAuth();
+  } catch {
+    return;
+  }
+
   const id = readField(formData, "id");
 
   if (!id) {
@@ -94,6 +120,12 @@ export async function deleteServiceAction(formData: FormData) {
 }
 
 export async function checkServiceHealthAction(formData: FormData) {
+  try {
+    await requireAuth();
+  } catch {
+    return;
+  }
+
   const id = readField(formData, "id");
 
   if (!id) {
@@ -123,6 +155,12 @@ export async function checkServiceHealthAction(formData: FormData) {
 }
 
 export async function checkAllServiceHealthAction() {
+  try {
+    await requireAuth();
+  } catch {
+    return;
+  }
+
   const servicesToCheck = getDb().select().from(services).all();
 
   for (const service of servicesToCheck) {

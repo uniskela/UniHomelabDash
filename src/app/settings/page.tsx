@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Bell, Download, HeartPulse, LockKeyhole } from "lucide-react";
+import { Bell, Download, HeartPulse, LockKeyhole, ShieldAlert } from "lucide-react";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { SettingsAdvanced } from "@/components/settings-advanced";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,12 +10,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { isHttpsRequest } from "@/lib/request/https";
+import { getSessionUser } from "@/lib/auth/session-user";
+import { isAuthDisabled } from "@/lib/auth/constants";
 import { getDatabasePath } from "@/lib/db/client";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const sessionUser = await getSessionUser();
+  const httpsEnabled = await isHttpsRequest();
+  const authDisabled = isAuthDisabled();
+
   return (
     <div className="space-y-6">
       <section className="space-y-2">
@@ -23,9 +31,28 @@ export default function SettingsPage() {
         </Badge>
         <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Install the app, review health checks, and see what is coming next.
+          Install the app, review health checks, and manage access to your dashboard.
         </p>
       </section>
+
+      {!httpsEnabled && !authDisabled ? (
+        <Card className="border-amber-500/40 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-100">
+              <ShieldAlert className="size-5 text-amber-400" />
+              Exposure warning
+            </CardTitle>
+            <CardDescription>
+              This request is not using HTTPS. Prefer a reverse proxy with TLS before exposing
+              UniHomelabDash beyond your LAN.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            Put the app behind nginx, Caddy, or Traefik with HTTPS. Add access control such as
+            Authelia, Authentik, or VPN-only access when reachable from untrusted networks.
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -101,16 +128,31 @@ export default function SettingsPage() {
               <LockKeyhole className="size-5" />
               Authentication
             </CardTitle>
-            <CardDescription>Coming in a future release.</CardDescription>
+            <CardDescription>
+              {authDisabled
+                ? "Authentication is disabled for development."
+                : "Sign-in is required for dashboard access."}
+            </CardDescription>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Login and access control will be added before privileged integrations such as
-            Docker actions are enabled.
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            {authDisabled ? (
+              <p>
+                <code className="text-xs">AUTH_DISABLED=true</code> bypasses login. Do not use
+                this in production.
+              </p>
+            ) : (
+              <>
+                <p>
+                  Signed in as <strong className="text-foreground">{sessionUser?.username}</strong>.
+                </p>
+                <LogoutButton />
+              </>
+            )}
           </CardContent>
         </Card>
 
         <div className="lg:col-span-2">
-          <SettingsAdvanced databasePath={getDatabasePath()} />
+          <SettingsAdvanced databasePath={getDatabasePath()} authEnabled={!authDisabled} />
         </div>
       </div>
     </div>
