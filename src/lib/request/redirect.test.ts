@@ -113,3 +113,14 @@ test("redirectUrlFromRequest rejects unsafe pathnames", () => {
   const redirectUrl = redirectUrlFromRequest(request, "//evil.example/phish");
   assert.equal(redirectUrl.pathname, "/");
 });
+
+test("redirectUrlFromRequest normalizes 0.0.0.0 to localhost for browser redirects", () => {
+  const request = createRequest({
+    url: "http://0.0.0.0:3000/setup",
+    host: "0.0.0.0:3000",
+  });
+
+  const redirectUrl = redirectUrlFromRequest(request, "/login");
+  assert.equal(redirectUrl.origin, "http://localhost:3000");
+  assert.equal(redirectUrl.pathname, "/login");
+});

@@ -1,7 +1,8 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ensureSetupCookie } from "@/lib/auth/setup-cookie";
-import { isAuthDisabled } from "@/lib/auth/constants";
-import { getClearSetupCookieOptions } from "@/lib/auth/session";
+import { isAuthDisabled, SESSION_COOKIE_NAME } from "@/lib/auth/constants";
+import { getClearSetupCookieOptions, verifySessionToken } from "@/lib/auth/session";
 import { redirectUrlFromRequest } from "@/lib/request/redirect";
 import { isSetupComplete } from "@/lib/settings/store";
 
@@ -24,5 +25,10 @@ export async function GET(request: Request) {
 
   await ensureSetupCookie();
 
-  return NextResponse.redirect(redirectUrlFromRequest(request, "/login"));
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const session = sessionToken ? await verifySessionToken(sessionToken) : null;
+  const destination = session ? "/" : "/login";
+
+  return NextResponse.redirect(redirectUrlFromRequest(request, destination));
 }

@@ -60,6 +60,22 @@ function getConfiguredPublicOrigin() {
   }
 }
 
+const UNSAFE_BROWSER_HOSTS = new Set(["0.0.0.0"]);
+
+function normalizeBrowserHostname(hostname: string) {
+  return UNSAFE_BROWSER_HOSTS.has(hostname) ? "localhost" : hostname;
+}
+
+function normalizeRedirectUrl(url: URL) {
+  if (!UNSAFE_BROWSER_HOSTS.has(url.hostname)) {
+    return url;
+  }
+
+  const normalized = new URL(url);
+  normalized.hostname = normalizeBrowserHostname(url.hostname);
+  return normalized;
+}
+
 function getTrustedProxyOrigin(request: Request | NextRequest) {
   if (process.env.TRUST_PROXY_HEADERS !== "true") {
     return null;
@@ -85,17 +101,17 @@ export function redirectUrlFromRequest(request: Request | NextRequest, pathname:
 
   const trustedProxyOrigin = getTrustedProxyOrigin(request);
   if (trustedProxyOrigin) {
-    return new URL(safePath, trustedProxyOrigin);
+    return normalizeRedirectUrl(new URL(safePath, trustedProxyOrigin));
   }
 
   if ("nextUrl" in request) {
     const url = request.nextUrl.clone();
     url.pathname = safePath;
     url.search = "";
-    return url;
+    return normalizeRedirectUrl(url);
   }
 
-  return new URL(safePath, request.url);
+  return normalizeRedirectUrl(new URL(safePath, request.url));
 }
 
 export function redirectUrlWithSearch(

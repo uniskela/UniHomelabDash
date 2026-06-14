@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { BrandIcon } from "@/components/brand-icon";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +20,6 @@ import { sanitizeLocalRedirectPath } from "@/lib/auth/safe-redirect-path";
 const initialState: AuthActionState = { ok: false, message: "" };
 
 export function SetupForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [state, formAction, pending] = useActionState(setupAdminAction, initialState);
   const hasNavigatedRef = useRef(false);
@@ -29,9 +28,11 @@ export function SetupForm() {
     if (state.ok && !hasNavigatedRef.current) {
       hasNavigatedRef.current = true;
       const next = sanitizeLocalRedirectPath(searchParams.get("next"));
-      router.replace(next);
+      // Full navigation ensures session cookies from the server action are applied
+      // before middleware runs on the destination route.
+      window.location.replace(next);
     }
-  }, [state.ok, searchParams, router]);
+  }, [state.ok, searchParams]);
 
   return (
     <div className="mx-auto flex min-h-[70dvh] w-full max-w-md flex-col justify-center py-8">
