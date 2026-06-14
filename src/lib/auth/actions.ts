@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { settings, users } from "@/lib/db/schema";
 import { isAuthDisabled, MAX_USERNAME_LENGTH } from "@/lib/auth/constants";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { hashPassword, passwordExceedsBcryptLimit, verifyPassword } from "@/lib/auth/password";
 import {
   createSessionToken,
   createSetupToken,
@@ -44,6 +44,10 @@ export async function setupAdminAction(
 
   if (password.length < 8) {
     return { ok: false, message: "Password must be at least 8 characters." };
+  }
+
+  if (passwordExceedsBcryptLimit(password)) {
+    return { ok: false, message: "Password must be at most 72 bytes." };
   }
 
   if (password !== confirmPassword) {
@@ -133,6 +137,10 @@ export async function loginAction(
 
   if (!username || !password) {
     return { ok: false, message: "Enter your username and password." };
+  }
+
+  if (passwordExceedsBcryptLimit(password)) {
+    return { ok: false, message: "Password must be at most 72 bytes." };
   }
 
   const [user] = getDb().select().from(users).where(eq(users.username, username)).limit(1).all();

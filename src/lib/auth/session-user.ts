@@ -2,9 +2,21 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
-import { isAuthDisabled } from "@/lib/auth/constants";
+import { isAuthDisabled, SESSION_COOKIE_NAME } from "@/lib/auth/constants";
 import { getSessionCookieOptions, verifySessionToken } from "@/lib/auth/session";
+import { validateSessionFromCookieHeader } from "@/lib/auth/validate-session";
 import { AuthError, type SessionUser } from "@/lib/auth/types";
+
+function formatCookieHeader(
+  cookieStore: Awaited<ReturnType<typeof cookies>>
+) {
+  const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!session) {
+    return "";
+  }
+
+  return `${SESSION_COOKIE_NAME}=${encodeURIComponent(session)}`;
+}
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   if (isAuthDisabled()) {
@@ -12,6 +24,11 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   }
 
   const cookieStore = await cookies();
+  const validation = await validateSessionFromCookieHeader(formatCookieHeader(cookieStore));
+  if (!validation.ok) {
+    return null;
+  }
+
   const token = cookieStore.get(getSessionCookieOptions().name)?.value;
   if (!token) {
     return null;

@@ -49,6 +49,28 @@ export async function middleware(request: NextRequest) {
   const setupComplete = setupToken && secret ? await verifySetupToken(setupToken) : false;
 
   if (session) {
+    try {
+      const checkUrl = new URL("/api/auth/session-check", request.url);
+      const checkResponse = await fetch(checkUrl, {
+        headers: { cookie: request.headers.get("cookie") ?? "" },
+        cache: "no-store",
+      });
+
+      if (checkResponse.status === 401) {
+        const body = (await checkResponse.json().catch(() => null)) as { redirectTo?: string } | null;
+        const redirectTo = body?.redirectTo === "/login" ? "/login" : "/setup";
+        const response = NextResponse.redirect(redirectUrlFromRequest(request, redirectTo));
+
+        for (const cookie of checkResponse.headers.getSetCookie()) {
+          response.headers.append("Set-Cookie", cookie);
+        }
+
+        return response;
+      }
+    } catch {
+      // If validation is unavailable, continue with the signed session token.
+    }
+
     if (pathname === "/login" || pathname === "/setup") {
       return NextResponse.redirect(redirectUrlFromRequest(request, "/"));
     }
@@ -77,5 +99,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|api/auth/sync-setup).*)"],
+  matcher: ["/((?!_next/static|_next/image|api/auth/sync-setup|api/auth/session-check).*)"],
 };
