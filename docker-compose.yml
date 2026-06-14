@@ -8,6 +8,9 @@ services:
       DATABASE_PATH: /app/data/unihomelabdash.sqlite
       SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in a .env file or shell environment}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
     volumes:
       - unihomelabdash-data:/app/data
     restart: unless-stopped

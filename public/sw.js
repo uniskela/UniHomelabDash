@@ -1,8 +1,36 @@
-const CACHE_NAME = "unihomelabdash-shell-v2";
+const CACHE_NAME = "unihomelabdash-shell-v3";
 const PUBLIC_SHELL_URLS = ["/login", "/setup", "/manifest.webmanifest"];
 
+async function precachePublicShell(urls) {
+  const cache = await caches.open(CACHE_NAME);
+
+  await Promise.all(
+    urls.map(async (url) => {
+      try {
+        const response = await fetch(url, {
+          credentials: "omit",
+          redirect: "manual",
+        });
+
+        if (
+          response.type === "opaqueredirect" ||
+          (response.status >= 300 && response.status < 400)
+        ) {
+          return;
+        }
+
+        if (response.ok) {
+          await cache.put(url, response);
+        }
+      } catch {
+        // Ignore failed precache entries.
+      }
+    })
+  );
+}
+
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PUBLIC_SHELL_URLS)));
+  event.waitUntil(precachePublicShell(PUBLIC_SHELL_URLS));
   self.skipWaiting();
 });
 
