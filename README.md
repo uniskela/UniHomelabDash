@@ -36,9 +36,11 @@ HOST_PORT=3003 docker compose up --build
 3. On first visit, complete `/setup` to create the admin account (existing services data in the SQLite volume is preserved).
 4. If you serve over HTTPS via a reverse proxy, set `COOKIE_SECURE=true` and `PUBLIC_URL` to your public origin (see [.env.example](.env.example)).
 
-Copy [.env.example](.env.example) for optional environment variables (`DATABASE_PATH`, `HOST_PORT`, `SESSION_SECRET`, `COOKIE_SECURE`, `PUBLIC_URL`, `TRUST_PROXY_HEADERS`, `ALLOWED_HOSTS`, `ALLOWED_DEV_ORIGIN`).
+Copy [.env.example](.env.example) for environment variables. **`SESSION_SECRET` is required** in production containers. Optional settings include `DATABASE_PATH`, `HOST_PORT`, `COOKIE_SECURE`, `PUBLIC_URL`, `TRUST_PROXY_HEADERS`, `ALLOWED_HOSTS`, and `ALLOWED_DEV_ORIGIN`.
 
 ## Container Images
+
+**Production image installs require `SESSION_SECRET`.** Generate one before `docker run` or add it to a `.env` file for Compose (see [Quick start](#quick-start-docker)).
 
 Public source code and releases: [github.com/uniskela/UniHomelabDash](https://github.com/uniskela/UniHomelabDash).
 
@@ -73,10 +75,13 @@ GHCR:
 docker pull ghcr.io/uniskela/unihomelabdash:latest
 docker run -d --name unihomelabdash \
   -p 3000:3000 \
+  -e SESSION_SECRET="$(openssl rand -base64 32)" \
   -v unihomelabdash-data:/app/data \
   --restart unless-stopped \
   ghcr.io/uniskela/unihomelabdash:latest
 ```
+
+For a fixed secret across restarts, use `--env-file .env` instead of `-e SESSION_SECRET=...` (see [.env.example](.env.example)).
 
 Docker Hub:
 
@@ -84,6 +89,7 @@ Docker Hub:
 docker pull uniskela/unihomelabdash:latest
 docker run -d --name unihomelabdash \
   -p 3000:3000 \
+  -e SESSION_SECRET="$(openssl rand -base64 32)" \
   -v unihomelabdash-data:/app/data \
   --restart unless-stopped \
   uniskela/unihomelabdash:latest
@@ -91,7 +97,7 @@ docker run -d --name unihomelabdash \
 
 ### docker-compose (pre-built image)
 
-Use `image` instead of `build` (for example in `docker-compose.override.yml`):
+Use `image` instead of `build` (for example in `docker-compose.override.yml`). Create a `.env` file with `SESSION_SECRET` first (see [Quick start](#quick-start-docker)):
 
 ```yaml
 services:
@@ -103,6 +109,11 @@ services:
       - "${HOST_PORT:-3000}:3000"
     environment:
       DATABASE_PATH: /app/data/unihomelabdash.sqlite
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in a .env file or shell environment}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
     volumes:
       - unihomelabdash-data:/app/data
     restart: unless-stopped
