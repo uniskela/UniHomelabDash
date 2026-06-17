@@ -29,6 +29,12 @@ If port 3000 is already in use:
 HOST_PORT=3003 docker compose up --build
 ```
 
+### Upgrading from v0.3.x
+
+1. Pull or rebuild: `docker compose up --build -d`.
+2. Existing SQLite data and provider settings are preserved. Container actions remain **disabled** until you enable **Allow container actions** in Settings → Integrations.
+3. Optional: switch connection mode to remote TCP/TLS for Docker hosts on another machine. See [SECURITY.md](SECURITY.md).
+
 ### Upgrading from v0.2.x
 
 1. Pull or rebuild the new image: `docker compose up --build -d`.
@@ -160,12 +166,13 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - Installable PWA (home screen / desktop shortcut)
 - SQLite persistence and Docker Compose deployment
 - Single-admin authentication with first-run setup and session cookies
-- Provider system foundation with Docker read-only container status (opt-in socket mount)
+- Provider system foundation with Docker container status (opt-in local socket or remote TCP/TLS)
+- Optional container start/stop/restart with confirmation prompts (disabled by default)
 
 ## What it does not do (yet)
 
 - Multi-user access or OIDC
-- Container start/stop/restart or logs viewer
+- Container logs viewer
 - Portainer or Proxmox integrations
 - Push notifications or alerts
 - Automatic background health polling

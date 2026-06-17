@@ -28,7 +28,11 @@ export default async function ContainersPage() {
       <PageHeader
         eyebrow="Docker"
         title="Containers"
-        description="Read-only container status from your local Docker Engine. Start, stop, and restart actions will arrive in a later release."
+        description={
+          provider && !provider.readOnly
+            ? "Container status and actions from your Docker Engine. Destructive actions require confirmation."
+            : "Read-only container status from your Docker Engine. Enable actions in Settings to start, stop, or restart."
+        }
         actions={
           <>
             <ConnectionPill status={connectionStatus} />
@@ -42,7 +46,12 @@ export default async function ContainersPage() {
         }
       />
 
-      <ContainerList containers={resources} error={error} enabled={enabled} />
+      <ContainerList
+        containers={resources}
+        error={error}
+        enabled={enabled}
+        actionsEnabled={Boolean(provider && !provider.readOnly)}
+      />
     </div>
   );
 }

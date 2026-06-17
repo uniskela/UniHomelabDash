@@ -126,10 +126,15 @@ Each provider should define:
 
 2. Docker read-only container status via opt-in docker.sock mount (behind auth)
 
+### Shipped (v0.4.0)
+
+3. Docker container start/stop/restart with confirmation modals (opt-in)
+4. Remote Docker Engine over TCP/TLS with encrypted credentials
+
 ### Planned
 
-3. Portainer integration if practical
-4. Docker container actions and logs viewer
+5. Portainer integration if practical
+6. Docker logs viewer
 
 Do not start with Proxmox, Arr stack, Jellyfin, Immich, Home Assistant, Kubernetes, or AI until the base app is usable and authenticated where needed.
 
@@ -155,9 +160,14 @@ Do not start with Proxmox, Arr stack, Jellyfin, Immich, Home Assistant, Kubernet
 * Settings integrations UI with connection test
 * Opt-in Docker socket mount via compose override example
 
+### Shipped in v0.4.0
+
+* Container start/stop/restart with confirmation modals (opt-in, read-only default)
+* Remote Docker connection modes: local socket, TCP, TLS
+* Settings UI for connection mode, TLS credentials, and actions toggle
+
 ### Planned (future phases)
 
-* Container start/stop/restart actions with confirmation modals
 * Basic logs viewer
 * Portainer read-only status
 * Background health polling and alerts
@@ -306,11 +316,10 @@ A feature is done when:
 
 ## Current Priority
 
-v0.3.0 shipped: provider system foundation and Docker read-only container status behind auth.
+v0.4.0 shipped: Docker container actions with confirmation modals and remote TCP/TLS connections.
 
 Next focus (see ROADMAP.md):
 
-* Docker container start/stop/restart with confirmation modals
 * Basic logs viewer
 * Portainer read-only integration
 

@@ -52,7 +52,7 @@ Anyone with valid admin credentials can manage services and trigger health check
 
 ## Docker integration (v0.3.0+)
 
-v0.3.0 adds **read-only** Docker container status when you opt in:
+v0.3.0 adds **read-only** Docker container status when you opt in. v0.4.0 adds optional **start/stop/restart** actions and **remote TCP/TLS** connections.
 
 1. Copy [docker-compose.override.example.yml](docker-compose.override.example.yml) to `docker-compose.override.yml`.
 2. Rebuild and restart the stack.
@@ -67,7 +67,21 @@ The default Compose file still does **not** mount the Docker socket.
 - A read-only mount (`:ro`) limits some write paths but is **not** a full security boundary.
 - v0.3.0 only calls read-only Docker APIs, but a compromised app could still attempt privileged operations via the socket.
 - Only enable this on trusted homelab hosts where dashboard access is already restricted.
-- Rotating `SESSION_SECRET` invalidates stored provider credentials (none required for local socket access in v0.3.0).
+- Rotating `SESSION_SECRET` invalidates stored provider credentials (including TLS material for remote Docker).
+
+### Remote Docker (TCP/TLS, v0.4.0+)
+
+- **TCP without TLS** (port 2375) exposes the Docker Engine API on your network. Anyone who can reach that port can control containers on the host. Use only on isolated lab networks or behind a VPN.
+- **TLS mode** (port 2376) is recommended for remote hosts. Store CA, client certificate, and key via Settings; they are encrypted at rest with `SESSION_SECRET`.
+- Prefer local unix socket access when UniHomelabDash runs on the same host as Docker Engine.
+- Container actions are **disabled by default** after upgrade. Enable explicitly in Settings → Integrations → Allow container actions.
+- Start, stop, and restart require confirmation in the UI but still grant significant control over workloads. Restrict dashboard access accordingly.
+
+### Docker actions (v0.4.0+)
+
+- Actions call Docker Engine POST endpoints only (`/containers/{id}/start`, `/stop`, `/restart`). No arbitrary shell commands.
+- Actions are blocked when read-only mode is enabled (default for existing installs).
+- A compromised admin session could trigger disruptive container operations. Treat admin credentials like root access on the Docker host.
 
 ## Health checks
 

@@ -2,7 +2,10 @@ export type ProviderCapability =
   | "service.status"
   | "service.open"
   | "container.list"
-  | "container.status";
+  | "container.status"
+  | "container.start"
+  | "container.stop"
+  | "container.restart";
 
 export type ProviderType = "manual" | "docker" | "portainer";
 
@@ -39,8 +42,13 @@ export type ProviderDefinitionMeta = {
   supportsCredentials: boolean;
 };
 
+import type { DockerConnectionMode } from "@/lib/providers/docker/config";
+
 export type DockerProviderConfig = {
+  mode: DockerConnectionMode;
   socketPath: string;
+  host: string;
+  port: number;
 };
 
 export type ProviderRow = {

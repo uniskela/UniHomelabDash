@@ -264,7 +264,7 @@ Success criteria:
 
 ## Phase 6 — Docker Integration
 
-Status: In progress (read-only shipped in v0.3.0)
+Status: Completed (v0.4.0)
 
 Goal: Show and control Docker containers.
 
@@ -273,22 +273,31 @@ Completed in v0.3.0:
 * List containers (read-only)
 * Container status, image name, ports, created/uptime summary
 * Connection test from Settings
-* `/containers` page with mobile-first detail sheet
+* `/containers` page with mobile-first detail modal
+
+Completed in v0.4.0:
+
+* Start, stop, restart with confirmation modals (opt-in via Settings)
+* Local unix socket, remote TCP, and remote TLS connection modes
+* TLS credentials stored encrypted (not in config JSON)
 
 Remaining:
 
-Safety:
+* Basic logs viewer (`GET /containers/{id}/logs`)
 
-* Require confirmation for start/stop/restart.
-* Show affected container name.
-* Redact secrets from logs where possible.
-* Do not allow arbitrary shell commands.
+Safety (v0.4.0):
+
+* Require confirmation for start/stop/restart. (met)
+* Show affected container name. (met)
+* Redact secrets from logs where possible. (met)
+* Do not allow arbitrary shell commands. (met)
+* Actions disabled by default on upgrade. (met)
 
 Success criteria:
 
-* User can see containers from UniHomelabDash.
-* User can safely restart a container from mobile.
-* Logs viewer is useful for quick checks.
+* User can see containers from UniHomelabDash. (met)
+* User can safely restart a container from mobile. (met)
+* Logs viewer is useful for quick checks. (planned)
 
 ---
 

@@ -112,7 +112,7 @@ export default async function SettingsPage() {
               Integrations
             </CardTitle>
             <CardDescription>
-              Connect homelab providers behind authentication. Docker is read-only in v0.3.0.
+              Connect homelab providers behind authentication. Docker supports read-only status, optional actions, and remote TCP/TLS.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">

@@ -66,6 +66,31 @@ export async function listProviderResources(
   }
 }
 
+export async function executeProviderAction(
+  providerType: ProviderType,
+  action: string,
+  resourceId: string
+): Promise<{ ok: boolean; message: string }> {
+  const row = listEnabledProviderRows().find((item) => item.type === providerType);
+  if (!row) {
+    return { ok: false, message: "Provider is not configured or enabled." };
+  }
+
+  const handler = getProviderHandler(providerType);
+  if (!handler?.executeAction) {
+    return { ok: false, message: "This provider does not support actions." };
+  }
+
+  try {
+    return await handler.executeAction(buildProviderContext(toProviderRow(row)), action, resourceId);
+  } catch (error) {
+    return {
+      ok: false,
+      message: redactSecrets(error instanceof Error ? error.message : "Action failed."),
+    };
+  }
+}
+
 async function updateProviderTestState(
   providerId: string,
   result: ConnectionTestResult

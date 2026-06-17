@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   configureDockerProviderAction,
   testDockerProviderAction,
 } from "@/lib/providers/actions";
 import { initialProviderActionState } from "@/lib/providers/action-state";
+import type { DockerConnectionMode } from "@/lib/providers/docker/config";
 import type { ProviderPublicView } from "@/lib/providers/types";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +22,14 @@ export function DockerIntegrationSettings({
 }: {
   provider: ProviderPublicView | null;
 }) {
+  const initialMode =
+    provider?.config.mode === "tcp" || provider?.config.mode === "tls"
+      ? provider.config.mode
+      : "local";
+
   const [enabled, setEnabled] = useState(provider?.enabled ?? false);
+  const [allowActions, setAllowActions] = useState(provider ? !provider.readOnly : false);
+  const [connectionMode, setConnectionMode] = useState<DockerConnectionMode>(initialMode);
   const [configureState, configureAction, configurePending] = useActionState(
     configureDockerProviderAction,
     initialProviderActionState
@@ -34,6 +43,14 @@ export function DockerIntegrationSettings({
     typeof provider?.config.socketPath === "string"
       ? provider.config.socketPath
       : "/var/run/docker.sock";
+  const host =
+    typeof provider?.config.host === "string" ? provider.config.host : "127.0.0.1";
+  const port =
+    typeof provider?.config.port === "number"
+      ? String(provider.config.port)
+      : connectionMode === "tls"
+        ? "2376"
+        : "2375";
 
   const statusMessage =
     testState.message ||
@@ -48,11 +65,10 @@ export function DockerIntegrationSettings({
         <div className="flex items-center justify-between gap-4 rounded-xl border border-border/80 bg-muted/20 p-4">
           <div className="space-y-1">
             <Label htmlFor="docker-enabled" className="text-sm font-medium">
-              Enable Docker read-only status
+              Enable Docker integration
             </Label>
             <p className="text-sm text-muted-foreground">
-              List containers from a local Docker Engine socket. No start, stop, or restart in
-              this release.
+              List containers from a local socket or remote Docker Engine API.
             </p>
           </div>
           <Switch
@@ -64,19 +80,102 @@ export function DockerIntegrationSettings({
           <input type="hidden" name="enabled" value={enabled ? "true" : "false"} />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="socketPath">Docker socket path</Label>
-          <div className="rounded-lg border border-border/80 bg-muted/30 p-3">
-            <Input
-              id="socketPath"
-              name="socketPath"
-              defaultValue={socketPath}
-              placeholder="/var/run/docker.sock"
-              disabled={configurePending}
-              className="border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0"
-            />
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-border/80 bg-muted/20 p-4">
+          <div className="space-y-1">
+            <Label htmlFor="allow-actions" className="text-sm font-medium">
+              Allow container actions
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              Enable start, stop, and restart with confirmation prompts. Off by default.
+            </p>
           </div>
+          <Switch
+            id="allow-actions"
+            checked={allowActions}
+            onCheckedChange={setAllowActions}
+            disabled={configurePending}
+          />
+          <input type="hidden" name="allowActions" value={allowActions ? "true" : "false"} />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="connectionMode">Connection mode</Label>
+          <select
+            id="connectionMode"
+            name="connectionMode"
+            value={connectionMode}
+            onChange={(event) =>
+              setConnectionMode(event.target.value as DockerConnectionMode)
+            }
+            disabled={configurePending}
+            className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
+          >
+            <option value="local">Local unix socket</option>
+            <option value="tcp">Remote TCP</option>
+            <option value="tls">Remote TCP with TLS</option>
+          </select>
+        </div>
+
+        {connectionMode === "local" ? (
+          <div className="space-y-2">
+            <Label htmlFor="socketPath">Docker socket path</Label>
+            <div className="rounded-lg border border-border/80 bg-muted/30 p-3">
+              <Input
+                id="socketPath"
+                name="socketPath"
+                defaultValue={socketPath}
+                placeholder="/var/run/docker.sock"
+                disabled={configurePending}
+                className="border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="host">Host</Label>
+              <Input
+                id="host"
+                name="host"
+                defaultValue={host}
+                placeholder="192.168.1.10"
+                disabled={configurePending}
+                className="font-mono text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="port">Port</Label>
+              <Input
+                id="port"
+                name="port"
+                defaultValue={port}
+                placeholder={connectionMode === "tls" ? "2376" : "2375"}
+                disabled={configurePending}
+                className="font-mono text-sm"
+              />
+            </div>
+          </div>
+        )}
+
+        {connectionMode === "tls" ? (
+          <div className="space-y-4 rounded-xl border border-border/80 bg-muted/20 p-4">
+            <p className="text-sm text-muted-foreground">
+              Paste PEM contents for TLS. Leave blank to keep existing stored credentials.
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="tlsCa">CA certificate</Label>
+              <Textarea id="tlsCa" name="tlsCa" rows={3} className="font-mono text-xs" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tlsCert">Client certificate</Label>
+              <Textarea id="tlsCert" name="tlsCert" rows={3} className="font-mono text-xs" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tlsKey">Client key</Label>
+              <Textarea id="tlsKey" name="tlsKey" rows={3} className="font-mono text-xs" />
+            </div>
+          </div>
+        ) : null}
 
         {configureState.message ? (
           <p
@@ -111,7 +210,7 @@ export function DockerIntegrationSettings({
       {provider ? <form id="docker-test-form" action={testAction} className="hidden" /> : null}
 
       <div className="space-y-4 rounded-xl border border-border/80 bg-card/40 p-4">
-        <h3 className="text-sm font-medium">Setup steps</h3>
+        <h3 className="text-sm font-medium">Local socket setup</h3>
         <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
           <li>
             Copy <code className="text-xs">docker-compose.override.example.yml</code> to{" "}
@@ -123,6 +222,9 @@ export function DockerIntegrationSettings({
           <li>Recreate the container, then enable Docker above</li>
           <li>Run Test connection and open the Containers page</li>
         </ol>
+        <p className="text-sm text-muted-foreground">
+          For remote hosts, use TCP/TLS mode instead. Prefer TLS or VPN-only access on your LAN.
+        </p>
       </div>
 
       {provider && provider.enabled ? (

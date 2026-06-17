@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Box, Settings } from "lucide-react";
+import { useActionState, useMemo, useState } from "react";
+import { Box, Play, RotateCcw, Settings, Square } from "lucide-react";
 import { ContainerStatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { StatTile, StatTileGrid } from "@/components/stat-tile";
@@ -10,12 +10,17 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { initialProviderActionState } from "@/lib/providers/action-state";
+import { executeContainerAction } from "@/lib/providers/actions";
 import type { ProviderResource } from "@/lib/providers/types";
 import { cn } from "@/lib/utils";
+
+type ContainerAction = "start" | "stop" | "restart";
 
 type ContainerFilter = "all" | "running" | "stopped";
 
@@ -37,13 +42,21 @@ export function ContainerList({
   containers,
   error,
   enabled,
+  actionsEnabled = false,
 }: {
   containers: ProviderResource[];
   error?: string | null;
   enabled: boolean;
+  actionsEnabled?: boolean;
 }) {
   const [selected, setSelected] = useState<ProviderResource | null>(null);
+  const [pendingAction, setPendingAction] = useState<ContainerAction | null>(null);
+  const [submittedAction, setSubmittedAction] = useState<ContainerAction | null>(null);
   const [filter, setFilter] = useState<ContainerFilter>("all");
+  const [actionState, actionFormAction, actionPending] = useActionState(
+    executeContainerAction,
+    initialProviderActionState
+  );
 
   const filteredContainers = useMemo(() => {
     if (filter === "running") {
@@ -231,12 +244,158 @@ export function ContainerList({
                   </>
                 ) : null}
               </div>
+              {actionsEnabled ? (
+                <div className="flex flex-wrap gap-2 border-t border-border/80 p-4">
+                  {isStopped(selected.status) ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setSubmittedAction(null);
+                        setPendingAction("start");
+                      }}
+                      disabled={actionPending}
+                    >
+                      <Play />
+                      Start
+                    </Button>
+                  ) : null}
+                  {isRunning(selected.status) ? (
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSubmittedAction(null);
+                          setPendingAction("stop");
+                        }}
+                        disabled={actionPending}
+                      >
+                        <Square />
+                        Stop
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSubmittedAction(null);
+                          setPendingAction("restart");
+                        }}
+                        disabled={actionPending}
+                      >
+                        <RotateCcw />
+                        Restart
+                      </Button>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
             </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(selected && pendingAction)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingAction(null);
+            setSubmittedAction(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          {selected && pendingAction ? (
+            actionState.ok &&
+            actionState.message &&
+            submittedAction === pendingAction &&
+            !actionPending ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Action complete</DialogTitle>
+                  <DialogDescription>{actionState.message}</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setPendingAction(null);
+                      setSelected(null);
+                    }}
+                  >
+                    Close
+                  </Button>
+                </DialogFooter>
+              </>
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{actionTitle(pendingAction)}</DialogTitle>
+                  <DialogDescription>
+                    {actionDescription(pendingAction, selected.name)}
+                  </DialogDescription>
+                </DialogHeader>
+                {actionState.message && !actionState.ok ? (
+                  <p className="text-sm text-destructive" role="alert">
+                    {actionState.message}
+                  </p>
+                ) : null}
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setPendingAction(null)}
+                    disabled={actionPending}
+                  >
+                    Cancel
+                  </Button>
+                  <form
+                    action={actionFormAction}
+                    onSubmit={() => setSubmittedAction(pendingAction)}
+                  >
+                    <input type="hidden" name="containerId" value={selected.id} />
+                    <input type="hidden" name="action" value={pendingAction} />
+                    <Button
+                      type="submit"
+                      variant={pendingAction === "stop" ? "destructive" : "default"}
+                      disabled={actionPending}
+                    >
+                      {actionPending ? "Working..." : actionConfirmLabel(pendingAction)}
+                    </Button>
+                  </form>
+                </DialogFooter>
+              </>
+            )
           ) : null}
         </DialogContent>
       </Dialog>
     </>
   );
+}
+
+function actionTitle(action: ContainerAction) {
+  if (action === "start") return "Start container";
+  if (action === "stop") return "Stop container";
+  return "Restart container";
+}
+
+function actionDescription(action: ContainerAction, name: string) {
+  if (action === "start") {
+    return `Start "${name}"? The container will begin running on your Docker host.`;
+  }
+  if (action === "stop") {
+    return `Stop "${name}"? Running processes inside the container will be stopped.`;
+  }
+  return `Restart "${name}"? The container will stop and start again.`;
+}
+
+function actionConfirmLabel(action: ContainerAction) {
+  if (action === "start") return "Start container";
+  if (action === "stop") return "Stop container";
+  return "Restart container";
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
