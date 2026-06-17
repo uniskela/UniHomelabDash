@@ -1,6 +1,6 @@
 {
   "name": "unihomelabdash",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Self-hosted homelab PWA for manual services and on-demand health checks",
   "license": "MIT",
   "private": true,
@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
+    "reset-admin": "node scripts/reset-admin.mjs",
     "test": "node --import tsx --test src/lib/auth/*.test.ts src/lib/request/*.test.ts",
     "screenshots": "node scripts/capture-screenshots.mjs",
     "icons:export": "node scripts/export-icons.mjs"

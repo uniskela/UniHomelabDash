@@ -237,9 +237,32 @@ npm run build
 npm run start:lan    # production server on 0.0.0.0:3004
 npm run db:generate
 npm run db:migrate
+npm run reset-admin  # recover admin access (see below)
 npm run test
 npm run screenshots  # capture docs/screenshots (requires build)
 ```
+
+## Locked out of the admin account?
+
+If you forget the admin password, reset it against the SQLite database.
+
+**Docker Compose** (non-interactive password via env):
+
+```bash
+RESET_ADMIN_PASSWORD='your-new-password' \
+  docker compose exec unihomelabdash \
+  node scripts/reset-admin.mjs --username admin --confirm
+```
+
+**Local development:**
+
+```bash
+npm run reset-admin -- --username admin --confirm
+```
+
+The script updates the single admin user (or creates one if missing) and marks setup complete. It requires `--confirm` and never prints the password.
+
+Change your password from **Settings** while signed in.
 
 ## Security
 

@@ -83,6 +83,18 @@ v0.2.0 requires **single-admin login** for dashboard access. Set `SESSION_SECRET
 
 Report vulnerabilities via [GitHub Security Advisories](https://github.com/uniskela/UniHomelabDash/security/advisories/new) (see SECURITY.md).
 
+## Recovering admin access (operators)
+
+UniHomelabDash uses a single admin account. If you are locked out:
+
+```bash
+RESET_ADMIN_PASSWORD='your-new-password' \
+  docker compose exec unihomelabdash \
+  node scripts/reset-admin.mjs --username admin --confirm
+```
+
+For a local SQLite file, run `npm run reset-admin -- --username admin --confirm` instead. Signed-in users can also change password from Settings.
+
 ## Proposing integrations
 
 New homelab integrations should be discussed in an issue before substantial implementation.

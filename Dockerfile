@@ -29,6 +29,7 @@ LABEL org.opencontainers.image.title="UniHomelabDash" \
 RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/drizzle ./drizzle
+COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 RUN mkdir -p /app/data && chown -R nextjs:nextjs /app/data

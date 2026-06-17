@@ -16,6 +16,7 @@ import {
 } from "@/lib/auth/session";
 import { isSetupComplete } from "@/lib/settings/store";
 import { SETTING_KEYS } from "@/lib/settings/keys";
+import { requireAuth } from "@/lib/auth/session-user";
 import type { AuthActionState } from "@/lib/auth/types";
 
 export async function setupAdminAction(
@@ -164,6 +165,62 @@ export async function loginAction(
   }
 
   return { ok: true, message: "Signed in." };
+}
+
+export async function changePasswordAction(
+  _previousState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  if (isAuthDisabled()) {
+    return { ok: false, message: "Password changes are disabled while AUTH_DISABLED is true." };
+  }
+
+  const sessionUser = await requireAuth();
+  const currentPassword = readField(formData, "currentPassword");
+  const newPassword = readField(formData, "newPassword");
+  const confirmPassword = readField(formData, "confirmPassword");
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return { ok: false, message: "Enter your current password and the new password twice." };
+  }
+
+  if (newPassword.length < 8) {
+    return { ok: false, message: "New password must be at least 8 characters." };
+  }
+
+  if (passwordExceedsBcryptLimit(newPassword)) {
+    return { ok: false, message: "New password must be at most 72 bytes." };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { ok: false, message: "New passwords do not match." };
+  }
+
+  const [user] = getDb().select().from(users).where(eq(users.id, sessionUser.id)).limit(1).all();
+  if (!user) {
+    return { ok: false, message: "Your account could not be found." };
+  }
+
+  const valid = await verifyPassword(currentPassword, user.passwordHash);
+  if (!valid) {
+    return { ok: false, message: "Current password is incorrect." };
+  }
+
+  const samePassword = await verifyPassword(newPassword, user.passwordHash);
+  if (samePassword) {
+    return { ok: false, message: "Choose a password different from your current one." };
+  }
+
+  const now = new Date().toISOString();
+  const passwordHash = await hashPassword(newPassword);
+
+  getDb()
+    .update(users)
+    .set({ passwordHash, updatedAt: now })
+    .where(eq(users.id, user.id))
+    .run();
+
+  return { ok: true, message: "Password updated." };
 }
 
 export async function logoutAction() {

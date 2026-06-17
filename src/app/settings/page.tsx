@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Bell, Download, HeartPulse, LockKeyhole, ShieldAlert } from "lucide-react";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { ChangePasswordForm } from "@/components/auth/change-password-form";
 import { SettingsAdvanced } from "@/components/settings-advanced";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -146,6 +147,7 @@ export default async function SettingsPage() {
                   Signed in as <strong className="text-foreground">{sessionUser?.username}</strong>.
                 </p>
                 <LogoutButton />
+                <ChangePasswordForm />
               </>
             )}
           </CardContent>
