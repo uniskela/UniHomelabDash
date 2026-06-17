@@ -29,6 +29,13 @@ If port 3000 is already in use:
 HOST_PORT=3003 docker compose up --build
 ```
 
+### Upgrading from v0.2.x
+
+1. Pull or rebuild the new image: `docker compose up --build -d`.
+2. Existing SQLite data in your mounted volume is preserved; the app runs a migration for the new `providers` table on startup.
+3. Optional: enable Docker read-only status by copying [docker-compose.override.example.yml](docker-compose.override.example.yml) to `docker-compose.override.yml`, then enable the integration in **Settings → Integrations**.
+4. See [SECURITY.md](SECURITY.md) before mounting `/var/run/docker.sock`.
+
 ### Upgrading from v0.1.0
 
 1. Add `SESSION_SECRET` to your `.env` (see [.env.example](.env.example)).
@@ -153,11 +160,13 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - Installable PWA (home screen / desktop shortcut)
 - SQLite persistence and Docker Compose deployment
 - Single-admin authentication with first-run setup and session cookies
+- Provider system foundation with Docker read-only container status (opt-in socket mount)
 
 ## What it does not do (yet)
 
 - Multi-user access or OIDC
-- Docker, Portainer, or Proxmox integrations
+- Container start/stop/restart or logs viewer
+- Portainer or Proxmox integrations
 - Push notifications or alerts
 - Automatic background health polling
 

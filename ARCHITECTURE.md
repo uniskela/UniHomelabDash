@@ -198,6 +198,30 @@ Native apps:
 
 ---
 
+## Provider layer (v0.3.0)
+
+Server-side provider code lives under `src/lib/providers/`:
+
+* `types.ts` — capability and resource contracts
+* `registry.ts` — built-in provider registration
+* `runtime.ts` — connection tests and resource listing with error isolation
+* `credentials.ts` — AES-GCM encryption for future API tokens (key derived from `SESSION_SECRET`)
+* `manual/` — virtual adapter over existing `services` table
+* `docker/` — read-only Docker Engine socket client (native HTTP over unix socket)
+
+Configured provider instances persist in the SQLite `providers` table. The manual provider remains virtual (no DB row) so existing installs keep working without migration of service data.
+
+Docker connection model for v0.3.0:
+
+* Default Compose file does not mount `/var/run/docker.sock`.
+* Operators opt in via `docker-compose.override.example.yml` (read-only socket mount).
+* Settings UI enables the integration and runs connection tests.
+* Container list is exposed at `/containers` and via authenticated API routes only.
+
+Future Docker actions (start/stop/restart, logs) will require explicit confirmation UI and remain server-side only.
+
+---
+
 ## Immediate Build Scope
 
 The first build must stay focused on the smallest useful product.
@@ -241,9 +265,9 @@ Authentication decision:
 
 UniHomelabDash is a control-plane app. It must treat integrations and actions as privileged operations.
 
-**Current state (v0.2.0):** Single-admin authentication is required for dashboard access. First-run setup creates the admin account; sessions use signed HTTP-only cookies. See [SECURITY.md](SECURITY.md) for deployment guidance (`SESSION_SECRET`, optional `COOKIE_SECURE` behind HTTPS).
+**Current state (v0.3.0):** Single-admin authentication is required for dashboard access. Provider system foundation ships with a read-only Docker integration (opt-in socket mount). See [SECURITY.md](SECURITY.md) for deployment guidance (`SESSION_SECRET`, optional `COOKIE_SECURE` behind HTTPS, Docker socket risks).
 
-**Next state (Phase 5+):** Provider system foundation, then privileged integrations behind confirmed actions.
+**Next state (Phase 6 remainder):** Docker container actions and logs viewer behind confirmed actions.
 
 Required rules:
 

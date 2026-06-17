@@ -48,7 +48,26 @@ Anyone with valid admin credentials can manage services and trigger health check
 1. Put UniHomelabDash behind a reverse proxy (nginx, Caddy, Traefik) with **HTTPS**.
 2. Add access control (Authelia, Authentik, OAuth2 proxy, or VPN-only access) if the login page could be reached by untrusted users.
 3. Set a long random `SESSION_SECRET` (for example `openssl rand -base64 32`).
-4. Do not mount `/var/run/docker.sock` until provider integrations and action safety ship.
+4. Do not mount `/var/run/docker.sock` until you understand the risks below.
+
+## Docker integration (v0.3.0+)
+
+v0.3.0 adds **read-only** Docker container status when you opt in:
+
+1. Copy [docker-compose.override.example.yml](docker-compose.override.example.yml) to `docker-compose.override.yml`.
+2. Rebuild and restart the stack.
+3. Enable the integration in **Settings → Integrations** and run **Test connection**.
+
+The default Compose file still does **not** mount the Docker socket.
+
+### Docker socket risks
+
+- Mounting `/var/run/docker.sock` gives the UniHomelabDash process access to Docker Engine on the host.
+- The socket is usually `root:docker` with mode `660`. The container runs as user `nextjs`, so the compose override must include `group_add` with your host docker GID (`DOCKER_GID` in `.env`).
+- A read-only mount (`:ro`) limits some write paths but is **not** a full security boundary.
+- v0.3.0 only calls read-only Docker APIs, but a compromised app could still attempt privileged operations via the socket.
+- Only enable this on trusted homelab hosts where dashboard access is already restricted.
+- Rotating `SESSION_SECRET` invalidates stored provider credentials (none required for local socket access in v0.3.0).
 
 ## Health checks
 

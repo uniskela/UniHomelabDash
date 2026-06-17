@@ -24,7 +24,7 @@ export function SettingsAdvanced({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2">
@@ -48,7 +48,7 @@ export function SettingsAdvanced({
         </div>
       </CardHeader>
       {open ? (
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-4 pt-0 text-sm">
           <div>
             <div className="text-muted-foreground">Database path</div>
             <code className="mt-1 block overflow-x-auto rounded-lg bg-muted px-3 py-2 text-xs">
@@ -68,14 +68,14 @@ export function SettingsAdvanced({
               Planned integrations
             </div>
             <ul className="grid gap-2 text-muted-foreground sm:grid-cols-3">
-              <li className="rounded-lg border bg-muted/30 p-3">Docker monitoring</li>
-              <li className="rounded-lg border bg-muted/30 p-3">Portainer actions</li>
-              <li className="rounded-lg border bg-muted/30 p-3">Proxmox and media apps</li>
+              <li className="rounded-lg border bg-muted/30 p-3">Docker read-only status</li>
+              <li className="rounded-lg border bg-muted/30 p-3">Docker actions and logs</li>
+              <li className="rounded-lg border bg-muted/30 p-3">Portainer, Proxmox, media apps</li>
             </ul>
             <p className="mt-2 text-muted-foreground">
               {authEnabled
-                ? "Authentication is enabled. Privileged integrations still require the provider system before they ship."
-                : "These require authentication and a safer provider model before they ship."}
+                ? "Docker read-only status is available when you mount the socket and enable the integration above."
+                : "Enable authentication before using provider integrations in production."}
             </p>
           </div>
         </CardContent>

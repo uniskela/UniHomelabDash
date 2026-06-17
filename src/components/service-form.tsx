@@ -33,7 +33,7 @@ export function ServiceForm({
   }, [onSaved, service, state.ok]);
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-4 px-4 pb-4">
+    <form ref={formRef} action={formAction} className="space-y-4">
       {service ? <input type="hidden" name="id" value={service.id} /> : null}
 
       <Field label="Name" htmlFor="name" required>

@@ -7,10 +7,10 @@ on:
   pull_request:
     branches:
       - main
-  
-  permissions:
-    contents: read
-  
+
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest

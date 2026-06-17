@@ -240,53 +240,42 @@ Success criteria:
 
 ## Phase 5 — Provider System
 
-Status: Planned
+Status: Completed (v0.3.0)
 
 Goal: Build the foundation for integrations.
 
-Provider contract should support:
+Completed:
 
-* Connection test
-* Read-only data fetch
-* Available actions
-* Action execution
-* Safety metadata
-* Credential requirements
-* Error handling
-
-Initial provider types:
-
-* Manual provider
-* Docker provider
-* Portainer provider
+* Typed provider contract with capabilities and safety metadata
+* Provider registry and runtime with per-provider error isolation
+* SQLite `providers` table and encrypted credential storage helper
+* Virtual manual provider adapter over existing services
+* Docker provider (read-only) with Settings configuration and connection test
+* Authenticated API routes for provider discovery and container listing
 
 Success criteria:
 
-* Providers can be added without rewriting the dashboard.
-* UI can discover provider capabilities.
-* Unsupported actions are hidden or disabled.
-* Failed providers do not crash the app.
+* Providers can be added without rewriting the dashboard. (met)
+* UI can discover provider capabilities. (met)
+* Unsupported actions are hidden or disabled. (met — Docker actions rejected in read-only mode)
+* Failed providers do not crash the app. (met)
 
 ---
 
 ## Phase 6 — Docker Integration
 
-Status: Planned
+Status: In progress (read-only shipped in v0.3.0)
 
 Goal: Show and control Docker containers.
 
-Features:
+Completed in v0.3.0:
 
-* List containers.
-* Container status.
-* Image name.
-* Uptime/created time.
-* Ports.
-* Basic resource usage if available.
-* Start container.
-* Stop container.
-* Restart container.
-* View recent logs.
+* List containers (read-only)
+* Container status, image name, ports, created/uptime summary
+* Connection test from Settings
+* `/containers` page with mobile-first detail sheet
+
+Remaining:
 
 Safety:
 

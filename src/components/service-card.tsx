@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 import { ArrowUpRight, HeartPulse, MoreVertical, Pencil, Trash2 } from "lucide-react";
-import type { HealthStatus, ManualService } from "@/lib/services/types";
+import type { ManualService } from "@/lib/services/types";
 import {
   checkServiceHealthAction,
   deleteServiceAction,
 } from "@/lib/services/actions";
-import { Badge } from "@/components/ui/badge";
+import { HealthBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -50,7 +49,7 @@ export function ServiceCard({
     <>
       <Card
         className={cn(
-          "cursor-pointer transition hover:ring-foreground/20",
+          "cursor-pointer border-border/80 bg-card/80 transition hover:border-primary/20 hover:bg-card",
           "focus-within:ring-2 focus-within:ring-ring/50"
         )}
         onClick={(event) => {
@@ -74,19 +73,26 @@ export function ServiceCard({
         role="group"
         aria-label={`${service.name} service card`}
       >
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-base">
-              {service.icon || service.name.slice(0, 1).toUpperCase()}
+        <CardHeader className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle className="flex min-w-0 items-center gap-3">
+              <span
+                className={cn(
+                  "grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-base ring-1 ring-border/60",
+                  service.healthStatus === "degraded" && "ring-primary/40"
+                )}
+              >
+                {service.icon || service.name.slice(0, 1).toUpperCase()}
+              </span>
+              <span className="min-w-0 truncate">{service.name}</span>
+            </CardTitle>
+            <span className="shrink-0 rounded-full bg-muted/60 px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
+              {service.category}
             </span>
-            <span className="min-w-0 truncate">{service.name}</span>
-          </CardTitle>
-          <CardDescription className="truncate">
+          </div>
+          <CardDescription className="truncate font-mono text-xs">
             {service.host || service.url}
           </CardDescription>
-          <CardAction>
-            <Badge variant="outline">{service.category}</Badge>
-          </CardAction>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -99,7 +105,9 @@ export function ServiceCard({
           </div>
 
           {service.healthStatus === "degraded" && service.healthErrorMessage ? (
-            <p className="text-sm text-amber-300/90">{service.healthErrorMessage}</p>
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-100/90">
+              {service.healthErrorMessage}
+            </div>
           ) : null}
 
           {!service.healthUrl ? (
@@ -109,12 +117,13 @@ export function ServiceCard({
           ) : null}
 
           {service.notes ? (
-            <p className="line-clamp-3 text-sm text-muted-foreground">{service.notes}</p>
+            <p className="line-clamp-2 text-sm text-muted-foreground">{service.notes}</p>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="secondary"
+              size="sm"
               onClick={(event) => {
                 event.stopPropagation();
                 openService();
@@ -129,6 +138,23 @@ export function ServiceCard({
               <Button
                 type="submit"
                 variant="outline"
+                size="icon-sm"
+                className="sm:hidden"
+                disabled={!service.healthUrl}
+                title={
+                  service.healthUrl
+                    ? "Run health check now"
+                    : "Add a health check URL in Edit to enable checks"
+                }
+                aria-label="Check health"
+              >
+                <HeartPulse />
+              </Button>
+              <Button
+                type="submit"
+                variant="outline"
+                size="sm"
+                className="hidden sm:inline-flex"
                 disabled={!service.healthUrl}
                 title={
                   service.healthUrl
@@ -146,7 +172,7 @@ export function ServiceCard({
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    size="icon"
+                    size="icon-sm"
                     aria-label={`More actions for ${service.name}`}
                     onClick={(event) => event.stopPropagation()}
                   >
@@ -199,22 +225,6 @@ export function ServiceCard({
         </Dialog>
       ) : null}
     </>
-  );
-}
-
-export function HealthBadge({ status }: { status: HealthStatus }) {
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        "capitalize",
-        status === "healthy" && "border-rose-400/40 bg-rose-400/10 text-rose-300",
-        status === "degraded" && "border-amber-500/40 bg-amber-500/10 text-amber-300",
-        status === "unknown" && "border-border bg-muted/40 text-muted-foreground"
-      )}
-    >
-      {status}
-    </Badge>
   );
 }
 

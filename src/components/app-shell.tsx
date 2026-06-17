@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Settings, Server } from "lucide-react";
+import { Home, Settings, Server, Box } from "lucide-react";
 import { BrandIcon } from "@/components/brand-icon";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/services", label: "Services", icon: Server },
+  { href: "/containers", label: "Containers", icon: Box },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -39,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         Skip to content
       </a>
 
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-card/60 p-4 backdrop-blur lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-sidebar/95 p-4 backdrop-blur lg:block">
         <Brand />
         <nav className="mt-8 space-y-1" aria-label="Main">
           {navItems.map((item) => (
@@ -59,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur lg:hidden"
         aria-label="Main"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-3 gap-1">
+        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
           {navItems.map((item) => (
             <MobileNavLink
               key={item.href}
@@ -99,8 +100,8 @@ function NavLink({
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
-        active && "bg-muted text-foreground"
+        "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
+        active && "border-primary bg-primary/5 text-foreground"
       )}
     >
       <Icon className="size-4" />
@@ -124,7 +125,7 @@ function MobileNavLink({
       aria-current={active ? "page" : undefined}
       className={cn(
         "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs text-muted-foreground",
-        active && "bg-muted text-foreground"
+        active && "bg-primary/5 font-semibold text-primary"
       )}
     >
       <Icon className="size-4" />

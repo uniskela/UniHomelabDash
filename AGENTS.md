@@ -122,10 +122,14 @@ Each provider should define:
 
 1. Manual services/bookmarks with on-demand HTTP health checks
 
-### Planned (not in v0.1.0)
+### Shipped (v0.3.0)
 
-2. Docker container status via a controlled API proxy (not raw socket access without auth)
+2. Docker read-only container status via opt-in docker.sock mount (behind auth)
+
+### Planned
+
 3. Portainer integration if practical
+4. Docker container actions and logs viewer
 
 Do not start with Proxmox, Arr stack, Jellyfin, Immich, Home Assistant, Kubernetes, or AI until the base app is usable and authenticated where needed.
 
@@ -144,12 +148,18 @@ Do not start with Proxmox, Arr stack, Jellyfin, Immich, Home Assistant, Kubernet
 * Docker Compose deployment (no Docker socket mount)
 * README with screenshots
 
+### Shipped in v0.3.0
+
+* Provider system foundation (registry, capabilities, encrypted credentials helper)
+* Docker read-only container list and `/containers` page
+* Settings integrations UI with connection test
+* Opt-in Docker socket mount via compose override example
+
 ### Planned (future phases)
 
-* Docker/Portainer container list and read-only status
 * Container start/stop/restart actions with confirmation modals
 * Basic logs viewer
-* Authentication and session management
+* Portainer read-only status
 * Background health polling and alerts
 
 ## Safety Rules
@@ -296,11 +306,12 @@ A feature is done when:
 
 ## Current Priority
 
-v0.2.0 shipped: manual-services PWA with on-demand health checks, SQLite persistence, Docker Compose deployment, and single-admin authentication.
+v0.3.0 shipped: provider system foundation and Docker read-only container status behind auth.
 
 Next focus (see ROADMAP.md):
 
-* Provider system foundation for future integrations
-* Docker/Portainer read-only status only when explicitly scoped and behind auth
+* Docker container start/stop/restart with confirmation modals
+* Basic logs viewer
+* Portainer read-only integration
 
 Do not chase every homelab integration at once.
