@@ -19,13 +19,14 @@ export async function POST(
   }
 
   const { id } = await context.params;
-  const body = (await request.json().catch(() => null)) as { action?: string } | null;
+  const body = (await request.json().catch(() => null)) as { action?: string; providerId?: string } | null;
   const action = body?.action;
+  const providerId = body?.providerId?.trim();
 
   if (!action || !["start", "stop", "restart"].includes(action)) {
     return NextResponse.json({ error: "action must be start, stop, or restart." }, { status: 400 });
   }
 
-  const result = await executeProviderAction("docker", action, id);
+  const result = await executeProviderAction("docker", action, id, providerId);
   return NextResponse.json(result, { status: result.ok ? 200 : 502 });
 }

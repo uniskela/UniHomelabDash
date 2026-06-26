@@ -1,7 +1,11 @@
-import "server-only";
+if (process.env.npm_lifecycle_event !== "test") {
+  void import("server-only");
+}
+
 import http from "node:http";
 import https from "node:https";
 import type { DockerProviderConfig, DockerTlsCredentials } from "@/lib/providers/docker/config";
+import type { ContainerLogsOptions } from "@/lib/providers/types";
 
 type DockerListItem = {
   Id: string;
@@ -130,6 +134,30 @@ export async function listDockerContainers(
     credentials,
     path: "/containers/json?all=1",
   });
+}
+
+export async function getDockerContainerLogs(
+  config: DockerProviderConfig,
+  credentials: DockerTlsCredentials,
+  containerId: string,
+  options: ContainerLogsOptions = {}
+) {
+  const tail = Number.isFinite(options.tail) ? Math.max(1, Math.trunc(options.tail ?? 200)) : 200;
+  const timestamps = options.timestamps ?? true;
+  const params = new URLSearchParams({
+    stdout: "1",
+    stderr: "1",
+    tail: String(tail),
+    timestamps: timestamps ? "1" : "0",
+  });
+
+  const logs = await dockerRequest<string | undefined>({
+    config,
+    credentials,
+    path: `/containers/${encodeURIComponent(containerId)}/logs?${params.toString()}`,
+  });
+
+  return logs ?? "";
 }
 
 export async function runDockerContainerAction(

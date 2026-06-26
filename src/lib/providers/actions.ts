@@ -5,13 +5,19 @@ import { AuthError } from "@/lib/auth/types";
 import { requireAuth } from "@/lib/auth/session-user";
 import type { DockerConnectionMode } from "@/lib/providers/docker/config";
 import {
+  getProviderRowById,
   getProviderRowByType,
   listProviderDefinitions,
   rowToPublicView,
   toProviderRow,
 } from "@/lib/providers/registry";
 import { executeProviderAction, testProviderConnection } from "@/lib/providers/runtime";
-import { upsertDockerProvider } from "@/lib/providers/store";
+import {
+  createDockerProvider,
+  deleteProviderById,
+  listProvidersByType,
+  upsertDockerProvider,
+} from "@/lib/providers/store";
 import type { ProviderPublicView } from "@/lib/providers/types";
 import type { ProviderActionState } from "@/lib/providers/action-state";
 
@@ -26,9 +32,25 @@ export async function getDockerProviderAction(): Promise<ProviderPublicView | nu
   return row ? rowToPublicView(toProviderRow(row)) : null;
 }
 
+export async function getDockerProvidersAction(): Promise<ProviderPublicView[]> {
+  await requireAuth();
+  return listProvidersByType("docker").map((row) => rowToPublicView(toProviderRow(row)));
+}
+
 function parseConnectionMode(value: FormDataEntryValue | null): DockerConnectionMode {
   const mode = String(value ?? "local");
   return mode === "tcp" || mode === "tls" ? mode : "local";
+}
+
+export async function createDockerProviderAction() {
+  try {
+    await requireAuth();
+  } catch {
+    return;
+  }
+
+  createDockerProvider("Docker");
+  revalidateProviderPaths();
 }
 
 export async function configureDockerProviderAction(
@@ -44,6 +66,8 @@ export async function configureDockerProviderAction(
     throw error;
   }
 
+  const providerId = String(formData.get("providerId") ?? "").trim() || undefined;
+  const name = String(formData.get("name") ?? "Docker").trim();
   const enabled = formData.get("enabled") === "on" || formData.get("enabled") === "true";
   const allowActions =
     formData.get("allowActions") === "on" || formData.get("allowActions") === "true";
@@ -55,12 +79,23 @@ export async function configureDockerProviderAction(
   const tlsCert = String(formData.get("tlsCert") ?? "").trim();
   const tlsKey = String(formData.get("tlsKey") ?? "").trim();
 
+  if (!name) {
+    return { ok: false, message: "Integration name is required." };
+  }
+
   if (mode === "local" && !socketPath) {
     return { ok: false, message: "Socket path is required for local Docker connections." };
   }
 
   if (mode !== "local" && !host) {
     return { ok: false, message: "Host is required for remote Docker connections." };
+  }
+
+  if (providerId) {
+    const existing = getProviderRowById(providerId);
+    if (!existing || existing.type !== "docker") {
+      return { ok: false, message: "Docker integration not found." };
+    }
   }
 
   const credentials =
@@ -73,6 +108,8 @@ export async function configureDockerProviderAction(
       : undefined;
 
   upsertDockerProvider({
+    id: providerId,
+    name,
     enabled,
     readOnly: !allowActions,
     config: {
@@ -85,8 +122,7 @@ export async function configureDockerProviderAction(
     preserveCredentials: mode === "tls" && !credentials,
   });
 
-  revalidatePath("/settings");
-  revalidatePath("/containers");
+  revalidateProviderPaths();
 
   return {
     ok: true,
@@ -100,7 +136,6 @@ export async function testDockerProviderAction(
   _previousState: ProviderActionState,
   formData: FormData
 ): Promise<ProviderActionState> {
-  void formData;
   try {
     await requireAuth();
   } catch (error) {
@@ -110,19 +145,36 @@ export async function testDockerProviderAction(
     throw error;
   }
 
-  const row = getProviderRowByType("docker");
-  if (!row) {
+  const providerId = String(formData.get("providerId") ?? "").trim();
+  const row = providerId ? getProviderRowById(providerId) : getProviderRowByType("docker");
+  if (!row || row.type !== "docker") {
     return { ok: false, message: "Enable Docker integration in Settings first." };
   }
 
   const result = await testProviderConnection(row.id);
-  revalidatePath("/settings");
-  revalidatePath("/containers");
+  revalidateProviderPaths();
 
   return {
     ok: result.ok,
     message: result.message,
   };
+}
+
+export async function deleteDockerProviderAction(formData: FormData) {
+  try {
+    await requireAuth();
+  } catch {
+    return;
+  }
+
+  const providerId = String(formData.get("providerId") ?? "").trim();
+  const row = providerId ? getProviderRowById(providerId) : null;
+  if (!row || row.type !== "docker") {
+    return;
+  }
+
+  deleteProviderById(providerId);
+  revalidateProviderPaths();
 }
 
 export async function executeContainerAction(
@@ -139,17 +191,23 @@ export async function executeContainerAction(
   }
 
   const containerId = String(formData.get("containerId") ?? "").trim();
+  const providerId = String(formData.get("providerId") ?? "").trim();
   const action = String(formData.get("action") ?? "").trim();
 
-  if (!containerId || !["start", "stop", "restart"].includes(action)) {
+  if (!containerId || !providerId || !["start", "stop", "restart"].includes(action)) {
     return { ok: false, message: "Invalid container action request." };
   }
 
-  const result = await executeProviderAction("docker", action, containerId);
+  const result = await executeProviderAction("docker", action, containerId, providerId);
   revalidatePath("/containers");
 
   return {
     ok: result.ok,
     message: result.message,
   };
+}
+
+function revalidateProviderPaths() {
+  revalidatePath("/settings");
+  revalidatePath("/containers");
 }

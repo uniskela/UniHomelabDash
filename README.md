@@ -29,6 +29,13 @@ If port 3000 is already in use:
 HOST_PORT=3003 docker compose up --build
 ```
 
+### Upgrading from v0.4.x
+
+1. Pull or rebuild: `docker compose up --build -d`.
+2. Existing SQLite data and provider settings are preserved. Docker integrations can now be added, managed, and removed individually from **Settings -> Integrations**.
+3. Container logs now support line-count and severity filters from the container details popup.
+4. The container **Add to dashboard** flow pre-fills the manual service form. Health URLs are inferred only from explicit health labels, Traefik router labels, or published ports on remote Docker integrations; OCI image package URLs are ignored.
+
 ### Upgrading from v0.3.x
 
 1. Pull or rebuild: `docker compose up --build -d`.
@@ -148,6 +155,45 @@ Secret names must be alphanumeric or underscore only, and cannot start with `GIT
 
 For the first GHCR push, set **Settings → Actions → General → Workflow permissions → Read and write permissions**.
 
+### Maintainer release checklist
+
+After the v0.5.0 PR is merged to the default branch, tag the merge commit and push the tag:
+
+```bash
+git switch main
+git pull
+git tag -a v0.5.0 -m "v0.5.0"
+git push origin v0.5.0
+```
+
+Publish a GitHub Release from tag `v0.5.0`.
+
+Release title:
+
+```text
+UniHomelabDash v0.5.0
+```
+
+Release description:
+
+```markdown
+## Highlights
+
+- Added support for multiple Docker integrations in Settings.
+- Aggregated containers across enabled Docker integrations.
+- Added container log viewing with line-count and severity filters.
+- Added a richer container details popup with optional labels visibility.
+- Added an Add to dashboard flow from container details.
+- Improved container health URL prefill by ignoring OCI package URLs, honoring explicit health labels, and inferring URLs from published ports where safe.
+- Routed Docker logs and actions to the owning integration.
+
+## Verification
+
+- npm run lint
+- npm run typecheck
+- npm test
+- npm run build
+```
 ### Maintainer-only: internal infrastructure
 
 The project maintainer may also build images to a **private** self-hosted Gitea registry on an internal network (LAN/Tailscale only). This is **not** a public distribution channel — contributors and users should use GitHub, GHCR, or Docker Hub only.
@@ -167,12 +213,15 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - SQLite persistence and Docker Compose deployment
 - Single-admin authentication with first-run setup and session cookies
 - Provider system foundation with Docker container status (opt-in local socket or remote TCP/TLS)
+- Multiple Docker integrations with add, manage, remove, and per-integration action settings
+- Aggregated container status across enabled Docker integrations
 - Optional container start/stop/restart with confirmation prompts (disabled by default)
+- Read-only Docker container logs viewer with line-count and severity filters
+- Add containers to the dashboard through the manual service form with safe health URL prefill
 
 ## What it does not do (yet)
 
 - Multi-user access or OIDC
-- Container logs viewer
 - Portainer or Proxmox integrations
 - Push notifications or alerts
 - Automatic background health polling

@@ -264,7 +264,7 @@ Success criteria:
 
 ## Phase 6 — Docker Integration
 
-Status: Completed (v0.4.0)
+Status: Completed (v0.5.0)
 
 Goal: Show and control Docker containers.
 
@@ -281,9 +281,14 @@ Completed in v0.4.0:
 * Local unix socket, remote TCP, and remote TLS connection modes
 * TLS credentials stored encrypted (not in config JSON)
 
-Remaining:
+Completed in v0.5.0:
 
-* Basic logs viewer (`GET /containers/{id}/logs`)
+* Multiple Docker integrations with add, manage, and remove controls in Settings
+* Aggregated container list across enabled Docker integrations
+* Basic read-only logs viewer (`GET /api/docker/containers/{id}/logs`) with line-count and severity filters
+* Container details popup with hidden-by-default labels and a richer mobile-friendly layout
+* Add container to dashboard flow through the manual service form
+* Health URL prefill that ignores OCI image package URLs, honors explicit health labels, and infers URLs from published ports where safe
 
 Safety (v0.4.0):
 
@@ -297,7 +302,9 @@ Success criteria:
 
 * User can see containers from UniHomelabDash. (met)
 * User can safely restart a container from mobile. (met)
-* Logs viewer is useful for quick checks. (planned)
+* Logs viewer is useful for quick checks. (met)
+* Multiple Docker integrations can be managed independently. (met)
+* Containers can be converted into dashboard services with safe prefilled metadata. (met)
 
 ---
 
@@ -578,7 +585,6 @@ The first meaningful release should include:
 * Basic authentication
 * Docker integration
 * Container restart/start/stop
-* Logs viewer
 * Mobile-first UI
 * Docker Compose deployment
 * Screenshots in README

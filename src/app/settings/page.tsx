@@ -16,7 +16,7 @@ import { isHttpsRequest } from "@/lib/request/https";
 import { isAuthDisabled } from "@/lib/auth/constants";
 import { getSessionUser } from "@/lib/auth/session-user";
 import { getDatabasePath } from "@/lib/db/client";
-import { getDockerProviderAction } from "@/lib/providers/actions";
+import { getDockerProvidersAction } from "@/lib/providers/actions";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -25,7 +25,7 @@ export default async function SettingsPage() {
   const sessionUser = await getSessionUser();
   const httpsEnabled = await isHttpsRequest();
   const authDisabled = isAuthDisabled();
-  const dockerProvider = await getDockerProviderAction();
+  const dockerProviders = await getDockerProvidersAction();
 
   return (
     <div className="space-y-8">
@@ -116,10 +116,7 @@ export default async function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <DockerIntegrationSettings
-              key={`${dockerProvider?.id ?? "new"}-${dockerProvider?.enabled}-${dockerProvider?.lastTestedAt ?? ""}`}
-              provider={dockerProvider}
-            />
+            <DockerIntegrationSettings providers={dockerProviders} />
           </CardContent>
         </Card>
 

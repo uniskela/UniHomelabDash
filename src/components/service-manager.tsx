@@ -21,9 +21,11 @@ import { ServiceForm } from "@/components/service-form";
 export function ServiceManager({
   services,
   initialAddOpen = false,
+  serviceDefaults,
 }: {
   services: ManualService[];
   initialAddOpen?: boolean;
+  serviceDefaults?: Partial<Pick<ManualService, "name" | "category" | "icon" | "host" | "notes" | "healthUrl">>;
 }) {
   const [createOpen, setCreateOpen] = useState(initialAddOpen);
   const [editing, setEditing] = useState<ManualService | null>(null);
@@ -60,7 +62,7 @@ export function ServiceManager({
                     Save a link, host, category, and optional notes.
                   </DialogDescription>
                 </DialogHeader>
-                <ServiceForm onSaved={() => setCreateOpen(false)} />
+                <ServiceForm defaults={serviceDefaults} onSaved={() => setCreateOpen(false)} />
               </DialogContent>
             </Dialog>
           </>

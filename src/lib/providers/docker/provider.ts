@@ -1,5 +1,6 @@
 import { redactSecrets } from "@/lib/providers/credentials";
 import {
+  getDockerContainerLogs,
   listDockerContainers,
   pingDocker,
   runDockerContainerAction,
@@ -16,6 +17,8 @@ import {
 } from "@/lib/providers/docker/normalize";
 import type {
   ConnectionTestResult,
+  ContainerLogsOptions,
+  ContainerLogsResult,
   ProviderContext,
   ProviderHandler,
   ProviderResource,
@@ -27,10 +30,11 @@ export const dockerProviderHandler: ProviderHandler = {
   meta: {
     type: "docker",
     name: "Docker",
-    description: "Container status and safe start/stop/restart actions for Docker Engine.",
+    description: "Container status, logs, and safe start/stop/restart actions for Docker Engine.",
     capabilities: [
       "container.list",
       "container.status",
+      "container.logs",
       "container.start",
       "container.stop",
       "container.restart",
@@ -82,11 +86,38 @@ export const dockerProviderHandler: ProviderHandler = {
     );
   },
 
+  async getLogs(
+    context: ProviderContext,
+    resourceId: string,
+    options: ContainerLogsOptions = {}
+  ): Promise<ContainerLogsResult> {
+    const config = parseDockerConfig(context.config);
+    const credentials = parseDockerCredentials(context.credentials);
+    const validationError = validateDockerConfig(config, credentials);
+
+    if (validationError) {
+      return { ok: false, logs: "", message: validationError };
+    }
+
+    try {
+      const logs = await getDockerContainerLogs(config, credentials, resourceId, options);
+      return { ok: true, logs: redactSecrets(logs) };
+    } catch (error) {
+      return {
+        ok: false,
+        logs: "",
+        message: redactSecrets(
+          error instanceof Error ? error.message : "Failed to load container logs."
+        ),
+      };
+    }
+  },
+
   async executeAction(context: ProviderContext, action: string, resourceId: string) {
     if (context.provider.readOnly) {
       return {
         ok: false,
-        message: "Container actions are disabled. Enable them in Settings → Integrations.",
+        message: "Container actions are disabled. Enable them in Settings -> Integrations.",
       };
     }
 
