@@ -4,24 +4,21 @@ import { ContainerList } from "@/components/container-list";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getDockerProviderAction } from "@/lib/providers/actions";
+import { getDockerProvidersAction } from "@/lib/providers/actions";
 import { listProviderResources } from "@/lib/providers/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export default async function ContainersPage() {
-  const provider = await getDockerProviderAction();
-  const enabled = Boolean(provider?.enabled);
+  const providers = await getDockerProvidersAction();
+  const enabled = providers.some((provider) => provider.enabled);
+  const actionsEnabled = providers.some((provider) => provider.enabled && !provider.readOnly);
   const { resources, error } = enabled
     ? await listProviderResources("docker")
     : { resources: [], error: undefined };
 
-  const connectionStatus = !enabled
-    ? "disabled"
-    : error
-      ? "error"
-      : "connected";
+  const connectionStatus = !enabled ? "disabled" : error ? "error" : "connected";
 
   return (
     <div className="space-y-8">
@@ -29,13 +26,13 @@ export default async function ContainersPage() {
         eyebrow="Docker"
         title="Containers"
         description={
-          provider && !provider.readOnly
-            ? "Container status and actions from your Docker Engine. Destructive actions require confirmation."
-            : "Read-only container status from your Docker Engine. Enable actions in Settings to start, stop, or restart."
+          actionsEnabled
+            ? "Container status from your Docker integrations. Destructive actions require confirmation and only appear for integrations with actions enabled."
+            : "Read-only container status from your Docker integrations. Enable actions in Settings to start, stop, or restart."
         }
         actions={
           <>
-            <ConnectionPill status={connectionStatus} />
+            <ConnectionPill status={connectionStatus} count={providers.filter((provider) => provider.enabled).length} />
             <Button variant="outline" size="sm" asChild>
               <Link href="/settings">
                 <Settings />
@@ -50,7 +47,7 @@ export default async function ContainersPage() {
         containers={resources}
         error={error}
         enabled={enabled}
-        actionsEnabled={Boolean(provider && !provider.readOnly)}
+        actionsEnabled={actionsEnabled}
       />
     </div>
   );
@@ -58,14 +55,16 @@ export default async function ContainersPage() {
 
 function ConnectionPill({
   status,
+  count,
 }: {
   status: "connected" | "disabled" | "error";
+  count: number;
 }) {
   if (status === "connected") {
     return (
       <Badge variant="outline" className="border-rose-400/40 bg-rose-400/10 text-rose-300">
         <Box className="size-3" />
-        Connected
+        {count === 1 ? "1 integration" : `${count} integrations`}
       </Badge>
     );
   }

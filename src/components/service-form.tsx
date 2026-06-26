@@ -14,9 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function ServiceForm({
   service,
+  defaults,
   onSaved,
 }: {
   service?: ManualService;
+  defaults?: Partial<
+    Pick<ManualService, "name" | "category" | "icon" | "host" | "notes" | "healthUrl">
+  >;
   onSaved: () => void;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -42,7 +46,7 @@ export function ServiceForm({
           name="name"
           required
           maxLength={80}
-          defaultValue={service?.name}
+          defaultValue={service?.name ?? defaults?.name}
           placeholder="Jellyfin"
         />
       </Field>
@@ -64,7 +68,7 @@ export function ServiceForm({
             id="category"
             name="category"
             maxLength={50}
-            defaultValue={service?.category ?? "General"}
+            defaultValue={service?.category ?? defaults?.category ?? "General"}
             placeholder="Media"
           />
         </Field>
@@ -74,7 +78,7 @@ export function ServiceForm({
             id="icon"
             name="icon"
             maxLength={8}
-            defaultValue={service?.icon}
+            defaultValue={service?.icon ?? defaults?.icon}
             placeholder="JF"
           />
         </Field>
@@ -85,7 +89,7 @@ export function ServiceForm({
           id="host"
           name="host"
           maxLength={80}
-          defaultValue={service?.host}
+          defaultValue={service?.host ?? defaults?.host}
           placeholder="docker-01"
         />
       </Field>
@@ -99,7 +103,7 @@ export function ServiceForm({
           id="healthUrl"
           name="healthUrl"
           type="url"
-          defaultValue={service?.healthUrl}
+          defaultValue={service?.healthUrl ?? defaults?.healthUrl}
           placeholder="https://jellyfin.example.local/health"
         />
       </Field>
@@ -109,7 +113,7 @@ export function ServiceForm({
           id="notes"
           name="notes"
           maxLength={500}
-          defaultValue={service?.notes}
+          defaultValue={service?.notes ?? defaults?.notes}
           placeholder="Runs on the media VM. Manual entry only."
           rows={4}
         />

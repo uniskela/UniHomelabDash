@@ -3,6 +3,7 @@ export type ProviderCapability =
   | "service.open"
   | "container.list"
   | "container.status"
+  | "container.logs"
   | "container.start"
   | "container.stop"
   | "container.restart";
@@ -32,6 +33,17 @@ export type ConnectionTestResult = {
   ok: boolean;
   message: string;
   details?: Record<string, string>;
+};
+
+export type ContainerLogsOptions = {
+  tail?: number;
+  timestamps?: boolean;
+};
+
+export type ContainerLogsResult = {
+  ok: boolean;
+  logs: string;
+  message?: string;
 };
 
 export type ProviderDefinitionMeta = {
@@ -87,6 +99,11 @@ export interface ProviderHandler {
   meta: ProviderDefinitionMeta;
   testConnection(context: ProviderContext): Promise<ConnectionTestResult>;
   listResources(context: ProviderContext): Promise<ProviderResource[]>;
+  getLogs?(
+    context: ProviderContext,
+    resourceId: string,
+    options?: ContainerLogsOptions
+  ): Promise<ContainerLogsResult>;
   executeAction?(
     context: ProviderContext,
     action: string,
