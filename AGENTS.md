@@ -315,7 +315,7 @@ A feature is done when:
 
 ## Current Priority
 
-v0.6.1 shipped: faster Containers loading (async fetch, timeouts, endpoint cooldown, cache) plus host/status/search filters.
+v0.6.2 in progress: Containers UI polish — hide containers, view/group layouts, and prefixed search.
 
 Next focus (see ROADMAP.md):
 

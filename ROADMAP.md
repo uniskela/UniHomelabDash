@@ -326,10 +326,16 @@ Completed in v0.6.0:
 * Async `/containers` loading with shorter list timeouts, failed-endpoint cooldown, and short in-memory cache
 * Container list filters for host, running/stopped status, and text search
 
+Completed in v0.6.2:
+
+* Prefixed container search (`host:`, `name:`, `image:`, `status:`, `port:`, `label:`, `provider:`, `id:`) with negation and quoted values
+* Separate **View as** (list / grid / tiles) and **Grouped by** (none / host / status / provider) controls
+* Hide individual containers (persisted) with show-hidden / unhide-all controls
+* Dismissible Containers warning banner and readable Host dropdown options in dark mode
+
 Planned next increments:
 
 * Stack list and stack status views
-* Endpoint-specific filtering in UI
 * Explicit Portainer action support (restart/redeploy) only after additional safety checks
 
 Success criteria:

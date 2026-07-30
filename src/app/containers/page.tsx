@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth/session-user";
 import { getDockerProvidersAction, getPortainerProvidersAction } from "@/lib/providers/actions";
+import { readContainerViewPreferences } from "@/lib/providers/container-preferences-store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,6 +19,7 @@ export default async function ContainersPage() {
   const enabled = providers.some((provider) => provider.enabled);
   const actionsEnabled = dockerProviders.some((provider) => provider.enabled && !provider.readOnly);
   const connectionStatus = !enabled ? "disabled" : "connected";
+  const viewPreferences = readContainerViewPreferences();
 
   return (
     <div className="space-y-8">
@@ -45,7 +47,11 @@ export default async function ContainersPage() {
         }
       />
 
-      <AsyncContainerList enabled={enabled} actionsEnabled={actionsEnabled} />
+      <AsyncContainerList
+        enabled={enabled}
+        actionsEnabled={actionsEnabled}
+        initialPreferences={viewPreferences}
+      />
     </div>
   );
 }
