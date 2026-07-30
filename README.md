@@ -157,21 +157,21 @@ For the first GHCR push, set **Settings → Actions → General → Workflow per
 
 ### Maintainer release checklist
 
-After the v0.6.0 PR is merged to the default branch, tag the merge commit and push the tag:
+After the v0.6.1 PR is merged to the default branch, tag the merge commit and push the tag:
 
 ```bash
 git switch main
 git pull
-git tag -a v0.6.0 -m "v0.6.0"
-git push origin v0.6.0
+git tag -a v0.6.1 -m "v0.6.1"
+git push origin v0.6.1
 ```
 
-Publish a GitHub Release from tag `v0.6.0`.
+Publish a GitHub Release from tag `v0.6.1`.
 
 Release title:
 
 ```text
-UniHomelabDash v0.6.0
+UniHomelabDash v0.6.1
 ```
 
 Release description:
@@ -179,13 +179,15 @@ Release description:
 ```markdown
 ## Highlights
 
-- Added support for multiple Docker integrations in Settings.
-- Aggregated containers across enabled Docker integrations.
-- Added container log viewing with line-count and severity filters.
-- Added a richer container details popup with optional labels visibility.
-- Added an Add to dashboard flow from container details.
-- Improved container health URL prefill by ignoring OCI package URLs, honoring explicit health labels, and inferring URLs from published ports where safe.
-- Routed Docker logs and actions to the owning integration.
+- Load Containers asynchronously so the page shell appears immediately.
+- Bound Portainer container-list requests (5s default) and briefly skip recently failed endpoints.
+- Cache aggregated container lists in-memory for 30s and parallelize provider instance fetches.
+- Filter containers by host, running/stopped status, and free-text search.
+
+## Upgrade notes
+
+- Rebuild/restart as usual (`docker compose up --build -d`). No schema migration required.
+- Optional tunables: `UH_PORTAINER_LIST_TIMEOUT_MS`, `UH_PORTAINER_ENDPOINT_COOLDOWN_MS`, `UH_CONTAINER_LIST_CACHE_MS` (see `SECURITY.md` / `.env.example`).
 
 ## Verification
 

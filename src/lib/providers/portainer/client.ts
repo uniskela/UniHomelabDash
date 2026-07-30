@@ -40,11 +40,17 @@ type PortainerRequestOptions = {
   path: string;
   method?: "GET" | "POST";
   decodeLogs?: boolean;
+  timeoutMs?: number;
 };
 
-function getPortainerRequestTimeoutMs() {
+export function getPortainerRequestTimeoutMs() {
   const configured = Number.parseInt(process.env.UH_PORTAINER_REQUEST_TIMEOUT_MS ?? "", 10);
   return Number.isFinite(configured) && configured > 0 ? configured : 15_000;
+}
+
+export function getPortainerListTimeoutMs() {
+  const configured = Number.parseInt(process.env.UH_PORTAINER_LIST_TIMEOUT_MS ?? "", 10);
+  return Number.isFinite(configured) && configured > 0 ? configured : 5_000;
 }
 
 /** Keep any reverse-proxy prefix from the base URL ahead of the API path. */
@@ -163,7 +169,7 @@ function portainerRequest<T>(options: PortainerRequestOptions): Promise<T> {
       });
     });
 
-    request.setTimeout(getPortainerRequestTimeoutMs(), () => {
+    request.setTimeout(options.timeoutMs ?? getPortainerRequestTimeoutMs(), () => {
       finish(new Error("Portainer request timed out."));
       request.destroy();
     });
@@ -196,6 +202,7 @@ export async function listPortainerEndpointContainers(
     config,
     credentials,
     path: `/api/endpoints/${endpointId}/docker/containers/json?all=1`,
+    timeoutMs: getPortainerListTimeoutMs(),
   });
 }
 

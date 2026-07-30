@@ -13,7 +13,7 @@ import {
   rowToPublicView,
   toProviderRow,
 } from "@/lib/providers/registry";
-import { executeProviderAction, testProviderConnection } from "@/lib/providers/runtime";
+import { executeProviderAction, invalidateContainerListCache, testProviderConnection } from "@/lib/providers/runtime";
 import {
   createDockerProvider,
   createPortainerProvider,
@@ -332,6 +332,7 @@ export async function executeContainerAction(
   }
 
   const result = await executeProviderAction("docker", action, containerId, providerId);
+  invalidateContainerListCache();
   revalidatePath("/containers");
 
   return {
@@ -341,6 +342,7 @@ export async function executeContainerAction(
 }
 
 function revalidateProviderPaths() {
+  invalidateContainerListCache();
   revalidatePath("/settings");
   revalidatePath("/containers");
 }

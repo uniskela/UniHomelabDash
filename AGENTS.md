@@ -315,7 +315,7 @@ A feature is done when:
 
 ## Current Priority
 
-v0.6.0 shipped: Portainer read-only container status and logs via API tokens, plus dependency/auth hardening updates.
+v0.6.1 shipped: faster Containers loading (async fetch, timeouts, endpoint cooldown, cache) plus host/status/search filters.
 
 Next focus (see ROADMAP.md):
 

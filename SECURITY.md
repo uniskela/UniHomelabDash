@@ -90,6 +90,12 @@ The default Compose file still does **not** mount the Docker socket.
 - Tokens and optional custom CA certificates are encrypted at rest in the providers store.
 - Use dedicated least-privilege Portainer users/teams for dashboard access.
 - Prefer HTTPS (`:9443`) and private network exposure only.
+- Container inventory loads asynchronously from `/api/containers` so the page shell stays responsive while endpoints respond.
+- Optional tunables (process-local, single-instance only):
+  - `UH_PORTAINER_LIST_TIMEOUT_MS` (default `5000`) — timeout for per-endpoint container list calls
+  - `UH_PORTAINER_ENDPOINT_COOLDOWN_MS` (default `120000`) — skip recently failed endpoints briefly
+  - `UH_CONTAINER_LIST_CACHE_MS` (default `30000`) — short in-memory cache for aggregated container lists
+  - `UH_PORTAINER_REQUEST_TIMEOUT_MS` / `UH_DOCKER_REQUEST_TIMEOUT_MS` (default `15000`) — general request timeouts
 
 ## Health checks
 

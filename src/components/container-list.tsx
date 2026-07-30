@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import {
   Box,
   FileText,
   LayoutDashboard,
   Play,
   RotateCcw,
+  Search,
   Settings,
   ShieldAlert,
   Square,
@@ -16,6 +17,7 @@ import { ContainerStatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { StatTile, StatTileGrid } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -28,16 +30,23 @@ import { Separator } from "@/components/ui/separator";
 import { initialProviderActionState } from "@/lib/providers/action-state";
 import { executeContainerAction } from "@/lib/providers/actions";
 import { buildContainerServiceDefaults } from "@/lib/providers/docker/dashboard-prefill";
+import {
+  containerHostLabel,
+  filterContainers,
+  isRunningContainer,
+  isStoppedContainer,
+  listContainerHostOptions,
+  type ContainerStatusFilter,
+} from "@/lib/providers/container-filters";
 import type { ProviderResource } from "@/lib/providers/types";
 import { cn } from "@/lib/utils";
 
 type ContainerAction = "start" | "stop" | "restart";
 
-type ContainerFilter = "all" | "running" | "stopped";
 type LogLineCount = 10 | 50 | 100 | 200 | 500;
 type LogLevelFilter = "all" | "log" | "warn" | "error";
 
-const filterOptions: Array<{ id: ContainerFilter; label: string }> = [
+const filterOptions: Array<{ id: ContainerStatusFilter; label: string }> = [
   { id: "all", label: "All" },
   { id: "running", label: "Running" },
   { id: "stopped", label: "Stopped" },
@@ -55,31 +64,27 @@ const logLevelOptions: Array<{ id: LogLevelFilter; label: string }> = [
 const warningPattern = /\bwarn(?:ing)?\b/i;
 const errorPattern = /\b(?:error|err|fatal|panic|exception)\b/i;
 
-function isRunning(status: string) {
-  return status === "running" || status === "restarting";
-}
-
-function isStopped(status: string) {
-  return status === "exited" || status === "dead" || status === "created" || status === "paused";
-}
-
 export function ContainerList({
   containers,
   error,
   warning,
   enabled,
   actionsEnabled = false,
+  onRefresh,
 }: {
   containers: ProviderResource[];
   error?: string | null;
   warning?: string | null;
   enabled: boolean;
   actionsEnabled?: boolean;
+  onRefresh?: () => void;
 }) {
   const [selected, setSelected] = useState<ProviderResource | null>(null);
   const [pendingAction, setPendingAction] = useState<ContainerAction | null>(null);
   const [submittedAction, setSubmittedAction] = useState<ContainerAction | null>(null);
-  const [filter, setFilter] = useState<ContainerFilter>("all");
+  const [filter, setFilter] = useState<ContainerStatusFilter>("all");
+  const [hostFilter, setHostFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [logs, setLogs] = useState<string | null>(null);
   const [logsError, setLogsError] = useState<string | null>(null);
   const [logsLoading, setLogsLoading] = useState(false);
@@ -90,6 +95,12 @@ export function ContainerList({
     executeContainerAction,
     initialProviderActionState
   );
+
+  useEffect(() => {
+    if (actionState.ok && submittedAction) {
+      onRefresh?.();
+    }
+  }, [actionState.ok, actionState.message, submittedAction, onRefresh]);
 
   function resetLogs() {
     setLogs(null);
@@ -144,17 +155,21 @@ export function ContainerList({
     }
   }
 
-  const filteredContainers = useMemo(() => {
-    if (filter === "running") {
-      return containers.filter((item) => isRunning(item.status));
-    }
-    if (filter === "stopped") {
-      return containers.filter((item) => isStopped(item.status));
-    }
-    return containers;
-  }, [containers, filter]);
+  const hostOptions = useMemo(() => listContainerHostOptions(containers), [containers]);
+
+  const filteredContainers = useMemo(
+    () =>
+      filterContainers(containers, {
+        status: filter,
+        host: hostFilter === "all" ? "" : hostFilter,
+        search: searchQuery,
+      }),
+    [containers, filter, hostFilter, searchQuery]
+  );
 
   const visibleLogs = useMemo(() => filterLogs(logs ?? "", logLevelFilter), [logs, logLevelFilter]);
+
+  const filtersActive = filter !== "all" || hostFilter !== "all" || searchQuery.trim().length > 0;
 
   if (!enabled) {
     return (
@@ -190,7 +205,7 @@ export function ContainerList({
     );
   }
 
-  const runningCount = containers.filter((item) => isRunning(item.status)).length;
+  const runningCount = containers.filter((item) => isRunningContainer(item.status)).length;
   const stoppedCount = containers.length - runningCount;
 
   return (
@@ -220,18 +235,57 @@ export function ContainerList({
         />
       </StatTileGrid>
 
-      <div className="flex flex-wrap gap-2">
-        {filterOptions.map((option) => (
-          <Button
-            key={option.id}
-            type="button"
-            size="sm"
-            variant={filter === option.id ? "secondary" : "outline"}
-            onClick={() => setFilter(option.id)}
-          >
-            {option.label}
-          </Button>
-        ))}
+      <div className="space-y-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search name, image, host, or ports"
+            aria-label="Search containers"
+            className="pl-8"
+          />
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="flex flex-wrap gap-2">
+            {filterOptions.map((option) => (
+              <Button
+                key={option.id}
+                type="button"
+                size="sm"
+                variant={filter === option.id ? "secondary" : "outline"}
+                onClick={() => setFilter(option.id)}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+
+          <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs text-muted-foreground sm:max-w-xs">
+            <span className="font-medium text-foreground">Host</span>
+            <select
+              value={hostFilter}
+              onChange={(event) => setHostFilter(event.target.value)}
+              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+              aria-label="Filter by host"
+            >
+              <option value="all">All hosts</option>
+              {hostOptions.map((host) => (
+                <option key={host} value={host}>
+                  {host}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {filtersActive ? (
+          <p className="text-xs text-muted-foreground">
+            Showing {filteredContainers.length} of {containers.length} containers
+            {hostFilter !== "all" ? ` on ${hostFilter}` : ""}.
+          </p>
+        ) : null}
       </div>
 
       <div className="grid gap-3">
@@ -256,6 +310,9 @@ export function ContainerList({
                 </div>
                 <p className="truncate font-mono text-xs text-muted-foreground">
                   {providerName(container)} · {container.image}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  Host: {containerHostLabel(container)}
                 </p>
                 {container.ports?.length ? (
                   <div className="flex flex-wrap gap-1 pt-1">
@@ -455,7 +512,7 @@ export function ContainerList({
               </div>
               {actionsEnabled && selected && containerActionsEnabled(selected) ? (
                 <div className="flex flex-wrap gap-2 border-t border-rose-500/20 bg-rose-500/5 p-4">
-                  {isStopped(selected.status) ? (
+                  {isStoppedContainer(selected.status) ? (
                     <Button
                       type="button"
                       size="sm"
@@ -470,7 +527,7 @@ export function ContainerList({
                       Start
                     </Button>
                   ) : null}
-                  {isRunning(selected.status) ? (
+                  {isRunningContainer(selected.status) ? (
                     <>
                       <Button
                         type="button"

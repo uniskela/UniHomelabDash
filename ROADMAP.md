@@ -323,6 +323,8 @@ Completed in v0.6.0:
 * Read-only endpoint discovery and container list aggregation on `/containers`
 * Read-only container logs via Portainer Docker gateway
 * Encrypted storage for Portainer token and optional custom CA certificate
+* Async `/containers` loading with shorter list timeouts, failed-endpoint cooldown, and short in-memory cache
+* Container list filters for host, running/stopped status, and text search
 
 Planned next increments:
 
