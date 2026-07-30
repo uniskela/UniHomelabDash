@@ -168,8 +168,7 @@ Do not start with Proxmox, Arr stack, Jellyfin, Immich, Home Assistant, Kubernet
 
 ### Planned (future phases)
 
-* Basic logs viewer
-* Portainer read-only status
+* Portainer stack status and actions
 * Background health polling and alerts
 
 ## Safety Rules
@@ -316,11 +315,11 @@ A feature is done when:
 
 ## Current Priority
 
-v0.4.0 shipped: Docker container actions with confirmation modals and remote TCP/TLS connections.
+v0.6.0 shipped: Portainer read-only container status and logs via API tokens, plus dependency/auth hardening updates.
 
 Next focus (see ROADMAP.md):
 
-* Basic logs viewer
-* Portainer read-only integration
+* Portainer stack/status expansion
+* Alerts and activity feed foundation
 
 Do not chase every homelab integration at once.

@@ -46,7 +46,7 @@ export async function testProviderConnection(providerId: string): Promise<Connec
 
 export async function listProviderResources(
   providerType: ProviderType
-): Promise<{ resources: ProviderResource[]; error?: string }> {
+): Promise<{ resources: ProviderResource[]; error?: string; warning?: string }> {
   const rows = listEnabledProviderRows().filter((item) => item.type === providerType);
   if (rows.length === 0) {
     return { resources: [], error: "Provider is not configured or enabled." };
@@ -59,13 +59,14 @@ export async function listProviderResources(
 
   const resources: ProviderResource[] = [];
   const errors: string[] = [];
+  const warnings: string[] = [];
 
   for (const row of rows) {
     try {
       const providerRow = toProviderRow(row);
-      const providerResources = await handler.listResources(buildProviderContext(providerRow));
+      const listed = await handler.listResources(buildProviderContext(providerRow));
       resources.push(
-        ...providerResources.map((resource) => ({
+        ...listed.resources.map((resource) => ({
           ...resource,
           providerId: resource.providerId ?? providerRow.id,
           meta: {
@@ -76,6 +77,9 @@ export async function listProviderResources(
           },
         }))
       );
+      if (listed.warning) {
+        warnings.push(`${row.name}: ${listed.warning}`);
+      }
     } catch (error) {
       const message = redactSecrets(
         error instanceof Error ? error.message : "Failed to load resources."
@@ -84,9 +88,58 @@ export async function listProviderResources(
     }
   }
 
+  const combinedIssues = [...errors, ...warnings];
+
   return {
     resources,
     error: resources.length === 0 && errors.length > 0 ? errors.join(" ") : undefined,
+    warning:
+      resources.length > 0 && combinedIssues.length > 0 ? combinedIssues.join(" ") : undefined,
+  };
+}
+
+export async function listContainerResources() {
+  const providerTypes: ProviderType[] = ["docker", "portainer"];
+  const resources: ProviderResource[] = [];
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Isolate provider calls so one hung integration cannot block the others.
+  const settled = await Promise.allSettled(
+    providerTypes.map((providerType) => listProviderResources(providerType))
+  );
+
+  for (const result of settled) {
+    if (result.status === "rejected") {
+      errors.push(
+        redactSecrets(
+          result.reason instanceof Error ? result.reason.message : "Failed to load containers."
+        )
+      );
+      continue;
+    }
+
+    resources.push(...result.value.resources);
+
+    if (result.value.error && result.value.error !== "Provider is not configured or enabled.") {
+      errors.push(result.value.error);
+    }
+    if (result.value.warning) {
+      warnings.push(result.value.warning);
+    }
+  }
+
+  const combinedWarnings = [...errors, ...warnings];
+
+  return {
+    resources,
+    // Page-level error only when every provider failed; otherwise keep healthy
+    // containers visible and surface partial failures as a warning.
+    error: resources.length === 0 && errors.length > 0 ? errors.join(" ") : undefined,
+    warning:
+      resources.length > 0 && combinedWarnings.length > 0
+        ? combinedWarnings.join(" ")
+        : undefined,
   };
 }
 
@@ -149,7 +202,12 @@ export async function executeProviderAction(
 
 function providerHostMeta(configJson: string): Record<string, string> {
   try {
-    const config = JSON.parse(configJson) as { mode?: unknown; host?: unknown };
+    const config = JSON.parse(configJson) as {
+      mode?: unknown;
+      host?: unknown;
+    };
+    // Only remote Docker Engine hosts are safe published-port fallbacks.
+    // Portainer baseUrl is the API server, not the container host.
     if ((config.mode === "tcp" || config.mode === "tls") && typeof config.host === "string") {
       return { providerHost: config.host };
     }

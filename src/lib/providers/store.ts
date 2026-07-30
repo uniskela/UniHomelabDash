@@ -12,6 +12,10 @@ const DEFAULT_DOCKER_CONFIG = {
   port: 2375,
 };
 
+const DEFAULT_PORTAINER_CONFIG = {
+  baseUrl: "",
+};
+
 export function upsertDockerProvider(input: {
   id?: string;
   name?: string;
@@ -82,6 +86,76 @@ export function createDockerProvider(name = "Docker") {
     enabled: false,
     readOnly: true,
     config: DEFAULT_DOCKER_CONFIG,
+  });
+}
+
+export function upsertPortainerProvider(input: {
+  id?: string;
+  name?: string;
+  enabled: boolean;
+  config?: Record<string, unknown>;
+  credentials?: Record<string, string>;
+  preserveCredentials?: boolean;
+}) {
+  const existing = input.id
+    ? getDb().select().from(providers).where(eq(providers.id, input.id)).get()
+    : undefined;
+  const now = new Date().toISOString();
+  const config = {
+    ...DEFAULT_PORTAINER_CONFIG,
+    ...(input.config ?? {}),
+  };
+
+  let credentialsEncrypted = existing?.credentialsEncrypted ?? null;
+  if (input.credentials && Object.keys(input.credentials).length > 0) {
+    credentialsEncrypted = encryptCredentials(input.credentials);
+  } else if (input.preserveCredentials === false) {
+    credentialsEncrypted = null;
+  }
+
+  const name = limitName(input.name) || existing?.name || "Portainer";
+
+  if (existing) {
+    getDb()
+      .update(providers)
+      .set({
+        name,
+        enabled: input.enabled,
+        readOnly: true,
+        configJson: JSON.stringify(config),
+        credentialsEncrypted,
+        updatedAt: now,
+      })
+      .where(eq(providers.id, existing.id))
+      .run();
+
+    return existing.id;
+  }
+
+  const id = crypto.randomUUID();
+  getDb()
+    .insert(providers)
+    .values({
+      id,
+      type: "portainer",
+      name,
+      enabled: input.enabled,
+      readOnly: true,
+      configJson: JSON.stringify(config),
+      credentialsEncrypted,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .run();
+
+  return id;
+}
+
+export function createPortainerProvider(name = "Portainer") {
+  return upsertPortainerProvider({
+    name,
+    enabled: false,
+    config: DEFAULT_PORTAINER_CONFIG,
   });
 }
 

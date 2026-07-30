@@ -65,16 +65,16 @@ export function SettingsAdvanced({
           <div>
             <div className="mb-2 flex items-center gap-2 font-medium">
               <ServerOff className="size-4" />
-              Planned integrations
+              Integration roadmap
             </div>
             <ul className="grid gap-2 text-muted-foreground sm:grid-cols-3">
-              <li className="rounded-lg border bg-muted/30 p-3">Docker read-only status</li>
-              <li className="rounded-lg border bg-muted/30 p-3">Docker actions and logs</li>
-              <li className="rounded-lg border bg-muted/30 p-3">Portainer, Proxmox, media apps</li>
+              <li className="rounded-lg border bg-muted/30 p-3">Docker (status, logs, actions)</li>
+              <li className="rounded-lg border bg-muted/30 p-3">Portainer read-only containers</li>
+              <li className="rounded-lg border bg-muted/30 p-3">Alerts, Proxmox, media apps</li>
             </ul>
             <p className="mt-2 text-muted-foreground">
               {authEnabled
-                ? "Docker read-only status is available when you mount the socket and enable the integration above."
+                ? "Docker and Portainer integrations are available above. Future phases will add alerts and broader homelab providers."
                 : "Enable authentication before using provider integrations in production."}
             </p>
           </div>

@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
-import { Box, FileText, LayoutDashboard, Play, RotateCcw, Settings, Square } from "lucide-react";
+import {
+  Box,
+  FileText,
+  LayoutDashboard,
+  Play,
+  RotateCcw,
+  Settings,
+  ShieldAlert,
+  Square,
+} from "lucide-react";
 import { ContainerStatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { StatTile, StatTileGrid } from "@/components/stat-tile";
@@ -57,11 +66,13 @@ function isStopped(status: string) {
 export function ContainerList({
   containers,
   error,
+  warning,
   enabled,
   actionsEnabled = false,
 }: {
   containers: ProviderResource[];
   error?: string | null;
+  warning?: string | null;
   enabled: boolean;
   actionsEnabled?: boolean;
 }) {
@@ -104,12 +115,15 @@ export function ContainerList({
     setLogsError(null);
 
     try {
-      const params = new URLSearchParams({ tail: String(logLineCount) });
+      const params = new URLSearchParams({
+        tail: String(logLineCount),
+        providerType: container.providerType,
+      });
       if (container.providerId) {
         params.set("providerId", container.providerId);
       }
       const response = await fetch(
-        `/api/docker/containers/${encodeURIComponent(container.id)}/logs?${params.toString()}`
+        `/api/containers/${encodeURIComponent(container.id)}/logs?${params.toString()}`
       );
       const payload = (await response.json().catch(() => null)) as
         | { logs?: string; error?: string }
@@ -146,20 +160,20 @@ export function ContainerList({
     return (
       <EmptyState
         icon={Box}
-        title="Docker not configured"
-        description="Enable the Docker integration in Settings and mount the Docker socket using the compose override example."
+        title="No container integrations"
+        description="Enable Docker or Portainer in Settings to list containers here."
         actionLabel="Open integration settings"
         actionHref="/settings"
       />
     );
   }
 
-  if (error) {
+  if (error && containers.length === 0) {
     return (
       <EmptyState
         icon={Settings}
-        title="Cannot reach Docker"
-        description={`${error} Confirm the socket is mounted read-only and that UniHomelabDash runs on the same host as Docker Engine.`}
+        title="Cannot reach containers"
+        description={`${error} Check your Docker or Portainer integration settings and try again.`}
         actionLabel="Review settings"
         actionHref="/settings"
       />
@@ -171,7 +185,7 @@ export function ContainerList({
       <EmptyState
         icon={Box}
         title="No containers found"
-        description="Docker responded successfully but returned an empty container list."
+        description="Configured integrations responded successfully but returned an empty container list."
       />
     );
   }
@@ -181,6 +195,15 @@ export function ContainerList({
 
   return (
     <>
+      {warning ? (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-100/90">
+          <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-300" />
+          <p>
+            Some integrations failed while loading containers. Healthy results are still shown.{" "}
+            {warning}
+          </p>
+        </div>
+      ) : null}
       <StatTileGrid>
         <StatTile icon={<Box />} label="Total" value={containers.length.toString()} />
         <StatTile
@@ -567,7 +590,9 @@ function containerActionsEnabled(container: ProviderResource) {
   return container.meta?.providerReadOnly !== "true";
 }
 function providerName(container: ProviderResource) {
-  return container.meta?.providerName || "Docker";
+  const provider = container.meta?.providerName || "Provider";
+  const endpointName = container.meta?.endpointName;
+  return endpointName ? `${provider} · ${endpointName}` : provider;
 }
 function filterLogs(logs: string, filter: LogLevelFilter) {
   if (!logs || filter === "all") {

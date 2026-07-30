@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { ServiceCard } from "@/components/service-card";
 import { StatTile, StatTileGrid } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
+import { requireAuth } from "@/lib/auth/session-user";
 import { listServices } from "@/lib/services/queries";
 import { isDockerProviderEnabled } from "@/lib/providers/store";
 import { sortServicesByAttention } from "@/lib/services/sort";
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export default async function DashboardPage() {
+  await requireAuth();
   const services = await listServices();
   const sortedServices = sortServicesByAttention(services);
   const dashboardServices = sortedServices.slice(0, 6);

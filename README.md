@@ -157,21 +157,21 @@ For the first GHCR push, set **Settings → Actions → General → Workflow per
 
 ### Maintainer release checklist
 
-After the v0.5.0 PR is merged to the default branch, tag the merge commit and push the tag:
+After the v0.6.0 PR is merged to the default branch, tag the merge commit and push the tag:
 
 ```bash
 git switch main
 git pull
-git tag -a v0.5.0 -m "v0.5.0"
-git push origin v0.5.0
+git tag -a v0.6.0 -m "v0.6.0"
+git push origin v0.6.0
 ```
 
-Publish a GitHub Release from tag `v0.5.0`.
+Publish a GitHub Release from tag `v0.6.0`.
 
 Release title:
 
 ```text
-UniHomelabDash v0.5.0
+UniHomelabDash v0.6.0
 ```
 
 Release description:
@@ -218,11 +218,12 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - Optional container start/stop/restart with confirmation prompts (disabled by default)
 - Read-only Docker container logs viewer with line-count and severity filters
 - Add containers to the dashboard through the manual service form with safe health URL prefill
+- Read-only Portainer integrations with endpoint container status and logs via API token
 
 ## What it does not do (yet)
 
 - Multi-user access or OIDC
-- Portainer or Proxmox integrations
+- Proxmox integrations
 - Push notifications or alerts
 - Automatic background health polling
 

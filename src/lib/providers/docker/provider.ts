@@ -19,9 +19,9 @@ import type {
   ConnectionTestResult,
   ContainerLogsOptions,
   ContainerLogsResult,
+  ListResourcesResult,
   ProviderContext,
   ProviderHandler,
-  ProviderResource,
 } from "@/lib/providers/types";
 
 const DOCKER_ACTIONS = new Set<DockerContainerAction>(["start", "stop", "restart"]);
@@ -73,17 +73,19 @@ export const dockerProviderHandler: ProviderHandler = {
     }
   },
 
-  async listResources(context: ProviderContext): Promise<ProviderResource[]> {
+  async listResources(context: ProviderContext): Promise<ListResourcesResult> {
     const config = parseDockerConfig(context.config);
     const credentials = parseDockerCredentials(context.credentials);
     const containers = await listDockerContainers(config, credentials);
 
-    return containers.map((item) =>
-      containerResourceToProviderResource(
-        normalizeDockerListItem(item),
-        context.provider.id
-      )
-    );
+    return {
+      resources: containers.map((item) =>
+        containerResourceToProviderResource(
+          normalizeDockerListItem(item),
+          context.provider.id
+        )
+      ),
+    };
   },
 
   async getLogs(

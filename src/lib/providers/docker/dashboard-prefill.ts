@@ -133,6 +133,15 @@ function isPreferredHttpPort(port: number) {
 }
 
 function formatUrlHost(host: string) {
+  // Defensive: never treat a full URL as an IPv6 literal.
+  if (host.includes("://")) {
+    try {
+      return new URL(host).hostname;
+    } catch {
+      return host;
+    }
+  }
+
   return host.includes(":") && !host.startsWith("[") ? `[${host}]` : host;
 }
 

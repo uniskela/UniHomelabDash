@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import http from "node:http";
 import test from "node:test";
-import { getDockerContainerLogs } from "./client";
+import { getDockerContainerLogs, listDockerContainers } from "./client";
 import { parseDockerConfig } from "./config";
 
 function withDockerServer(
@@ -61,10 +61,16 @@ test("getDockerContainerLogs requests default stdout and stderr tail with timest
   }
 });
 
-test("getDockerContainerLogs returns empty log output", async () => {
+test("getDockerContainerLogs demultiplexes raw docker log streams", async () => {
+  const payload = Buffer.from("started\n", "utf8");
+  const header = Buffer.alloc(8);
+  header[0] = 1;
+  header.writeUInt32BE(payload.length, 4);
+  const frame = Buffer.concat([header, payload]);
+
   const server = await withDockerServer((_request, response) => {
-    response.writeHead(200, { "content-type": "text/plain" });
-    response.end("");
+    response.writeHead(200, { "content-type": "application/vnd.docker.raw-stream" });
+    response.end(frame);
   });
 
   try {
@@ -78,7 +84,7 @@ test("getDockerContainerLogs returns empty log output", async () => {
       "abc123"
     );
 
-    assert.equal(logs, "");
+    assert.equal(logs, "started\n");
   } finally {
     await server.close();
   }
@@ -104,6 +110,35 @@ test("getDockerContainerLogs throws Docker error bodies", async () => {
       /No such container/
     );
   } finally {
+    await server.close();
+  }
+});
+
+test("listDockerContainers rejects hung responses with a timeout", async () => {
+  const previousTimeout = process.env.UH_DOCKER_REQUEST_TIMEOUT_MS;
+  process.env.UH_DOCKER_REQUEST_TIMEOUT_MS = "50";
+
+  const server = await withDockerServer((_request, _response) => {
+    // Intentionally never respond.
+  });
+
+  try {
+    await assert.rejects(
+      listDockerContainers(
+        parseDockerConfig({
+          mode: "tcp",
+          host: server.origin.host,
+          port: server.origin.port,
+        })
+      ),
+      /timed out/i
+    );
+  } finally {
+    if (previousTimeout === undefined) {
+      delete process.env.UH_DOCKER_REQUEST_TIMEOUT_MS;
+    } else {
+      process.env.UH_DOCKER_REQUEST_TIMEOUT_MS = previousTimeout;
+    }
     await server.close();
   }
 });

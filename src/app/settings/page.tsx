@@ -3,6 +3,7 @@ import { Bell, Download, HeartPulse, LockKeyhole, PlugZap, ShieldAlert } from "l
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ChangePasswordForm } from "@/components/auth/change-password-form";
 import { DockerIntegrationSettings } from "@/components/docker-integration-settings";
+import { PortainerIntegrationSettings } from "@/components/portainer-integration-settings";
 import { PageHeader } from "@/components/page-header";
 import { SettingsAdvanced } from "@/components/settings-advanced";
 import {
@@ -14,18 +15,19 @@ import {
 } from "@/components/ui/card";
 import { isHttpsRequest } from "@/lib/request/https";
 import { isAuthDisabled } from "@/lib/auth/constants";
-import { getSessionUser } from "@/lib/auth/session-user";
+import { requireAuth } from "@/lib/auth/session-user";
 import { getDatabasePath } from "@/lib/db/client";
-import { getDockerProvidersAction } from "@/lib/providers/actions";
+import { getDockerProvidersAction, getPortainerProvidersAction } from "@/lib/providers/actions";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export default async function SettingsPage() {
-  const sessionUser = await getSessionUser();
+  const sessionUser = await requireAuth();
   const httpsEnabled = await isHttpsRequest();
   const authDisabled = isAuthDisabled();
   const dockerProviders = await getDockerProvidersAction();
+  const portainerProviders = await getPortainerProvidersAction();
 
   return (
     <div className="space-y-8">
@@ -112,11 +114,13 @@ export default async function SettingsPage() {
               Integrations
             </CardTitle>
             <CardDescription>
-              Connect homelab providers behind authentication. Docker supports read-only status, optional actions, and remote TCP/TLS.
+              Connect homelab providers behind authentication. Docker supports read-only status,
+              optional actions, and remote TCP/TLS. Portainer is read-only in this release.
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="space-y-8 pt-0">
             <DockerIntegrationSettings providers={dockerProviders} />
+            <PortainerIntegrationSettings providers={portainerProviders} />
           </CardContent>
         </Card>
 

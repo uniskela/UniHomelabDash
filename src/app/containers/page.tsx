@@ -4,31 +4,35 @@ import { ContainerList } from "@/components/container-list";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getDockerProvidersAction } from "@/lib/providers/actions";
-import { listProviderResources } from "@/lib/providers/runtime";
+import { requireAuth } from "@/lib/auth/session-user";
+import { getDockerProvidersAction, getPortainerProvidersAction } from "@/lib/providers/actions";
+import { listContainerResources } from "@/lib/providers/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export default async function ContainersPage() {
-  const providers = await getDockerProvidersAction();
+  await requireAuth();
+  const dockerProviders = await getDockerProvidersAction();
+  const portainerProviders = await getPortainerProvidersAction();
+  const providers = [...dockerProviders, ...portainerProviders];
   const enabled = providers.some((provider) => provider.enabled);
-  const actionsEnabled = providers.some((provider) => provider.enabled && !provider.readOnly);
-  const { resources, error } = enabled
-    ? await listProviderResources("docker")
-    : { resources: [], error: undefined };
+  const actionsEnabled = dockerProviders.some((provider) => provider.enabled && !provider.readOnly);
+  const { resources, error, warning } = enabled
+    ? await listContainerResources()
+    : { resources: [], error: undefined, warning: undefined };
 
   const connectionStatus = !enabled ? "disabled" : error ? "error" : "connected";
 
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Docker"
+        eyebrow="Containers"
         title="Containers"
         description={
           actionsEnabled
-            ? "Container status from your Docker integrations. Destructive actions require confirmation and only appear for integrations with actions enabled."
-            : "Read-only container status from your Docker integrations. Enable actions in Settings to start, stop, or restart."
+            ? "Container status from your Docker and Portainer integrations. Destructive actions require confirmation and only appear for Docker integrations with actions enabled."
+            : "Read-only container status from your Docker and Portainer integrations. Enable Docker actions in Settings to start, stop, or restart."
         }
         actions={
           <>
@@ -46,6 +50,7 @@ export default async function ContainersPage() {
       <ContainerList
         containers={resources}
         error={error}
+        warning={warning}
         enabled={enabled}
         actionsEnabled={actionsEnabled}
       />
