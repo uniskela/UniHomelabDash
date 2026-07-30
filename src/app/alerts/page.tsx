@@ -9,8 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { requireAuth } from "@/lib/auth/session-user";
 
-export default function AlertsPage() {
+export default async function AlertsPage() {
+  await requireAuth();
   return (
     <div className="space-y-6">
       <section className="space-y-2">

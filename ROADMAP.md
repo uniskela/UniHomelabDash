@@ -310,20 +310,25 @@ Success criteria:
 
 ## Phase 7 — Portainer Integration
 
-Status: Planned
+Status: In progress (v0.6.0)
 
 Goal: Support users who manage homelabs through Portainer.
 
 Features:
 
-* Connect to Portainer API.
-* List endpoints.
-* List stacks.
-* List containers.
-* View stack status.
-* Restart container.
-* Redeploy stack if safe/practical.
-* View logs where supported.
+Completed in v0.6.0:
+
+* Connect to Portainer API with `X-API-Key` access token auth
+* Multiple Portainer integrations in Settings
+* Read-only endpoint discovery and container list aggregation on `/containers`
+* Read-only container logs via Portainer Docker gateway
+* Encrypted storage for Portainer token and optional custom CA certificate
+
+Planned next increments:
+
+* Stack list and stack status views
+* Endpoint-specific filtering in UI
+* Explicit Portainer action support (restart/redeploy) only after additional safety checks
 
 Success criteria:
 

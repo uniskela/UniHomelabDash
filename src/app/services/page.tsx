@@ -1,4 +1,5 @@
 import { ServiceManager } from "@/components/service-manager";
+import { requireAuth } from "@/lib/auth/session-user";
 import { listServices } from "@/lib/services/queries";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export default async function ServicesPage({
 }: {
   searchParams: Promise<ServiceSearchParams>;
 }) {
+  await requireAuth();
   const params = await searchParams;
   const services = await listServices();
   const serviceDefaults = {

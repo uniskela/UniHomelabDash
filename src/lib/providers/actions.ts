@@ -14,8 +14,10 @@ import {
 import { executeProviderAction, testProviderConnection } from "@/lib/providers/runtime";
 import {
   createDockerProvider,
+  createPortainerProvider,
   deleteProviderById,
   listProvidersByType,
+  upsertPortainerProvider,
   upsertDockerProvider,
 } from "@/lib/providers/store";
 import type { ProviderPublicView } from "@/lib/providers/types";
@@ -37,6 +39,11 @@ export async function getDockerProvidersAction(): Promise<ProviderPublicView[]> 
   return listProvidersByType("docker").map((row) => rowToPublicView(toProviderRow(row)));
 }
 
+export async function getPortainerProvidersAction(): Promise<ProviderPublicView[]> {
+  await requireAuth();
+  return listProvidersByType("portainer").map((row) => rowToPublicView(toProviderRow(row)));
+}
+
 function parseConnectionMode(value: FormDataEntryValue | null): DockerConnectionMode {
   const mode = String(value ?? "local");
   return mode === "tcp" || mode === "tls" ? mode : "local";
@@ -50,6 +57,17 @@ export async function createDockerProviderAction() {
   }
 
   createDockerProvider("Docker");
+  revalidateProviderPaths();
+}
+
+export async function createPortainerProviderAction() {
+  try {
+    await requireAuth();
+  } catch {
+    return;
+  }
+
+  createPortainerProvider("Portainer");
   revalidateProviderPaths();
 }
 
@@ -160,6 +178,92 @@ export async function testDockerProviderAction(
   };
 }
 
+export async function configurePortainerProviderAction(
+  _previousState: ProviderActionState,
+  formData: FormData
+): Promise<ProviderActionState> {
+  try {
+    await requireAuth();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { ok: false, message: error.message };
+    }
+    throw error;
+  }
+
+  const providerId = String(formData.get("providerId") ?? "").trim() || undefined;
+  const name = String(formData.get("name") ?? "Portainer").trim();
+  const enabled = formData.get("enabled") === "on" || formData.get("enabled") === "true";
+  const baseUrl = String(formData.get("baseUrl") ?? "").trim().replace(/\/+$/, "");
+  const apiKey = String(formData.get("apiKey") ?? "").trim();
+  const caCert = String(formData.get("caCert") ?? "").trim();
+  const clearToken = formData.get("clearToken") === "on" || formData.get("clearToken") === "true";
+
+  if (!name) {
+    return { ok: false, message: "Integration name is required." };
+  }
+
+  if (providerId) {
+    const existing = getProviderRowById(providerId);
+    if (!existing || existing.type !== "portainer") {
+      return { ok: false, message: "Portainer integration not found." };
+    }
+  }
+
+  const credentials =
+    apiKey || caCert
+      ? {
+          ...(apiKey ? { portainerApiKey: apiKey } : {}),
+          ...(caCert ? { portainerCaCert: caCert } : {}),
+        }
+      : undefined;
+
+  upsertPortainerProvider({
+    id: providerId,
+    name,
+    enabled,
+    config: { baseUrl },
+    credentials,
+    preserveCredentials: !(clearToken || credentials),
+  });
+
+  revalidateProviderPaths();
+  return {
+    ok: true,
+    message: enabled
+      ? "Portainer integration saved. Test the connection to confirm access."
+      : "Portainer integration disabled.",
+  };
+}
+
+export async function testPortainerProviderAction(
+  _previousState: ProviderActionState,
+  formData: FormData
+): Promise<ProviderActionState> {
+  try {
+    await requireAuth();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { ok: false, message: error.message };
+    }
+    throw error;
+  }
+
+  const providerId = String(formData.get("providerId") ?? "").trim();
+  const row = providerId ? getProviderRowById(providerId) : null;
+  if (!row || row.type !== "portainer") {
+    return { ok: false, message: "Enable Portainer integration in Settings first." };
+  }
+
+  const result = await testProviderConnection(row.id);
+  revalidateProviderPaths();
+
+  return {
+    ok: result.ok,
+    message: result.message,
+  };
+}
+
 export async function deleteDockerProviderAction(formData: FormData) {
   try {
     await requireAuth();
@@ -170,6 +274,23 @@ export async function deleteDockerProviderAction(formData: FormData) {
   const providerId = String(formData.get("providerId") ?? "").trim();
   const row = providerId ? getProviderRowById(providerId) : null;
   if (!row || row.type !== "docker") {
+    return;
+  }
+
+  deleteProviderById(providerId);
+  revalidateProviderPaths();
+}
+
+export async function deletePortainerProviderAction(formData: FormData) {
+  try {
+    await requireAuth();
+  } catch {
+    return;
+  }
+
+  const providerId = String(formData.get("providerId") ?? "").trim();
+  const row = providerId ? getProviderRowById(providerId) : null;
+  if (!row || row.type !== "portainer") {
     return;
   }
 

@@ -90,6 +90,26 @@ export async function listProviderResources(
   };
 }
 
+export async function listContainerResources() {
+  const providerTypes: ProviderType[] = ["docker", "portainer"];
+  const resources: ProviderResource[] = [];
+  const errors: string[] = [];
+
+  for (const providerType of providerTypes) {
+    const result = await listProviderResources(providerType);
+    resources.push(...result.resources);
+
+    if (result.error && result.error !== "Provider is not configured or enabled.") {
+      errors.push(result.error);
+    }
+  }
+
+  return {
+    resources,
+    error: errors.length > 0 ? errors.join(" ") : undefined,
+  };
+}
+
 export async function getProviderLogs(
   providerType: ProviderType,
   resourceId: string,
@@ -149,9 +169,16 @@ export async function executeProviderAction(
 
 function providerHostMeta(configJson: string): Record<string, string> {
   try {
-    const config = JSON.parse(configJson) as { mode?: unknown; host?: unknown };
+    const config = JSON.parse(configJson) as {
+      mode?: unknown;
+      host?: unknown;
+      baseUrl?: unknown;
+    };
     if ((config.mode === "tcp" || config.mode === "tls") && typeof config.host === "string") {
       return { providerHost: config.host };
+    }
+    if (typeof config.baseUrl === "string" && config.baseUrl.trim()) {
+      return { providerHost: config.baseUrl.trim() };
     }
   } catch {
     return {};

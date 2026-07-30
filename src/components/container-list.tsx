@@ -104,12 +104,15 @@ export function ContainerList({
     setLogsError(null);
 
     try {
-      const params = new URLSearchParams({ tail: String(logLineCount) });
+      const params = new URLSearchParams({
+        tail: String(logLineCount),
+        providerType: container.providerType,
+      });
       if (container.providerId) {
         params.set("providerId", container.providerId);
       }
       const response = await fetch(
-        `/api/docker/containers/${encodeURIComponent(container.id)}/logs?${params.toString()}`
+        `/api/containers/${encodeURIComponent(container.id)}/logs?${params.toString()}`
       );
       const payload = (await response.json().catch(() => null)) as
         | { logs?: string; error?: string }
@@ -567,7 +570,9 @@ function containerActionsEnabled(container: ProviderResource) {
   return container.meta?.providerReadOnly !== "true";
 }
 function providerName(container: ProviderResource) {
-  return container.meta?.providerName || "Docker";
+  const provider = container.meta?.providerName || "Provider";
+  const endpointName = container.meta?.endpointName;
+  return endpointName ? `${provider} · ${endpointName}` : provider;
 }
 function filterLogs(logs: string, filter: LogLevelFilter) {
   if (!logs || filter === "all") {

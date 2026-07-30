@@ -18,7 +18,7 @@ UniHomelabDash requires authentication for dashboard access. Read this before de
 - First visit runs **first-run setup** at `/setup` to create a single admin account.
 - Subsequent visits require **username and password** login.
 - Sessions use a signed, HTTP-only cookie (`uh_session`) backed by `SESSION_SECRET`.
-- Setup completion is tracked with a signed cookie (`uh_setup`) so middleware can route correctly without database access on the edge.
+- Setup completion is tracked with a signed cookie (`uh_setup`) so `proxy.ts` can route correctly without database access at the request boundary.
 
 ### Environment variables
 
@@ -83,6 +83,14 @@ The default Compose file still does **not** mount the Docker socket.
 - Actions are blocked when read-only mode is enabled (default for existing installs).
 - A compromised admin session could trigger disruptive container operations. Treat admin credentials like root access on the Docker host.
 
+## Portainer integration (v0.6.0+)
+
+- Portainer integrations are read-only in v0.6.0 (container list and logs only).
+- Authentication uses Portainer access tokens sent in `X-API-Key`.
+- Tokens and optional custom CA certificates are encrypted at rest in the providers store.
+- Use dedicated least-privilege Portainer users/teams for dashboard access.
+- Prefer HTTPS (`:9443`) and private network exposure only.
+
 ## Health checks
 
 Health checks are **server-side HTTP GET** requests to URLs you configure. The UniHomelabDash process fetches those URLs when you tap Check or Check all.
@@ -99,11 +107,11 @@ For other bugs, open a [GitHub issue](https://github.com/uniskela/UniHomelabDash
 
 ## Known dependency advisories
 
-### PostCSS (transitive via Next.js)
+### PostCSS and sharp (transitive via Next.js)
 
-`npm audit` may report a moderate PostCSS advisory ([GHSA-qx2v-qp2m-jg93](https://github.com/advisories/GHSA-qx2v-qp2m-jg93)) via `next@16.2.x`, which bundles `postcss@8.4.31`. This affects **build-time CSS processing only** — not the production Docker image runtime (standalone Next.js output).
+`npm audit` may report PostCSS and sharp advisories via `next@16.2.x`, which currently bundles `postcss@8.4.31` and `sharp@0.34.5` under `node_modules/next`. Direct app dependencies are patched (`next@16.2.12`, top-level `sharp@0.35.3`), but nested advisories remain until upstream Next.js releases updated bundled transitives.
 
-A fix is available in Next.js 16.3+ preview releases. We track this until a stable Next.js patch ships with `postcss >= 8.5.10`. Do not upgrade to canary/preview solely for this advisory before v0.1.0.
+Security-critical Next.js runtime advisories from July 2026 are patched in `16.2.11+`; this project is pinned above that (`16.2.12`). We continue tracking nested transitive advisories for the next stable Next.js minor that updates those bundled packages.
 
 ### esbuild (drizzle-kit dev tooling)
 

@@ -4,6 +4,7 @@ import { providers } from "@/lib/db/schema";
 import { decryptCredentials } from "@/lib/providers/credentials";
 import { dockerProviderHandler } from "@/lib/providers/docker/provider";
 import { manualProviderHandler } from "@/lib/providers/manual/provider";
+import { portainerProviderHandler } from "@/lib/providers/portainer/provider";
 import type {
   ProviderContext,
   ProviderHandler,
@@ -15,7 +16,7 @@ import type {
 const handlers: Record<ProviderType, ProviderHandler | undefined> = {
   manual: manualProviderHandler,
   docker: dockerProviderHandler,
-  portainer: undefined,
+  portainer: portainerProviderHandler,
 };
 
 export function getProviderHandler(type: ProviderType): ProviderHandler | null {

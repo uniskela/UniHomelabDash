@@ -25,7 +25,7 @@ function parseTimestamps(value: string | null) {
 
 export async function GET(
   request: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<Record<string, string | string[] | undefined>> }
 ) {
   try {
     await requireAuth();
@@ -36,7 +36,8 @@ export async function GET(
     throw error;
   }
 
-  const { id } = await context.params;
+  const params = await context.params;
+  const id = typeof params.id === "string" ? params.id : "";
   const url = new URL(request.url);
   const tail = parseTail(url.searchParams.get("tail"));
   const timestamps = parseTimestamps(url.searchParams.get("timestamps"));
