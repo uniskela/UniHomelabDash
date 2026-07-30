@@ -3,7 +3,9 @@ import http from "node:http";
 import test from "node:test";
 import {
   buildPortainerRequestOptions,
+  getPortainerListTimeoutMs,
   joinPortainerPath,
+  listPortainerEndpointContainers,
   listPortainerEndpoints,
   unbracketHostname,
 } from "./client";
@@ -84,7 +86,7 @@ test("listPortainerEndpoints rejects hung responses with a timeout", async () =>
   const previousTimeout = process.env.UH_PORTAINER_REQUEST_TIMEOUT_MS;
   process.env.UH_PORTAINER_REQUEST_TIMEOUT_MS = "50";
 
-  const server = http.createServer((_request, _response) => {
+  const server = http.createServer(() => {
     // Intentionally never respond.
   });
 
@@ -109,6 +111,52 @@ test("listPortainerEndpoints rejects hung responses with a timeout", async () =>
       delete process.env.UH_PORTAINER_REQUEST_TIMEOUT_MS;
     } else {
       process.env.UH_PORTAINER_REQUEST_TIMEOUT_MS = previousTimeout;
+    }
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+});
+
+test("listPortainerEndpointContainers uses the shorter list timeout", async () => {
+  const previousListTimeout = process.env.UH_PORTAINER_LIST_TIMEOUT_MS;
+  const previousRequestTimeout = process.env.UH_PORTAINER_REQUEST_TIMEOUT_MS;
+  process.env.UH_PORTAINER_LIST_TIMEOUT_MS = "50";
+  process.env.UH_PORTAINER_REQUEST_TIMEOUT_MS = "5000";
+
+  assert.equal(getPortainerListTimeoutMs(), 50);
+
+  const server = http.createServer(() => {
+    // Intentionally never respond.
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => resolve());
+  });
+
+  const address = server.address();
+  assert.ok(address && typeof address !== "string");
+
+  try {
+    await assert.rejects(
+      listPortainerEndpointContainers(
+        { baseUrl: `http://127.0.0.1:${address.port}` },
+        { apiKey: "token" },
+        1
+      ),
+      /timed out/i
+    );
+  } finally {
+    if (previousListTimeout === undefined) {
+      delete process.env.UH_PORTAINER_LIST_TIMEOUT_MS;
+    } else {
+      process.env.UH_PORTAINER_LIST_TIMEOUT_MS = previousListTimeout;
+    }
+    if (previousRequestTimeout === undefined) {
+      delete process.env.UH_PORTAINER_REQUEST_TIMEOUT_MS;
+    } else {
+      process.env.UH_PORTAINER_REQUEST_TIMEOUT_MS = previousRequestTimeout;
     }
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));

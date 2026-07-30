@@ -10,6 +10,11 @@ import {
   validatePortainerConfig,
 } from "@/lib/providers/portainer/config";
 import {
+  clearEndpointFailure,
+  getEndpointCooldown,
+  markEndpointFailure,
+} from "@/lib/providers/portainer/endpoint-cooldown";
+import {
   parsePortainerResourceId,
   portainerContainerToProviderResource,
   endpointHostFromPortainerEndpoint,
@@ -90,21 +95,35 @@ export const portainerProviderHandler: ProviderHandler = {
       isPortainerDockerEndpoint(endpoint.Type)
     );
 
+    const skipped: string[] = [];
+    const activeEndpoints = dockerEndpoints.filter((endpoint) => {
+      const cooldown = getEndpointCooldown(context.provider.id, endpoint.Id);
+      if (!cooldown) {
+        return true;
+      }
+      const endpointName = endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`;
+      skipped.push(`${endpointName}: recently unreachable (${cooldown.message})`);
+      return false;
+    });
+
     const settled = await Promise.allSettled(
-      dockerEndpoints.map(async (endpoint) => {
+      activeEndpoints.map(async (endpoint) => {
         const containers = await listPortainerEndpointContainers(config, credentials, endpoint.Id);
         const endpointName = endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`;
         const endpointHost = endpointHostFromPortainerEndpoint(endpoint);
 
-        return containers.map((item) =>
-          portainerContainerToProviderResource({
-            endpointId: endpoint.Id,
-            endpointName,
-            endpointHost,
-            providerId: context.provider.id,
-            item,
-          })
-        );
+        return {
+          endpointId: endpoint.Id,
+          resources: containers.map((item) =>
+            portainerContainerToProviderResource({
+              endpointId: endpoint.Id,
+              endpointName,
+              endpointHost,
+              providerId: context.provider.id,
+              item,
+            })
+          ),
+        };
       })
     );
 
@@ -112,26 +131,34 @@ export const portainerProviderHandler: ProviderHandler = {
     const failures: string[] = [];
 
     for (const [index, result] of settled.entries()) {
-      if (result.status === "fulfilled") {
-        resources.push(...result.value);
+      const endpoint = activeEndpoints[index];
+      if (!endpoint) {
         continue;
       }
-      const endpointName =
-        dockerEndpoints[index]?.Name?.trim() || `Endpoint ${dockerEndpoints[index]?.Id ?? "?"}`;
-      failures.push(
-        `${endpointName}: ${redactSecrets(
-          result.reason instanceof Error ? result.reason.message : "Endpoint request failed."
-        )}`
+      const endpointName = endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`;
+
+      if (result.status === "fulfilled") {
+        clearEndpointFailure(context.provider.id, endpoint.Id);
+        resources.push(...result.value.resources);
+        continue;
+      }
+
+      const message = redactSecrets(
+        result.reason instanceof Error ? result.reason.message : "Endpoint request failed."
       );
+      markEndpointFailure(context.provider.id, endpoint.Id, message);
+      failures.push(`${endpointName}: ${message}`);
     }
 
-    if (resources.length === 0 && failures.length > 0) {
-      throw new Error(failures.join(" "));
+    const warnings = [...failures, ...skipped];
+
+    if (resources.length === 0 && warnings.length > 0) {
+      throw new Error(warnings.join(" "));
     }
 
     return {
       resources,
-      warning: failures.length > 0 ? failures.join(" ") : undefined,
+      warning: warnings.length > 0 ? warnings.join(" ") : undefined,
     };
   },
 

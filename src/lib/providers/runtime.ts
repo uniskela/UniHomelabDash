@@ -1,5 +1,10 @@
 import { redactSecrets } from "@/lib/providers/credentials";
 import {
+  getCachedContainerList,
+  invalidateContainerListCache,
+  setCachedContainerList,
+} from "@/lib/providers/container-list-cache";
+import {
   buildProviderContext,
   getProviderHandler,
   getProviderRowById,
@@ -57,16 +62,13 @@ export async function listProviderResources(
     return { resources: [], error: "Provider type is not supported." };
   }
 
-  const resources: ProviderResource[] = [];
-  const errors: string[] = [];
-  const warnings: string[] = [];
-
-  for (const row of rows) {
-    try {
+  const settled = await Promise.allSettled(
+    rows.map(async (row) => {
       const providerRow = toProviderRow(row);
       const listed = await handler.listResources(buildProviderContext(providerRow));
-      resources.push(
-        ...listed.resources.map((resource) => ({
+      return {
+        name: row.name,
+        resources: listed.resources.map((resource) => ({
           ...resource,
           providerId: resource.providerId ?? providerRow.id,
           meta: {
@@ -75,17 +77,30 @@ export async function listProviderResources(
             providerReadOnly: String(providerRow.readOnly),
             ...providerHostMeta(providerRow.configJson),
           },
-        }))
-      );
-      if (listed.warning) {
-        warnings.push(`${row.name}: ${listed.warning}`);
+        })),
+        warning: listed.warning,
+      };
+    })
+  );
+
+  const resources: ProviderResource[] = [];
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  for (const [index, result] of settled.entries()) {
+    const row = rows[index];
+    if (result.status === "fulfilled") {
+      resources.push(...result.value.resources);
+      if (result.value.warning) {
+        warnings.push(`${result.value.name}: ${result.value.warning}`);
       }
-    } catch (error) {
-      const message = redactSecrets(
-        error instanceof Error ? error.message : "Failed to load resources."
-      );
-      errors.push(`${row.name}: ${message}`);
+      continue;
     }
+
+    const message = redactSecrets(
+      result.reason instanceof Error ? result.reason.message : "Failed to load resources."
+    );
+    errors.push(`${row?.name ?? providerType}: ${message}`);
   }
 
   const combinedIssues = [...errors, ...warnings];
@@ -98,7 +113,19 @@ export async function listProviderResources(
   };
 }
 
-export async function listContainerResources() {
+export async function listContainerResources(options: { bypassCache?: boolean } = {}) {
+  if (!options.bypassCache) {
+    const cached = getCachedContainerList();
+    if (cached) {
+      return {
+        resources: cached.resources,
+        error: cached.error,
+        warning: cached.warning,
+        cachedAt: cached.cachedAt,
+      };
+    }
+  }
+
   const providerTypes: ProviderType[] = ["docker", "portainer"];
   const resources: ProviderResource[] = [];
   const errors: string[] = [];
@@ -131,7 +158,7 @@ export async function listContainerResources() {
 
   const combinedWarnings = [...errors, ...warnings];
 
-  return {
+  const payload = {
     resources,
     // Page-level error only when every provider failed; otherwise keep healthy
     // containers visible and surface partial failures as a warning.
@@ -141,7 +168,15 @@ export async function listContainerResources() {
         ? combinedWarnings.join(" ")
         : undefined,
   };
+
+  const cached = setCachedContainerList(payload);
+  return {
+    ...payload,
+    cachedAt: cached.cachedAt,
+  };
 }
+
+export { invalidateContainerListCache };
 
 export async function getProviderLogs(
   providerType: ProviderType,

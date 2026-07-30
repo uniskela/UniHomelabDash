@@ -265,7 +265,7 @@ Authentication decision:
 
 UniHomelabDash is a control-plane app. It must treat integrations and actions as privileged operations.
 
-**Current state (v0.6.0):** Single-admin authentication is required for dashboard access. Provider system includes manual services, multi-instance Docker (read/actions/logs), and read-only Portainer integration (container status/logs). See [SECURITY.md](SECURITY.md) for deployment guidance (`SESSION_SECRET`, optional `COOKIE_SECURE` behind HTTPS, Docker socket and Portainer token risks).
+**Current state (v0.6.1):** Single-admin authentication is required for dashboard access. Provider system includes manual services, multi-instance Docker (read/actions/logs), and read-only Portainer integration (container status/logs). Containers load asynchronously with short list timeouts, endpoint cooldown, and in-memory caching. See [SECURITY.md](SECURITY.md) for deployment guidance (`SESSION_SECRET`, optional `COOKIE_SECURE` behind HTTPS, Docker socket and Portainer token risks).
 
 **Next state (Phase 7 remainder):** Portainer stack-level visibility and carefully scoped actions with confirmation UX.
 

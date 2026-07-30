@@ -118,7 +118,7 @@ test("listDockerContainers rejects hung responses with a timeout", async () => {
   const previousTimeout = process.env.UH_DOCKER_REQUEST_TIMEOUT_MS;
   process.env.UH_DOCKER_REQUEST_TIMEOUT_MS = "50";
 
-  const server = await withDockerServer((_request, _response) => {
+  const server = await withDockerServer(() => {
     // Intentionally never respond.
   });
 
