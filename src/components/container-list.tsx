@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Eye,
   FileText,
   LayoutDashboard,
   Play,
@@ -12,10 +13,14 @@ import {
   Settings,
   ShieldAlert,
   Square,
+  X,
 } from "lucide-react";
+import { ContainerCard } from "@/components/container-card";
+import { ControlSelect } from "@/components/control-select";
 import { ContainerStatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { StatTile, StatTileGrid } from "@/components/stat-tile";
+import { useContainerViewPreferences } from "@/components/use-container-view-preferences";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,13 +36,24 @@ import { initialProviderActionState } from "@/lib/providers/action-state";
 import { executeContainerAction } from "@/lib/providers/actions";
 import { buildContainerServiceDefaults } from "@/lib/providers/docker/dashboard-prefill";
 import {
-  containerHostLabel,
+  containerHideKey,
+  containerProviderCaption,
   filterContainers,
+  groupContainers,
   isRunningContainer,
   isStoppedContainer,
   listContainerHostOptions,
+  splitHiddenContainers,
   type ContainerStatusFilter,
 } from "@/lib/providers/container-filters";
+import {
+  defaultContainerViewPreferences,
+  toggleHiddenContainer,
+  type ContainerGroupMode,
+  type ContainerViewMode,
+  type ContainerViewPreferences,
+} from "@/lib/providers/container-preferences";
+import { containerQueryPrefixes } from "@/lib/providers/container-query";
 import type { ProviderResource } from "@/lib/providers/types";
 import { cn } from "@/lib/utils";
 
@@ -52,13 +68,34 @@ const filterOptions: Array<{ id: ContainerStatusFilter; label: string }> = [
   { id: "stopped", label: "Stopped" },
 ];
 
-const logLineOptions: LogLineCount[] = [10, 50, 100, 200, 500];
+const viewOptions: Array<{ value: ContainerViewMode; label: string }> = [
+  { value: "list", label: "List" },
+  { value: "grid", label: "Grid" },
+  { value: "tiles", label: "Tiles" },
+];
 
-const logLevelOptions: Array<{ id: LogLevelFilter; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "log", label: "Log" },
-  { id: "warn", label: "Warn" },
-  { id: "error", label: "Error" },
+const groupOptions: Array<{ value: ContainerGroupMode; label: string }> = [
+  { value: "none", label: "No grouping" },
+  { value: "host", label: "Host" },
+  { value: "status", label: "Status" },
+  { value: "provider", label: "Provider" },
+];
+
+const viewClasses: Record<ContainerViewMode, string> = {
+  list: "grid gap-3",
+  grid: "grid gap-3 sm:grid-cols-2 xl:grid-cols-3",
+  tiles: "grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4",
+};
+
+const logLineOptions: Array<{ value: string; label: string }> = [10, 50, 100, 200, 500].map(
+  (count) => ({ value: String(count), label: String(count) })
+);
+
+const logLevelOptions: Array<{ value: LogLevelFilter; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "log", label: "Log" },
+  { value: "warn", label: "Warn" },
+  { value: "error", label: "Error" },
 ];
 
 const warningPattern = /\bwarn(?:ing)?\b/i;
@@ -70,6 +107,7 @@ export function ContainerList({
   warning,
   enabled,
   actionsEnabled = false,
+  initialPreferences = defaultContainerViewPreferences,
   onRefresh,
 }: {
   containers: ProviderResource[];
@@ -77,6 +115,7 @@ export function ContainerList({
   warning?: string | null;
   enabled: boolean;
   actionsEnabled?: boolean;
+  initialPreferences?: ContainerViewPreferences;
   onRefresh?: () => void;
 }) {
   const [selected, setSelected] = useState<ProviderResource | null>(null);
@@ -85,6 +124,10 @@ export function ContainerList({
   const [filter, setFilter] = useState<ContainerStatusFilter>("all");
   const [hostFilter, setHostFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showHidden, setShowHidden] = useState(false);
+  const [showSearchTips, setShowSearchTips] = useState(false);
+  const [dismissedWarning, setDismissedWarning] = useState<string | null>(null);
+  const { preferences, saveError, update } = useContainerViewPreferences(initialPreferences);
   const [logs, setLogs] = useState<string | null>(null);
   const [logsError, setLogsError] = useState<string | null>(null);
   const [logsLoading, setLogsLoading] = useState(false);
@@ -155,21 +198,61 @@ export function ContainerList({
     }
   }
 
-  const hostOptions = useMemo(() => listContainerHostOptions(containers), [containers]);
+  const hostOptions = useMemo(
+    () => [
+      { value: "all", label: "All hosts" },
+      ...listContainerHostOptions(containers).map((host) => ({ value: host, label: host })),
+    ],
+    [containers]
+  );
+
+  const { visible, concealed } = useMemo(
+    () => splitHiddenContainers(containers, preferences.hidden),
+    [containers, preferences.hidden]
+  );
+
+  const scopedContainers = showHidden ? containers : visible;
 
   const filteredContainers = useMemo(
     () =>
-      filterContainers(containers, {
+      filterContainers(scopedContainers, {
         status: filter,
         host: hostFilter === "all" ? "" : hostFilter,
         search: searchQuery,
       }),
-    [containers, filter, hostFilter, searchQuery]
+    [scopedContainers, filter, hostFilter, searchQuery]
   );
+
+  const groups = useMemo(
+    () => groupContainers(filteredContainers, preferences.groupBy),
+    [filteredContainers, preferences.groupBy]
+  );
+
+  const hiddenKeys = useMemo(() => new Set(preferences.hidden), [preferences.hidden]);
 
   const visibleLogs = useMemo(() => filterLogs(logs ?? "", logLevelFilter), [logs, logLevelFilter]);
 
   const filtersActive = filter !== "all" || hostFilter !== "all" || searchQuery.trim().length > 0;
+
+  function setView(view: ContainerViewMode) {
+    update({ ...preferences, view });
+  }
+
+  function setGroupBy(groupBy: ContainerGroupMode) {
+    update({ ...preferences, groupBy });
+  }
+
+  function toggleHidden(container: ProviderResource) {
+    update({
+      ...preferences,
+      hidden: toggleHiddenContainer(preferences.hidden, containerHideKey(container)),
+    });
+  }
+
+  function unhideAll() {
+    update({ ...preferences, hidden: [] });
+    setShowHidden(false);
+  }
 
   if (!enabled) {
     return (
@@ -205,22 +288,40 @@ export function ContainerList({
     );
   }
 
-  const runningCount = containers.filter((item) => isRunningContainer(item.status)).length;
-  const stoppedCount = containers.length - runningCount;
+  const runningCount = visible.filter((item) => isRunningContainer(item.status)).length;
+  const stoppedCount = visible.length - runningCount;
 
   return (
     <>
-      {warning ? (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-100/90">
+      {warning && dismissedWarning !== warning ? (
+        <div
+          className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-100/90"
+          role="status"
+        >
           <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-300" />
-          <p>
+          <p className="min-w-0 flex-1">
             Some integrations failed while loading containers. Healthy results are still shown.{" "}
             {warning}
           </p>
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="ghost"
+            className="-mt-1 -mr-1 shrink-0 text-amber-100/70 hover:bg-amber-500/10 hover:text-amber-100"
+            onClick={() => setDismissedWarning(warning)}
+            aria-label="Dismiss container warning"
+          >
+            <X />
+          </Button>
         </div>
       ) : null}
       <StatTileGrid>
-        <StatTile icon={<Box />} label="Total" value={containers.length.toString()} />
+        <StatTile
+          icon={<Box />}
+          label="Total"
+          value={visible.length.toString()}
+          detail={concealed.length > 0 ? `${concealed.length} hidden` : undefined}
+        />
         <StatTile
           icon={<Box />}
           label="Running"
@@ -236,19 +337,34 @@ export function ContainerList({
       </StatTileGrid>
 
       <div className="space-y-3">
-        <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search name, image, host, or ports"
-            aria-label="Search containers"
-            className="pl-8"
-          />
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search containers, or try host:nas name:immich"
+              aria-label="Search containers"
+              className="pl-8"
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              size="xs"
+              variant="ghost"
+              className="text-muted-foreground"
+              onClick={() => setShowSearchTips((current) => !current)}
+              aria-expanded={showSearchTips}
+            >
+              {showSearchTips ? "Hide search tips" : "Search tips"}
+            </Button>
+          </div>
+          {showSearchTips ? <SearchTips /> : null}
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+          <div className="flex flex-wrap gap-2 sm:pb-0.5">
             {filterOptions.map((option) => (
               <Button
                 key={option.id}
@@ -262,86 +378,97 @@ export function ContainerList({
             ))}
           </div>
 
-          <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs text-muted-foreground sm:max-w-xs">
-            <span className="font-medium text-foreground">Host</span>
-            <select
-              value={hostFilter}
-              onChange={(event) => setHostFilter(event.target.value)}
-              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
-              aria-label="Filter by host"
-            >
-              <option value="all">All hosts</option>
-              {hostOptions.map((host) => (
-                <option key={host} value={host}>
-                  {host}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ControlSelect
+            label="Host"
+            value={hostFilter}
+            options={hostOptions}
+            onChange={setHostFilter}
+            className="min-w-[10rem] flex-1 sm:max-w-xs"
+          />
+          <ControlSelect
+            label="View as"
+            value={preferences.view}
+            options={viewOptions}
+            onChange={setView}
+            className="min-w-[7rem]"
+          />
+          <ControlSelect
+            label="Grouped by"
+            value={preferences.groupBy}
+            options={groupOptions}
+            onChange={setGroupBy}
+            className="min-w-[9rem]"
+          />
         </div>
 
-        {filtersActive ? (
-          <p className="text-xs text-muted-foreground">
-            Showing {filteredContainers.length} of {containers.length} containers
-            {hostFilter !== "all" ? ` on ${hostFilter}` : ""}.
-          </p>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
+          {filtersActive || showHidden ? (
+            <span>
+              Showing {filteredContainers.length} of {scopedContainers.length} containers
+              {hostFilter !== "all" ? ` on ${hostFilter}` : ""}.
+            </span>
+          ) : null}
+          {concealed.length > 0 ? (
+            <>
+              <span>
+                {concealed.length} {concealed.length === 1 ? "container" : "containers"} hidden.
+              </span>
+              <Button
+                type="button"
+                size="xs"
+                variant="outline"
+                onClick={() => setShowHidden((current) => !current)}
+              >
+                <Eye />
+                {showHidden ? "Hide hidden" : "Show hidden"}
+              </Button>
+              <Button type="button" size="xs" variant="ghost" onClick={unhideAll}>
+                Unhide all
+              </Button>
+            </>
+          ) : null}
+          {saveError ? (
+            <span className="text-amber-300" role="status">
+              {saveError}
+            </span>
+          ) : null}
+        </div>
       </div>
 
-      <div className="grid gap-3">
-        {filteredContainers.map((container) => (
-          <button
-            key={`${container.providerId ?? container.providerType}-${container.id}`}
-            type="button"
-            onClick={() => openContainer(container)}
-            className={cn(
-              "rounded-xl border border-border/80 bg-card/80 p-4 text-left transition hover:border-primary/20 hover:bg-card",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-            )}
-          >
-            <div className="flex items-start gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted ring-1 ring-border/60">
-                <Box className="size-4 text-muted-foreground" />
-              </span>
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="truncate font-medium">{container.name}</span>
-                  <ContainerStatusBadge status={container.status} />
-                </div>
-                <p className="truncate font-mono text-xs text-muted-foreground">
-                  {providerName(container)} · {container.image}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  Host: {containerHostLabel(container)}
-                </p>
-                {container.ports?.length ? (
-                  <div className="flex flex-wrap gap-1 pt-1">
-                    {container.ports.slice(0, 3).map((port, index) => (
-                      <span
-                        key={`${port}-${index}`}
-                        className="rounded-md bg-muted/60 px-1.5 py-0.5 font-mono text-[0.65rem] text-muted-foreground"
-                      >
-                        {port}
-                      </span>
-                    ))}
-                    {container.ports.length > 3 ? (
-                      <span className="text-xs text-muted-foreground">
-                        +{container.ports.length - 3} more
-                      </span>
-                    ) : null}
-                  </div>
-                ) : null}
+      <div className="space-y-6">
+        {groups.map((group) => (
+          <section key={group.key} className="space-y-3">
+            {group.label ? (
+              <div className="flex items-center gap-3">
+                <h2 className="text-sm font-medium capitalize">{group.label}</h2>
+                <span className="rounded-md bg-muted/60 px-1.5 py-0.5 font-mono text-[0.65rem] text-muted-foreground">
+                  {group.containers.length}
+                </span>
+                <span className="h-px flex-1 bg-border/60" />
               </div>
-            </div>
-            {container.summary ? (
-              <p className="mt-2 pl-[3.25rem] text-xs text-muted-foreground">{container.summary}</p>
             ) : null}
-          </button>
+            <div className={viewClasses[preferences.view]}>
+              {group.containers.map((container) => (
+                <ContainerCard
+                  key={`${container.providerId ?? container.providerType}-${container.id}`}
+                  container={container}
+                  view={preferences.view}
+                  hidden={hiddenKeys.has(containerHideKey(container))}
+                  onOpen={() => openContainer(container)}
+                  onToggleHidden={() => toggleHidden(container)}
+                />
+              ))}
+            </div>
+          </section>
         ))}
       </div>
 
       {filteredContainers.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No containers match this filter.</p>
+        <p className="text-sm text-muted-foreground">
+          {concealed.length > 0 && !showHidden
+            ? "No containers match this filter. Some containers are hidden."
+            : "No containers match this filter."}
+        </p>
       ) : null}
 
       <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && closeContainer()}>
@@ -357,7 +484,7 @@ export function ContainerList({
                     <div className="min-w-0 space-y-1">
                       <DialogTitle>{selected.name}</DialogTitle>
                       <DialogDescription className="font-mono text-xs">
-                        {providerName(selected)} · {selected.image}
+                        {containerProviderCaption(selected)} · {selected.image}
                       </DialogDescription>
                       <div className="pt-1">
                         <ContainerStatusBadge status={selected.status} />
@@ -451,36 +578,18 @@ export function ContainerList({
                   </div>
                   {logs !== null ? (
                     <div className="flex flex-wrap items-end gap-2">
-                      <SelectField label="Lines">
-                        <select
-                          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                          value={logLineCount}
-                          onChange={(event) =>
-                            setLogLineCount(Number(event.target.value) as LogLineCount)
-                          }
-                        >
-                          {logLineOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      </SelectField>
-                      <SelectField label="Filter">
-                        <select
-                          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                          value={logLevelFilter}
-                          onChange={(event) =>
-                            setLogLevelFilter(event.target.value as LogLevelFilter)
-                          }
-                        >
-                          {logLevelOptions.map((option) => (
-                            <option key={option.id} value={option.id}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </SelectField>
+                      <ControlSelect
+                        label="Lines"
+                        value={String(logLineCount)}
+                        options={logLineOptions}
+                        onChange={(value) => setLogLineCount(Number(value) as LogLineCount)}
+                      />
+                      <ControlSelect
+                        label="Filter"
+                        value={logLevelFilter}
+                        options={logLevelOptions}
+                        onChange={setLogLevelFilter}
+                      />
                       <Button
                         type="button"
                         size="sm"
@@ -646,11 +755,42 @@ export function ContainerList({
 function containerActionsEnabled(container: ProviderResource) {
   return container.meta?.providerReadOnly !== "true";
 }
-function providerName(container: ProviderResource) {
-  const provider = container.meta?.providerName || "Provider";
-  const endpointName = container.meta?.endpointName;
-  return endpointName ? `${provider} · ${endpointName}` : provider;
+
+function SearchTips() {
+  return (
+    <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground">
+      <p>
+        Type plain text to search names, images, hosts, and ports. Add a prefix to target one
+        field, and combine as many terms as you like.
+      </p>
+      <div className="flex flex-wrap gap-1">
+        {containerQueryPrefixes.map((prefix) => (
+          <code
+            key={prefix}
+            className="rounded-md bg-background px-1.5 py-0.5 font-mono text-[0.65rem] text-foreground"
+          >
+            {prefix}
+          </code>
+        ))}
+      </div>
+      <ul className="space-y-1">
+        <li>
+          <code className="font-mono text-foreground">host:nas status:running</code> — running
+          containers on hosts matching &quot;nas&quot;.
+        </li>
+        <li>
+          <code className="font-mono text-foreground">image:postgres -name:test</code> — Postgres
+          images, excluding names containing &quot;test&quot;.
+        </li>
+        <li>
+          <code className="font-mono text-foreground">name:&quot;media server&quot;</code> — quote
+          values that contain spaces.
+        </li>
+      </ul>
+    </div>
+  );
 }
+
 function filterLogs(logs: string, filter: LogLevelFilter) {
   if (!logs || filter === "all") {
     return logs;
@@ -695,21 +835,6 @@ function actionConfirmLabel(action: ContainerAction) {
   if (action === "start") return "Start container";
   if (action === "stop") return "Stop container";
   return "Restart container";
-}
-
-function SelectField({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="grid gap-1 text-xs text-muted-foreground">
-      {label}
-      {children}
-    </label>
-  );
 }
 
 function DetailRow({

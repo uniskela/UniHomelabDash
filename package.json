@@ -1,6 +1,6 @@
 {
   "name": "unihomelabdash",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Self-hosted homelab PWA for manual services and on-demand health checks",
   "license": "MIT",
   "private": true,

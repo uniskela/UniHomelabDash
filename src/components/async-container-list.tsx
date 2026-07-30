@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Box, LoaderCircle } from "lucide-react";
 import { ContainerList } from "@/components/container-list";
+import {
+  defaultContainerViewPreferences,
+  type ContainerViewPreferences,
+} from "@/lib/providers/container-preferences";
 import type { ProviderResource } from "@/lib/providers/types";
 
 type ContainersPayload = {
@@ -15,18 +19,28 @@ type ContainersPayload = {
 export function AsyncContainerList({
   enabled,
   actionsEnabled = false,
+  initialPreferences = defaultContainerViewPreferences,
 }: {
   enabled: boolean;
   actionsEnabled?: boolean;
+  initialPreferences?: ContainerViewPreferences;
 }) {
   if (!enabled) {
     return <ContainerList containers={[]} enabled={false} actionsEnabled={actionsEnabled} />;
   }
 
-  return <EnabledContainerList actionsEnabled={actionsEnabled} />;
+  return (
+    <EnabledContainerList actionsEnabled={actionsEnabled} initialPreferences={initialPreferences} />
+  );
 }
 
-function EnabledContainerList({ actionsEnabled }: { actionsEnabled: boolean }) {
+function EnabledContainerList({
+  actionsEnabled,
+  initialPreferences,
+}: {
+  actionsEnabled: boolean;
+  initialPreferences: ContainerViewPreferences;
+}) {
   const [containers, setContainers] = useState<ProviderResource[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -110,6 +124,7 @@ function EnabledContainerList({ actionsEnabled }: { actionsEnabled: boolean }) {
       warning={warning}
       enabled
       actionsEnabled={actionsEnabled}
+      initialPreferences={initialPreferences}
       onRefresh={refresh}
     />
   );
