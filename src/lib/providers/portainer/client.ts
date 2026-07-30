@@ -47,23 +47,42 @@ function getPortainerRequestTimeoutMs() {
   return Number.isFinite(configured) && configured > 0 ? configured : 15_000;
 }
 
-function buildPortainerRequestOptions({
+/** Keep any reverse-proxy prefix from the base URL ahead of the API path. */
+export function joinPortainerPath(basePathname: string, path: string) {
+  const prefix = basePathname.replace(/\/+$/, "");
+  if (!prefix) {
+    return path;
+  }
+
+  return `${prefix}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+/** Node's hostname option expects IPv6 literals without surrounding brackets. */
+export function unbracketHostname(hostname: string) {
+  return hostname.startsWith("[") && hostname.endsWith("]")
+    ? hostname.slice(1, -1)
+    : hostname;
+}
+
+export function buildPortainerRequestOptions({
   config,
   credentials,
   path,
   method = "GET",
-}: PortainerRequestOptions): http.RequestOptions | https.RequestOptions {
+}: PortainerRequestOptions): (http.RequestOptions | https.RequestOptions) & {
+  protocol: string;
+} {
   const baseUrl = new URL(config.baseUrl);
   const isHttps = baseUrl.protocol === "https:";
 
-  const commonOptions: http.RequestOptions = {
+  const commonOptions: http.RequestOptions & { protocol: string } = {
     protocol: baseUrl.protocol,
-    hostname: baseUrl.hostname,
+    hostname: unbracketHostname(baseUrl.hostname),
     port: baseUrl.port ? Number.parseInt(baseUrl.port, 10) : isHttps ? 443 : 80,
-    path,
+    path: joinPortainerPath(baseUrl.pathname, path),
     method,
     headers: {
-      Host: baseUrl.hostname,
+      Host: baseUrl.host,
       "X-API-Key": credentials.apiKey ?? "",
     },
   };
@@ -82,7 +101,7 @@ function buildPortainerRequestOptions({
 function portainerRequest<T>(options: PortainerRequestOptions): Promise<T> {
   return new Promise((resolve, reject) => {
     const requestOptions = buildPortainerRequestOptions(options);
-    const transport = options.config.baseUrl.startsWith("https://") ? https.request : http.request;
+    const transport = requestOptions.protocol === "https:" ? https.request : http.request;
     let settled = false;
 
     const finish = (error?: Error, value?: T) => {
