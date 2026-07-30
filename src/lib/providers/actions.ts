@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { AuthError } from "@/lib/auth/types";
 import { requireAuth } from "@/lib/auth/session-user";
+import { decryptCredentials } from "@/lib/providers/credentials";
 import type { DockerConnectionMode } from "@/lib/providers/docker/config";
+import { mergePortainerCredentialUpdates } from "@/lib/providers/portainer/credentials-merge";
 import {
   getProviderRowById,
   getProviderRowByType,
@@ -203,20 +205,27 @@ export async function configurePortainerProviderAction(
     return { ok: false, message: "Integration name is required." };
   }
 
+  let existingCredentials: Record<string, string> = {};
   if (providerId) {
     const existing = getProviderRowById(providerId);
     if (!existing || existing.type !== "portainer") {
       return { ok: false, message: "Portainer integration not found." };
     }
+    if (existing.credentialsEncrypted) {
+      try {
+        existingCredentials = decryptCredentials(existing.credentialsEncrypted);
+      } catch {
+        existingCredentials = {};
+      }
+    }
   }
 
-  const credentials =
-    apiKey || caCert
-      ? {
-          ...(apiKey ? { portainerApiKey: apiKey } : {}),
-          ...(caCert ? { portainerCaCert: caCert } : {}),
-        }
-      : undefined;
+  const { credentials, preserveCredentials } = mergePortainerCredentialUpdates({
+    existing: existingCredentials,
+    apiKey,
+    caCert,
+    clearToken,
+  });
 
   upsertPortainerProvider({
     id: providerId,
@@ -224,7 +233,7 @@ export async function configurePortainerProviderAction(
     enabled,
     config: { baseUrl },
     credentials,
-    preserveCredentials: !(clearToken || credentials),
+    preserveCredentials,
   });
 
   revalidateProviderPaths();

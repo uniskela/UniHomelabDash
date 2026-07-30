@@ -22,7 +22,16 @@ import type {
   ProviderResource,
 } from "@/lib/providers/types";
 
-const DOCKER_ENDPOINT_TYPES = new Set([1, 2, 5, 7]);
+// Portainer EndpointType: 1 Docker, 2 Agent on Docker, 4 Edge Agent on Docker.
+// Exclude Kubernetes (5/6/7) and Azure (3) — those are not Docker Engine gateways.
+const DOCKER_ENDPOINT_TYPES = new Set([1, 2, 4]);
+
+export function isPortainerDockerEndpoint(type: number | undefined) {
+  if (type === undefined) {
+    return true;
+  }
+  return DOCKER_ENDPOINT_TYPES.has(type);
+}
 
 export const portainerProviderHandler: ProviderHandler = {
   meta: {
@@ -45,7 +54,7 @@ export const portainerProviderHandler: ProviderHandler = {
     try {
       const endpoints = await listPortainerEndpoints(config, credentials);
       const dockerEndpoints = endpoints.filter((endpoint) =>
-        endpoint.Type ? DOCKER_ENDPOINT_TYPES.has(endpoint.Type) : true
+        isPortainerDockerEndpoint(endpoint.Type)
       );
 
       return {
@@ -76,7 +85,7 @@ export const portainerProviderHandler: ProviderHandler = {
 
     const endpoints = await listPortainerEndpoints(config, credentials);
     const dockerEndpoints = endpoints.filter((endpoint) =>
-      endpoint.Type ? DOCKER_ENDPOINT_TYPES.has(endpoint.Type) : true
+      isPortainerDockerEndpoint(endpoint.Type)
     );
 
     const settled = await Promise.allSettled(

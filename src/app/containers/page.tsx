@@ -18,9 +18,9 @@ export default async function ContainersPage() {
   const providers = [...dockerProviders, ...portainerProviders];
   const enabled = providers.some((provider) => provider.enabled);
   const actionsEnabled = dockerProviders.some((provider) => provider.enabled && !provider.readOnly);
-  const { resources, error } = enabled
+  const { resources, error, warning } = enabled
     ? await listContainerResources()
-    : { resources: [], error: undefined };
+    : { resources: [], error: undefined, warning: undefined };
 
   const connectionStatus = !enabled ? "disabled" : error ? "error" : "connected";
 
@@ -50,6 +50,7 @@ export default async function ContainersPage() {
       <ContainerList
         containers={resources}
         error={error}
+        warning={warning}
         enabled={enabled}
         actionsEnabled={actionsEnabled}
       />

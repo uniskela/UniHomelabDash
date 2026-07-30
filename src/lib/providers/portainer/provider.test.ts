@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { portainerProviderHandler } from "./provider";
+import { isPortainerDockerEndpoint, portainerProviderHandler } from "./provider";
 import type { ProviderContext } from "@/lib/providers/types";
 
 function providerContext(config: Record<string, unknown>): ProviderContext {
@@ -42,4 +42,15 @@ test("portainer provider getLogs rejects malformed resource ids", async () => {
     logs: "",
     message: "Invalid Portainer container reference.",
   });
+});
+
+test("isPortainerDockerEndpoint includes Edge Agent Docker and excludes Kubernetes", () => {
+  assert.equal(isPortainerDockerEndpoint(1), true);
+  assert.equal(isPortainerDockerEndpoint(2), true);
+  assert.equal(isPortainerDockerEndpoint(4), true);
+  assert.equal(isPortainerDockerEndpoint(undefined), true);
+  assert.equal(isPortainerDockerEndpoint(3), false);
+  assert.equal(isPortainerDockerEndpoint(5), false);
+  assert.equal(isPortainerDockerEndpoint(6), false);
+  assert.equal(isPortainerDockerEndpoint(7), false);
 });

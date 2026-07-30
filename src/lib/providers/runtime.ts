@@ -106,7 +106,10 @@ export async function listContainerResources() {
 
   return {
     resources,
-    error: errors.length > 0 ? errors.join(" ") : undefined,
+    // Page-level error only when every provider failed; otherwise keep healthy
+    // containers visible and surface partial failures as a warning.
+    error: resources.length === 0 && errors.length > 0 ? errors.join(" ") : undefined,
+    warning: resources.length > 0 && errors.length > 0 ? errors.join(" ") : undefined,
   };
 }
 
