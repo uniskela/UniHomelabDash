@@ -5,6 +5,7 @@ if (process.env.npm_lifecycle_event !== "test") {
 import http from "node:http";
 import https from "node:https";
 import type { DockerProviderConfig, DockerTlsCredentials } from "@/lib/providers/docker/config";
+import { decodeDockerLogResponse } from "@/lib/providers/docker/log-stream";
 import type { ContainerLogsOptions } from "@/lib/providers/types";
 
 type DockerListItem = {
@@ -69,7 +70,9 @@ function buildRequestOptions({
   return remoteBase;
 }
 
-function dockerRequest<T>(options: DockerRequestOptions): Promise<T> {
+function dockerRequest<T>(
+  options: DockerRequestOptions & { decodeLogs?: boolean }
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const requestOptions = buildRequestOptions(options);
     const transport =
@@ -78,28 +81,44 @@ function dockerRequest<T>(options: DockerRequestOptions): Promise<T> {
         : http.request;
 
     const request = transport(requestOptions, (response) => {
-      let body = "";
+      const chunks: Buffer[] = [];
 
       response.on("data", (chunk: Buffer | string) => {
-        body += chunk.toString();
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
       });
 
       response.on("end", () => {
         const statusCode = response.statusCode ?? 500;
+        const body = Buffer.concat(chunks);
+
         if (statusCode >= 400) {
-          reject(new Error(body || `Docker API returned ${statusCode}.`));
+          reject(new Error(body.toString("utf8") || `Docker API returned ${statusCode}.`));
           return;
         }
 
-        if (!body.trim()) {
+        if (options.decodeLogs) {
+          const contentType = Array.isArray(response.headers["content-type"])
+            ? response.headers["content-type"][0]
+            : response.headers["content-type"];
+          resolve(decodeDockerLogResponse(body, contentType ?? "") as T);
+          return;
+        }
+
+        if (body.length === 0) {
+          resolve(undefined as T);
+          return;
+        }
+
+        const text = body.toString("utf8");
+        if (!text.trim()) {
           resolve(undefined as T);
           return;
         }
 
         try {
-          resolve(JSON.parse(body) as T);
+          resolve(JSON.parse(text) as T);
         } catch {
-          resolve(body as T);
+          resolve(text as T);
         }
       });
     });
@@ -155,6 +174,7 @@ export async function getDockerContainerLogs(
     config,
     credentials,
     path: `/containers/${encodeURIComponent(containerId)}/logs?${params.toString()}`,
+    decodeLogs: true,
   });
 
   return logs ?? "";

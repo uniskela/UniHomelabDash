@@ -46,6 +46,11 @@ export type ContainerLogsResult = {
   message?: string;
 };
 
+export type ListResourcesResult = {
+  resources: ProviderResource[];
+  warning?: string;
+};
+
 export type ProviderDefinitionMeta = {
   type: ProviderType;
   name: string;
@@ -98,7 +103,7 @@ export type ProviderContext = {
 export interface ProviderHandler {
   meta: ProviderDefinitionMeta;
   testConnection(context: ProviderContext): Promise<ConnectionTestResult>;
-  listResources(context: ProviderContext): Promise<ProviderResource[]>;
+  listResources(context: ProviderContext): Promise<ListResourcesResult>;
   getLogs?(
     context: ProviderContext,
     resourceId: string,

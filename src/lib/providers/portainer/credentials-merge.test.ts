@@ -61,6 +61,26 @@ test("mergePortainerCredentialUpdates clears the token while keeping CA", () => 
   });
 });
 
+test("mergePortainerCredentialUpdates clears stored CA while keeping the token", () => {
+  const result = mergePortainerCredentialUpdates({
+    existing: {
+      portainerApiKey: "existing-token",
+      portainerCaCert: "existing-ca",
+    },
+    apiKey: "",
+    caCert: "",
+    clearToken: false,
+    clearCaCert: true,
+  });
+
+  assert.deepEqual(result, {
+    credentials: {
+      portainerApiKey: "existing-token",
+    },
+    preserveCredentials: false,
+  });
+});
+
 test("mergePortainerCredentialUpdates preserves credentials when form fields are blank", () => {
   const result = mergePortainerCredentialUpdates({
     existing: {

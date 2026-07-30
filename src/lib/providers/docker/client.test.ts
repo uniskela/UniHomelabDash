@@ -61,10 +61,16 @@ test("getDockerContainerLogs requests default stdout and stderr tail with timest
   }
 });
 
-test("getDockerContainerLogs returns empty log output", async () => {
+test("getDockerContainerLogs demultiplexes raw docker log streams", async () => {
+  const payload = Buffer.from("started\n", "utf8");
+  const header = Buffer.alloc(8);
+  header[0] = 1;
+  header.writeUInt32BE(payload.length, 4);
+  const frame = Buffer.concat([header, payload]);
+
   const server = await withDockerServer((_request, response) => {
-    response.writeHead(200, { "content-type": "text/plain" });
-    response.end("");
+    response.writeHead(200, { "content-type": "application/vnd.docker.raw-stream" });
+    response.end(frame);
   });
 
   try {
@@ -78,7 +84,7 @@ test("getDockerContainerLogs returns empty log output", async () => {
       "abc123"
     );
 
-    assert.equal(logs, "");
+    assert.equal(logs, "started\n");
   } finally {
     await server.close();
   }

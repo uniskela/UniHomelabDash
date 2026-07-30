@@ -80,6 +80,7 @@ export function PortainerIntegrationSettings({
 function PortainerIntegrationCard({ provider }: { provider: ProviderPublicView }) {
   const [enabled, setEnabled] = useState(provider.enabled);
   const [clearToken, setClearToken] = useState(false);
+  const [clearCaCert, setClearCaCert] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [configureState, configureAction, configurePending] = useActionState(
     configurePortainerProviderAction,
@@ -187,6 +188,19 @@ function PortainerIntegrationCard({ provider }: { provider: ProviderPublicView }
             rows={3}
             className="font-mono text-xs"
             placeholder="Paste PEM to trust a self-signed certificate"
+            disabled={configurePending || clearCaCert}
+          />
+          <p className="text-xs text-muted-foreground">
+            Leave blank to keep any stored CA. Use clear below to return to the system trust store.
+          </p>
+          <ToggleRow
+            id={`portainer-clear-ca-${provider.id}`}
+            label="Clear stored CA certificate"
+            description="Turn this on and save to stop trusting a previously stored custom CA."
+            checked={clearCaCert}
+            onCheckedChange={setClearCaCert}
+            disabled={configurePending}
+            hiddenName="clearCaCert"
           />
         </div>
 

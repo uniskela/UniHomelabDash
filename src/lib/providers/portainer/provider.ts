@@ -17,6 +17,7 @@ import type {
   ConnectionTestResult,
   ContainerLogsOptions,
   ContainerLogsResult,
+  ListResourcesResult,
   ProviderContext,
   ProviderHandler,
   ProviderResource,
@@ -75,7 +76,7 @@ export const portainerProviderHandler: ProviderHandler = {
     }
   },
 
-  async listResources(context: ProviderContext): Promise<ProviderResource[]> {
+  async listResources(context: ProviderContext): Promise<ListResourcesResult> {
     const config = parsePortainerConfig(context.config);
     const credentials = parsePortainerCredentials(context.credentials);
     const validationError = validatePortainerConfig(config, credentials);
@@ -107,13 +108,17 @@ export const portainerProviderHandler: ProviderHandler = {
     const resources: ProviderResource[] = [];
     const failures: string[] = [];
 
-    for (const result of settled) {
+    for (const [index, result] of settled.entries()) {
       if (result.status === "fulfilled") {
         resources.push(...result.value);
         continue;
       }
+      const endpointName =
+        dockerEndpoints[index]?.Name?.trim() || `Endpoint ${dockerEndpoints[index]?.Id ?? "?"}`;
       failures.push(
-        redactSecrets(result.reason instanceof Error ? result.reason.message : "Endpoint request failed.")
+        `${endpointName}: ${redactSecrets(
+          result.reason instanceof Error ? result.reason.message : "Endpoint request failed."
+        )}`
       );
     }
 
@@ -121,7 +126,10 @@ export const portainerProviderHandler: ProviderHandler = {
       throw new Error(failures.join(" "));
     }
 
-    return resources;
+    return {
+      resources,
+      warning: failures.length > 0 ? failures.join(" ") : undefined,
+    };
   },
 
   async getLogs(

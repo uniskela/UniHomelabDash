@@ -46,7 +46,7 @@ export async function testProviderConnection(providerId: string): Promise<Connec
 
 export async function listProviderResources(
   providerType: ProviderType
-): Promise<{ resources: ProviderResource[]; error?: string }> {
+): Promise<{ resources: ProviderResource[]; error?: string; warning?: string }> {
   const rows = listEnabledProviderRows().filter((item) => item.type === providerType);
   if (rows.length === 0) {
     return { resources: [], error: "Provider is not configured or enabled." };
@@ -59,13 +59,14 @@ export async function listProviderResources(
 
   const resources: ProviderResource[] = [];
   const errors: string[] = [];
+  const warnings: string[] = [];
 
   for (const row of rows) {
     try {
       const providerRow = toProviderRow(row);
-      const providerResources = await handler.listResources(buildProviderContext(providerRow));
+      const listed = await handler.listResources(buildProviderContext(providerRow));
       resources.push(
-        ...providerResources.map((resource) => ({
+        ...listed.resources.map((resource) => ({
           ...resource,
           providerId: resource.providerId ?? providerRow.id,
           meta: {
@@ -76,6 +77,9 @@ export async function listProviderResources(
           },
         }))
       );
+      if (listed.warning) {
+        warnings.push(`${row.name}: ${listed.warning}`);
+      }
     } catch (error) {
       const message = redactSecrets(
         error instanceof Error ? error.message : "Failed to load resources."
@@ -84,9 +88,13 @@ export async function listProviderResources(
     }
   }
 
+  const combinedIssues = [...errors, ...warnings];
+
   return {
     resources,
     error: resources.length === 0 && errors.length > 0 ? errors.join(" ") : undefined,
+    warning:
+      resources.length > 0 && combinedIssues.length > 0 ? combinedIssues.join(" ") : undefined,
   };
 }
 
@@ -94,6 +102,7 @@ export async function listContainerResources() {
   const providerTypes: ProviderType[] = ["docker", "portainer"];
   const resources: ProviderResource[] = [];
   const errors: string[] = [];
+  const warnings: string[] = [];
 
   for (const providerType of providerTypes) {
     const result = await listProviderResources(providerType);
@@ -102,14 +111,22 @@ export async function listContainerResources() {
     if (result.error && result.error !== "Provider is not configured or enabled.") {
       errors.push(result.error);
     }
+    if (result.warning) {
+      warnings.push(result.warning);
+    }
   }
+
+  const combinedWarnings = [...errors, ...warnings];
 
   return {
     resources,
     // Page-level error only when every provider failed; otherwise keep healthy
     // containers visible and surface partial failures as a warning.
     error: resources.length === 0 && errors.length > 0 ? errors.join(" ") : undefined,
-    warning: resources.length > 0 && errors.length > 0 ? errors.join(" ") : undefined,
+    warning:
+      resources.length > 0 && combinedWarnings.length > 0
+        ? combinedWarnings.join(" ")
+        : undefined,
   };
 }
 

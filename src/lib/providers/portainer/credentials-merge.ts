@@ -4,10 +4,11 @@ export function mergePortainerCredentialUpdates(input: {
   apiKey: string;
   caCert: string;
   clearToken: boolean;
+  clearCaCert?: boolean;
 }): { credentials?: Record<string, string>; preserveCredentials: boolean } {
-  const { existing, apiKey, caCert, clearToken } = input;
+  const { existing, apiKey, caCert, clearToken, clearCaCert = false } = input;
 
-  if (!clearToken && !apiKey && !caCert) {
+  if (!clearToken && !clearCaCert && !apiKey && !caCert) {
     return { credentials: undefined, preserveCredentials: true };
   }
 
@@ -18,6 +19,9 @@ export function mergePortainerCredentialUpdates(input: {
   }
   if (apiKey) {
     next.portainerApiKey = apiKey;
+  }
+  if (clearCaCert) {
+    delete next.portainerCaCert;
   }
   if (caCert) {
     next.portainerCaCert = caCert;

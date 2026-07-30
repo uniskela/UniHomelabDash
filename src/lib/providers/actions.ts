@@ -200,6 +200,8 @@ export async function configurePortainerProviderAction(
   const apiKey = String(formData.get("apiKey") ?? "").trim();
   const caCert = String(formData.get("caCert") ?? "").trim();
   const clearToken = formData.get("clearToken") === "on" || formData.get("clearToken") === "true";
+  const clearCaCert =
+    formData.get("clearCaCert") === "on" || formData.get("clearCaCert") === "true";
 
   if (!name) {
     return { ok: false, message: "Integration name is required." };
@@ -225,6 +227,7 @@ export async function configurePortainerProviderAction(
     apiKey,
     caCert,
     clearToken,
+    clearCaCert,
   });
 
   upsertPortainerProvider({
