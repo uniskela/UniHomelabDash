@@ -67,3 +67,14 @@ test("container service defaults leave health URL blank without a reachable host
 
   assert.equal(defaults.healthUrl, "");
 });
+
+test("container service defaults do not treat API URLs as IPv6 hosts", () => {
+  const defaults = buildContainerServiceDefaults(
+    container({
+      ports: ["8080:8080/tcp"],
+      meta: { providerHost: "https://portainer.local:9443" },
+    })
+  );
+
+  assert.equal(defaults.healthUrl, "http://portainer.local:8080");
+});

@@ -104,15 +104,28 @@ export async function listContainerResources() {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  for (const providerType of providerTypes) {
-    const result = await listProviderResources(providerType);
-    resources.push(...result.resources);
+  // Isolate provider calls so one hung integration cannot block the others.
+  const settled = await Promise.allSettled(
+    providerTypes.map((providerType) => listProviderResources(providerType))
+  );
 
-    if (result.error && result.error !== "Provider is not configured or enabled.") {
-      errors.push(result.error);
+  for (const result of settled) {
+    if (result.status === "rejected") {
+      errors.push(
+        redactSecrets(
+          result.reason instanceof Error ? result.reason.message : "Failed to load containers."
+        )
+      );
+      continue;
     }
-    if (result.warning) {
-      warnings.push(result.warning);
+
+    resources.push(...result.value.resources);
+
+    if (result.value.error && result.value.error !== "Provider is not configured or enabled.") {
+      errors.push(result.value.error);
+    }
+    if (result.value.warning) {
+      warnings.push(result.value.warning);
     }
   }
 
@@ -192,13 +205,11 @@ function providerHostMeta(configJson: string): Record<string, string> {
     const config = JSON.parse(configJson) as {
       mode?: unknown;
       host?: unknown;
-      baseUrl?: unknown;
     };
+    // Only remote Docker Engine hosts are safe published-port fallbacks.
+    // Portainer baseUrl is the API server, not the container host.
     if ((config.mode === "tcp" || config.mode === "tls") && typeof config.host === "string") {
       return { providerHost: config.host };
-    }
-    if (typeof config.baseUrl === "string" && config.baseUrl.trim()) {
-      return { providerHost: config.baseUrl.trim() };
     }
   } catch {
     return {};

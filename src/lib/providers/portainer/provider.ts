@@ -12,6 +12,7 @@ import {
 import {
   parsePortainerResourceId,
   portainerContainerToProviderResource,
+  endpointHostFromPortainerEndpoint,
 } from "@/lib/providers/portainer/normalize";
 import type {
   ConnectionTestResult,
@@ -93,11 +94,13 @@ export const portainerProviderHandler: ProviderHandler = {
       dockerEndpoints.map(async (endpoint) => {
         const containers = await listPortainerEndpointContainers(config, credentials, endpoint.Id);
         const endpointName = endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`;
+        const endpointHost = endpointHostFromPortainerEndpoint(endpoint);
 
         return containers.map((item) =>
           portainerContainerToProviderResource({
             endpointId: endpoint.Id,
             endpointName,
+            endpointHost,
             providerId: context.provider.id,
             item,
           })

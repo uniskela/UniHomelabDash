@@ -23,9 +23,40 @@ export function parsePortainerResourceId(resourceId: string) {
   return { endpointId, containerId };
 }
 
+/** Prefer PublicURL, then a tcp/http(s) endpoint URL host. Skip unix/npipe sockets. */
+export function endpointHostFromPortainerEndpoint(endpoint: {
+  URL?: string;
+  PublicURL?: string;
+}): string | undefined {
+  const publicUrl = endpoint.PublicURL?.trim();
+  if (publicUrl) {
+    const fromPublic = hostFromMaybeUrl(publicUrl);
+    if (fromPublic) {
+      return fromPublic;
+    }
+  }
+
+  const url = endpoint.URL?.trim();
+  if (!url || url.startsWith("unix:") || url.startsWith("npipe:")) {
+    return undefined;
+  }
+
+  return hostFromMaybeUrl(url);
+}
+
+function hostFromMaybeUrl(value: string): string | undefined {
+  try {
+    const parsed = new URL(value.includes("://") ? value : `tcp://${value}`);
+    return parsed.hostname || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function portainerContainerToProviderResource(input: {
   endpointId: number;
   endpointName: string;
+  endpointHost?: string;
   providerId: string;
   item: DockerListItem;
 }): ProviderResource {
@@ -39,6 +70,7 @@ export function portainerContainerToProviderResource(input: {
     meta: {
       endpointId: String(input.endpointId),
       endpointName: input.endpointName,
+      ...(input.endpointHost ? { providerHost: input.endpointHost } : {}),
     },
   };
 }

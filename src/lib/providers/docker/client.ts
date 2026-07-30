@@ -70,6 +70,11 @@ function buildRequestOptions({
   return remoteBase;
 }
 
+function getDockerRequestTimeoutMs() {
+  const configured = Number.parseInt(process.env.UH_DOCKER_REQUEST_TIMEOUT_MS ?? "", 10);
+  return Number.isFinite(configured) && configured > 0 ? configured : 15_000;
+}
+
 function dockerRequest<T>(
   options: DockerRequestOptions & { decodeLogs?: boolean }
 ): Promise<T> {
@@ -79,6 +84,19 @@ function dockerRequest<T>(
       options.config.mode === "tls"
         ? https.request
         : http.request;
+    let settled = false;
+
+    const finish = (error?: Error, value?: T) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(value as T);
+    };
 
     const request = transport(requestOptions, (response) => {
       const chunks: Buffer[] = [];
@@ -92,7 +110,7 @@ function dockerRequest<T>(
         const body = Buffer.concat(chunks);
 
         if (statusCode >= 400) {
-          reject(new Error(body.toString("utf8") || `Docker API returned ${statusCode}.`));
+          finish(new Error(body.toString("utf8") || `Docker API returned ${statusCode}.`));
           return;
         }
 
@@ -100,30 +118,42 @@ function dockerRequest<T>(
           const contentType = Array.isArray(response.headers["content-type"])
             ? response.headers["content-type"][0]
             : response.headers["content-type"];
-          resolve(decodeDockerLogResponse(body, contentType ?? "") as T);
+          finish(undefined, decodeDockerLogResponse(body, contentType ?? "") as T);
           return;
         }
 
         if (body.length === 0) {
-          resolve(undefined as T);
+          finish(undefined, undefined as T);
           return;
         }
 
         const text = body.toString("utf8");
         if (!text.trim()) {
-          resolve(undefined as T);
+          finish(undefined, undefined as T);
           return;
         }
 
         try {
-          resolve(JSON.parse(text) as T);
+          finish(undefined, JSON.parse(text) as T);
         } catch {
-          resolve(text as T);
+          finish(undefined, text as T);
         }
+      });
+
+      response.on("error", (error) => {
+        finish(error);
       });
     });
 
-    request.on("error", reject);
+    request.setTimeout(getDockerRequestTimeoutMs(), () => {
+      finish(new Error("Docker request timed out."));
+      request.destroy();
+    });
+
+    request.on("error", (error) => {
+      finish(error);
+    });
+
     request.end();
   });
 }

@@ -15,6 +15,7 @@ type PortainerEndpoint = {
   Id: number;
   Name?: string;
   URL?: string;
+  PublicURL?: string;
   Type?: number;
 };
 

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildPortainerResourceId,
+  endpointHostFromPortainerEndpoint,
   parsePortainerResourceId,
   portainerContainerToProviderResource,
 } from "./normalize";
@@ -21,6 +22,7 @@ test("portainerContainerToProviderResource enriches endpoint metadata", () => {
   const resource = portainerContainerToProviderResource({
     endpointId: 7,
     endpointName: "Lab host",
+    endpointHost: "192.168.1.50",
     providerId: "provider-1",
     item: {
       Id: "container-1",
@@ -34,4 +36,27 @@ test("portainerContainerToProviderResource enriches endpoint metadata", () => {
   assert.equal(resource.providerType, "portainer");
   assert.equal(resource.id, "7:container-1");
   assert.equal(resource.meta?.endpointName, "Lab host");
+  assert.equal(resource.meta?.providerHost, "192.168.1.50");
+});
+
+test("endpointHostFromPortainerEndpoint prefers PublicURL and skips sockets", () => {
+  assert.equal(
+    endpointHostFromPortainerEndpoint({
+      PublicURL: "https://edge.lab.local",
+      URL: "tcp://10.0.0.8:2375",
+    }),
+    "edge.lab.local"
+  );
+  assert.equal(
+    endpointHostFromPortainerEndpoint({
+      URL: "tcp://10.0.0.8:2375",
+    }),
+    "10.0.0.8"
+  );
+  assert.equal(
+    endpointHostFromPortainerEndpoint({
+      URL: "unix:///var/run/docker.sock",
+    }),
+    undefined
+  );
 });
