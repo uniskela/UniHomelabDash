@@ -1,0 +1,199 @@
+---
+import AppPreview from "../components/AppPreview.astro";
+import FeatureCard from "../components/FeatureCard.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import "../styles/global.css";
+
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase === "/" ? "" : rawBase.replace(/\/$/, "");
+const local = (path: string) => `${base}${path}`;
+const canonical = "https://uniskela.github.io/UniHomelabDash/";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="A private, mobile-first control plane for your homelab services and containers."
+    />
+    <meta name="theme-color" content="#121214" />
+    <meta property="og:title" content="UniHomelabDash" />
+    <meta
+      property="og:description"
+      content="Your homelab. One calm control plane."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={local("/favicon.svg")} />
+    <title>UniHomelabDash — Your homelab, one calm control plane</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <SiteHeader {base} />
+
+    <main id="main">
+      <section class="hero shell">
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span>Self-hosted · Private · Built in the open</p>
+          <h1>Your homelab.<br /><em>One calm control plane.</em></h1>
+          <p class="hero-lede">
+            See services and containers at a glance, check health, read logs,
+            and take safe everyday actions—from a dashboard made for your phone.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href={local("/getting-started/docker-quick-start/")}
+              >Get started <span aria-hidden="true">→</span></a
+            >
+            <a
+              class="button secondary"
+              href="https://github.com/uniskela/UniHomelabDash"
+              target="_blank"
+              rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a
+            >
+          </div>
+          <ul class="trust-list" aria-label="Project qualities">
+            <li>MIT licensed</li>
+            <li>Docker ready</li>
+            <li>Mobile first</li>
+          </ul>
+        </div>
+        <div class="hero-visual">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <AppPreview />
+        </div>
+      </section>
+
+      <section class="proof-strip" aria-label="Current capabilities">
+        <div class="shell proof-grid">
+          <div><strong>Manual services</strong><span>Links and health checks</span></div>
+          <div><strong>Docker</strong><span>Status, logs, and safe actions</span></div>
+          <div><strong>Portainer</strong><span>Read-only endpoints and logs</span></div>
+          <div><strong>PWA</strong><span>Phone, tablet, and desktop</span></div>
+        </div>
+      </section>
+
+      <section class="section shell showcase">
+        <div class="section-heading">
+          <p class="eyebrow">The useful kind of overview</p>
+          <h2>Less tab hopping.<br />More knowing what needs you.</h2>
+          <p>
+            UniHomelabDash starts as a genuinely useful service dashboard and
+            grows into a safer control plane through focused provider integrations.
+          </p>
+        </div>
+        <figure class="screenshot-frame">
+          <div class="screenshot-bar"><span></span><span></span><span></span></div>
+          <img
+            src={local("/screenshots/dashboard.png")}
+            alt="UniHomelabDash dashboard showing service health and quick actions"
+            width="1440"
+            height="900"
+            loading="lazy"
+          />
+          <figcaption>Demo data only—your homelab stays on your network.</figcaption>
+        </figure>
+      </section>
+
+      <section id="features" class="section feature-section">
+        <div class="shell">
+          <div class="section-heading centered">
+            <p class="eyebrow">Calm by design</p>
+            <h2>Power where it helps.<br />Guardrails where it matters.</h2>
+          </div>
+          <div class="feature-grid">
+            <FeatureCard eyebrow="One view" title="Everything important, together" icon="⌂">
+              Services, containers, health, hosts, and logs share one
+              phone-friendly interface instead of a maze of admin tabs.
+            </FeatureCard>
+            <FeatureCard eyebrow="Safe actions" title="Control without the cowboy mode" icon="✓">
+              Provider actions are disabled by default, checked server-side,
+              and confirmed against the exact container before they run.
+            </FeatureCard>
+            <FeatureCard eyebrow="Private first" title="Your credentials stay behind the UI" icon="◆">
+              Sessions use HTTP-only cookies and integration credentials are
+              stored server-side with encrypted storage support.
+            </FeatureCard>
+          </div>
+        </div>
+      </section>
+
+      <section class="section shell journey">
+        <div class="journey-copy">
+          <p class="eyebrow">Start simple. Grow with your lab.</p>
+          <h2>Useful on day one.<br />Better with every contributor.</h2>
+          <p>
+            Run it with Docker Compose, add the services you already use, then
+            connect Docker or Portainer when you are ready.
+          </p>
+          <a class="text-link" href={local("/getting-started/overview/")}
+            >Read the documentation <span aria-hidden="true">→</span></a
+          >
+        </div>
+        <ol class="journey-grid">
+          <li><span>01</span><strong>Install</strong><p>One Compose stack gets the app running.</p></li>
+          <li><span>02</span><strong>Bring your services</strong><p>Add links, health checks, and hosts.</p></li>
+          <li><span>03</span><strong>Connect providers</strong><p>Docker and Portainer, private by default.</p></li>
+          <li><span>04</span><strong>Shape what is next</strong><p>Issues, docs, and focused pull requests welcome.</p></li>
+        </ol>
+      </section>
+
+      <section id="roadmap" class="section roadmap-section">
+        <div class="shell roadmap-grid">
+          <div>
+            <p class="eyebrow">A roadmap that stays honest</p>
+            <h2>Shipping the useful base before chasing every integration.</h2>
+            <p>
+              The project grows in small, reviewable increments. Planned
+              capabilities remain visibly planned until they work.
+            </p>
+            <a class="button secondary" href={local("/project/roadmap/")}>Explore the roadmap</a>
+          </div>
+          <div class="roadmap-board">
+            <div class="roadmap-column shipped">
+              <span>Shipped</span>
+              <strong>Manual services</strong>
+              <strong>Authentication</strong>
+              <strong>Docker providers</strong>
+              <strong>Portainer read-only</strong>
+            </div>
+            <div class="roadmap-column planned">
+              <span>Up next</span>
+              <strong>Portainer stacks</strong>
+              <strong>Alerts foundation</strong>
+              <strong>Activity feed</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="community-section">
+        <div class="shell community-inner">
+          <div>
+            <p class="eyebrow">Open source, on purpose</p>
+            <h2>Built for homelabs, built by homelabbers.</h2>
+            <p>
+              Star the project, suggest an integration, improve the docs, or
+              help fuel the next careful release. Every kind of contribution counts.
+            </p>
+          </div>
+          <div class="community-actions">
+            <a class="button secondary" href="https://github.com/uniskela/UniHomelabDash"
+              >Contribute on GitHub <span aria-hidden="true">↗</span></a
+            >
+            <a class="button primary" href="https://buymeacoffee.com/uniskela"
+              >Buy me a coffee <span aria-hidden="true">♡</span></a
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <SiteFooter {base} />
+  </body>
+</html>

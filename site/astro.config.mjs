@@ -9,6 +9,12 @@ export default defineConfig({
       title: "UniHomelabDash",
       description:
         "Documentation for the self-hosted, mobile-first homelab control plane.",
+      logo: {
+        src: "./src/assets/logo-wordmark-horizontal.svg",
+        replacesTitle: true,
+      },
+      favicon: "/favicon.svg",
+      customCss: ["./src/styles/starlight.css"],
       lastUpdated: true,
       editLink: {
         baseUrl:

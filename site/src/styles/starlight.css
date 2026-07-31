@@ -1,0 +1,32 @@
+:root {
+  --sl-color-accent-low: #3b111b;
+  --sl-color-accent: #e11d48;
+  --sl-color-accent-high: #fecdd3;
+  --sl-color-white: #f4f4f5;
+  --sl-color-gray-1: #e4e4e7;
+  --sl-color-gray-2: #a1a1aa;
+  --sl-color-gray-3: #71717a;
+  --sl-color-gray-4: #3f3f46;
+  --sl-color-gray-5: #27272a;
+  --sl-color-gray-6: #1c1c1f;
+  --sl-color-black: #121214;
+  --sl-font: Geist, "Geist Sans", Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #ffe4e6;
+  --sl-color-accent: #be123c;
+  --sl-color-accent-high: #4c0519;
+}
+
+.site-title img {
+  max-height: 2rem;
+}
+
+.hero .actions a {
+  border-radius: 0.625rem;
+}
+
+code {
+  border-radius: 0.35rem;
+}

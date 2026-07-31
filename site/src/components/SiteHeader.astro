@@ -1,0 +1,51 @@
+---
+interface Props {
+  base: string;
+}
+
+const { base } = Astro.props;
+const local = (path: string) => `${base}${path}`;
+---
+
+<header class="site-header">
+  <div class="shell header-inner">
+    <a class="brand-link" href={local("/")} aria-label="UniHomelabDash home">
+      <img
+        src={local("/branding/logo-wordmark-horizontal.svg")}
+        alt="UniHomelabDash"
+        width="238"
+        height="52"
+      />
+    </a>
+
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a href="#features">Features</a>
+      <a href={local("/getting-started/overview/")}>Docs</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href={local("/project/contributing/")}>Contribute</a>
+      <a
+        href="https://github.com/uniskela/UniHomelabDash"
+        target="_blank"
+        rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a
+      >
+      <a
+        class="support-link"
+        href="https://buymeacoffee.com/uniskela"
+        target="_blank"
+        rel="noreferrer">♡ Support</a
+      >
+    </nav>
+
+    <details class="mobile-nav">
+      <summary aria-label="Open navigation">Menu</summary>
+      <nav aria-label="Mobile navigation">
+        <a href="#features">Features</a>
+        <a href={local("/getting-started/overview/")}>Documentation</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href={local("/project/contributing/")}>Contribute</a>
+        <a href="https://github.com/uniskela/UniHomelabDash">GitHub</a>
+        <a href="https://buymeacoffee.com/uniskela">Support the project</a>
+      </nav>
+    </details>
+  </div>
+</header>

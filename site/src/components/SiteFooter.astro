@@ -1,0 +1,32 @@
+---
+interface Props {
+  base: string;
+}
+
+const { base } = Astro.props;
+const local = (path: string) => `${base}${path}`;
+---
+
+<footer class="site-footer">
+  <div class="shell footer-grid">
+    <div class="footer-brand">
+      <img
+        src={local("/branding/icon-control-rail.svg")}
+        alt=""
+        width="42"
+        height="42"
+      />
+      <div>
+        <strong>UniHomelabDash</strong>
+        <p>Open source under the MIT License.</p>
+      </div>
+    </div>
+    <nav aria-label="Footer navigation">
+      <a href={local("/getting-started/overview/")}>Documentation</a>
+      <a href={local("/operations/security/")}>Security</a>
+      <a href={local("/project/roadmap/")}>Roadmap</a>
+      <a href="https://github.com/uniskela/UniHomelabDash">GitHub</a>
+      <a href="https://buymeacoffee.com/uniskela">Buy me a coffee</a>
+    </nav>
+  </div>
+</footer>
