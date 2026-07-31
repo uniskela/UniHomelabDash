@@ -10,7 +10,8 @@ export default defineConfig({
       description:
         "Documentation for the self-hosted, mobile-first homelab control plane.",
       logo: {
-        src: "./src/assets/logo-wordmark-horizontal.svg",
+        dark: "./src/assets/logo-wordmark-horizontal.svg",
+        light: "./src/assets/logo-wordmark-horizontal-light.svg",
         replacesTitle: true,
       },
       favicon: "/favicon.svg",
