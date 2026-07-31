@@ -27,6 +27,7 @@ html {
 
 body {
   margin: 0;
+  overflow-x: clip;
   background:
     radial-gradient(circle at 82% 7%, rgb(225 29 72 / 8%), transparent 24rem),
     var(--canvas);
@@ -288,7 +289,7 @@ summary:focus-visible {
 }
 
 .orbit-one {
-  inset: -90px -80px 30px 90px;
+  inset: -90px -56px 30px 90px;
 }
 
 .orbit-two {
@@ -851,6 +852,10 @@ summary:focus-visible {
 
   .app-preview {
     transform: none;
+  }
+
+  .orbit {
+    display: none;
   }
 
   .preview-layout {

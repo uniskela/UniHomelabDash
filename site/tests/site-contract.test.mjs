@@ -11,6 +11,10 @@ test("Astro targets the UniHomelabDash GitHub Pages project path", async () => {
 
   assert.match(config, /site:\s*"https:\/\/uniskela\.github\.io"/);
   assert.match(config, /base:\s*"\/UniHomelabDash"/);
+  assert.match(
+    config,
+    /label:\s*"Getting started",[\s\S]*items:\s*\[\{\s*autogenerate:/,
+  );
 });
 
 test("the site package exposes check, build, and test commands", async () => {
@@ -46,6 +50,7 @@ test("the visual system includes accessible focus and motion preferences", async
   assert.match(css, /#e11d48/i);
   assert.match(css, /:focus-visible/);
   assert.match(css, /prefers-reduced-motion/);
+  assert.match(css, /overflow-x:\s*clip/);
 });
 
 test("the site reuses the project brand and screenshots", async () => {
@@ -140,4 +145,28 @@ test("repository docs link to the website and explain local site checks", async 
   assert.match(contributing, /npm install --prefix site/);
   assert.match(contributing, /npm run site:build/);
   assert.match(roadmap, /GitHub Pages/i);
+});
+
+test("GitHub Actions builds and deploys the isolated Pages artifact", async () => {
+  const pagesWorkflow = await readRoot(".github/workflows/pages.yml");
+  const ciWorkflow = await readRoot(".github/workflows/ci.yml");
+
+  assert.match(pagesWorkflow, /pages:\s*write/);
+  assert.match(pagesWorkflow, /id-token:\s*write/);
+  assert.match(pagesWorkflow, /actions\/configure-pages@v5/);
+  assert.match(pagesWorkflow, /actions\/upload-pages-artifact@v3/);
+  assert.match(pagesWorkflow, /path:\s*site\/dist/);
+  assert.match(pagesWorkflow, /actions\/deploy-pages@v4/);
+  assert.match(ciWorkflow, /npm --prefix site ci/);
+  assert.match(ciWorkflow, /npm run site:test/);
+  assert.match(ciWorkflow, /npm run site:build/);
+});
+
+test("Starlight has a custom searchable-site-safe 404 entry", async () => {
+  const notFound = await read("src/content/docs/404.mdx");
+
+  assert.match(notFound, /Page not found/);
+  assert.match(notFound, /pagefind:\s*false/);
+  assert.match(notFound, /draft:\s*true/);
+  assert.match(notFound, /getting-started\/overview/);
 });

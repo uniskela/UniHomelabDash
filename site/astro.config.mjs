@@ -30,23 +30,23 @@ export default defineConfig({
       sidebar: [
         {
           label: "Getting started",
-          autogenerate: { directory: "getting-started" },
+          items: [{ autogenerate: { directory: "getting-started" } }],
         },
         {
           label: "Using UniHomelabDash",
-          autogenerate: { directory: "using" },
+          items: [{ autogenerate: { directory: "using" } }],
         },
         {
           label: "Integrations",
-          autogenerate: { directory: "integrations" },
+          items: [{ autogenerate: { directory: "integrations" } }],
         },
         {
           label: "Operations",
-          autogenerate: { directory: "operations" },
+          items: [{ autogenerate: { directory: "operations" } }],
         },
         {
           label: "Project",
-          autogenerate: { directory: "project" },
+          items: [{ autogenerate: { directory: "project" } }],
         },
       ],
     }),

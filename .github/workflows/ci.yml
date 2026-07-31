@@ -24,9 +24,15 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install documentation dependencies
+        run: npm --prefix site ci
 
       - name: Typecheck
         run: npm run typecheck
@@ -36,3 +42,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Test documentation contracts
+        run: npm run site:test
+
+      - name: Build documentation
+        run: npm run site:build
