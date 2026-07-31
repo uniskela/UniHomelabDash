@@ -55,3 +55,52 @@ test("the site reuses the project brand and screenshots", async () => {
     access(new URL("../public/screenshots/add-service.png", import.meta.url)),
   ]);
 });
+
+test("the complete operator guide is present", async () => {
+  const pages = [
+    "getting-started/docker-quick-start.md",
+    "getting-started/first-run.md",
+    "getting-started/upgrading.md",
+    "using/services-and-health.md",
+    "using/containers-and-logs.md",
+    "using/install-the-pwa.md",
+    "integrations/manual-services.md",
+    "integrations/docker.md",
+    "integrations/portainer.md",
+    "operations/configuration.md",
+    "operations/security.md",
+    "operations/backup-and-recovery.md",
+    "operations/troubleshooting.md",
+  ];
+
+  await Promise.all(
+    pages.map((page) =>
+      access(new URL(`../src/content/docs/${page}`, import.meta.url)),
+    ),
+  );
+});
+
+test("privileged integration docs carry explicit safety boundaries", async () => {
+  const docker = await read("src/content/docs/integrations/docker.md");
+  const portainer = await read("src/content/docs/integrations/portainer.md");
+
+  assert.match(docker, /disabled by default/i);
+  assert.match(docker, /Docker socket/i);
+  assert.match(docker, /TCP without TLS/i);
+  assert.match(docker, /confirmation/i);
+  assert.match(portainer, /read-only/i);
+  assert.match(portainer, /least-privilege/i);
+  assert.doesNotMatch(portainer, /stack actions are available/i);
+});
+
+test("operations docs cover required production and recovery settings", async () => {
+  const configuration = await read("src/content/docs/operations/configuration.md");
+  const recovery = await read("src/content/docs/operations/backup-and-recovery.md");
+
+  assert.match(configuration, /SESSION_SECRET/);
+  assert.match(configuration, /COOKIE_SECURE/);
+  assert.match(configuration, /PUBLIC_URL/);
+  assert.match(configuration, /ALLOWED_HOSTS/);
+  assert.match(recovery, /unihomelabdash-data/);
+  assert.match(recovery, /RESET_ADMIN_PASSWORD/);
+});
