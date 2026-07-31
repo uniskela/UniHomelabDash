@@ -22,7 +22,11 @@
     "reset-admin": "node scripts/reset-admin.mjs",
     "test": "node --import tsx --test src/lib/auth/*.test.ts src/lib/request/*.test.ts src/lib/providers/*.test.ts src/lib/providers/**/*.test.ts",
     "screenshots": "node scripts/capture-screenshots.mjs",
-    "icons:export": "node scripts/export-icons.mjs"
+    "icons:export": "node scripts/export-icons.mjs",
+    "site:dev": "npm --prefix site run dev",
+    "site:test": "npm --prefix site test",
+    "site:check": "npm --prefix site run check",
+    "site:build": "npm --prefix site run build"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.16",
