@@ -79,6 +79,33 @@ Success criteria:
 
 ---
 
+## Phase 0.7 — Public Website and Documentation
+
+Status: Completed
+
+Goal: Give users and contributors a professional public project home with
+task-oriented documentation.
+
+Completed:
+
+* Astro/Starlight site built inside `site/`.
+* Open Control Room landing page using the existing Control Rail brand.
+* Operator guides for install, configuration, integrations, security, backup,
+  recovery, and troubleshooting.
+* Project guides for architecture, provider model, roadmap, contribution, and
+  community.
+* GitHub Pages deployment at
+  `https://uniskela.github.io/UniHomelabDash/`.
+
+Success criteria:
+
+* New users can understand and install the project without reading source code.
+* Security-sensitive setup keeps the same warnings as `SECURITY.md`.
+* Contributors can run and verify the documentation site locally.
+* Shipped and planned features are clearly distinguished.
+
+---
+
 ## Phase 1 — PWA Shell
 
 Status: Completed

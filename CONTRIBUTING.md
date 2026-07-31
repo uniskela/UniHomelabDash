@@ -29,6 +29,19 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). SQLite data is stored at `data/unihomelabdash.sqlite` by default.
 
+### Documentation website
+
+The public GitHub Pages site lives in `site/` and keeps its dependencies separate
+from the Next.js application:
+
+```bash
+npm install --prefix site
+npm run site:dev
+```
+
+Open the URL printed by Astro. The production build uses the
+`/UniHomelabDash/` project path.
+
 ### Docker Compose
 
 ```bash
@@ -61,6 +74,14 @@ Run:
 npm run lint
 npm run typecheck
 npm run build
+```
+
+If you changed website pages, docs, navigation, or styling, also run:
+
+```bash
+npm run site:test
+npm run site:check
+npm run site:build
 ```
 
 If you changed UI, do a quick manual check in the browser at a mobile viewport.

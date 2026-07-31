@@ -3,6 +3,8 @@ import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+const readRoot = (path) =>
+  readFile(new URL(`../../${path}`, import.meta.url), "utf8");
 
 test("Astro targets the UniHomelabDash GitHub Pages project path", async () => {
   const config = await read("astro.config.mjs");
@@ -103,4 +105,39 @@ test("operations docs cover required production and recovery settings", async ()
   assert.match(configuration, /ALLOWED_HOSTS/);
   assert.match(recovery, /unihomelabdash-data/);
   assert.match(recovery, /RESET_ADMIN_PASSWORD/);
+});
+
+test("project documentation covers architecture, providers, roadmap, and community", async () => {
+  const pages = [
+    "project/architecture.md",
+    "project/provider-model.md",
+    "project/roadmap.md",
+    "project/contributing.md",
+    "project/brand-and-community.md",
+  ];
+
+  await Promise.all(
+    pages.map((page) =>
+      access(new URL(`../src/content/docs/${page}`, import.meta.url)),
+    ),
+  );
+
+  const providerModel = await read("src/content/docs/project/provider-model.md");
+  assert.match(providerModel, /service\.status/);
+  assert.match(providerModel, /permission/i);
+  assert.match(providerModel, /server-side/i);
+});
+
+test("repository docs link to the website and explain local site checks", async () => {
+  const [readme, contributing, roadmap] = await Promise.all([
+    readRoot("README.md"),
+    readRoot("CONTRIBUTING.md"),
+    readRoot("ROADMAP.md"),
+  ]);
+
+  assert.match(readme, /https:\/\/uniskela\.github\.io\/UniHomelabDash\//);
+  assert.match(readme, /npm run site:dev/);
+  assert.match(contributing, /npm install --prefix site/);
+  assert.match(contributing, /npm run site:build/);
+  assert.match(roadmap, /GitHub Pages/i);
 });

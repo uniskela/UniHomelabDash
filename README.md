@@ -6,6 +6,8 @@
 
 Self-hosted homelab control plane — save your services, check health on demand, open everything from your phone.
 
+**Website and documentation:** [uniskela.github.io/UniHomelabDash](https://uniskela.github.io/UniHomelabDash/)
+
 Brand assets and palette: [docs/branding/BRAND.md](docs/branding/BRAND.md)
 
 > **Security:** Authentication is required for dashboard access. On first run, create the admin account at `/setup`. Set `SESSION_SECRET` in production. Do not expose to the public internet without HTTPS and access control. See [SECURITY.md](SECURITY.md).
@@ -272,6 +274,25 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Manual services are stored in SQLite at `data/unihomelabdash.sqlite` by default. Set `DATABASE_PATH` to use a different location.
 
+### Documentation website
+
+The GitHub Pages site is an isolated Astro/Starlight project under `site/`:
+
+```bash
+npm install --prefix site
+npm run site:dev
+```
+
+Before submitting website or documentation changes:
+
+```bash
+npm run site:test
+npm run site:check
+npm run site:build
+```
+
+The production build targets the GitHub Pages project path at `/UniHomelabDash/`.
+
 ### LAN / phone testing (dev)
 
 ```bash
@@ -308,6 +329,10 @@ npm run db:migrate
 npm run reset-admin  # recover admin access (see below)
 npm run test
 npm run screenshots  # capture docs/screenshots (requires build)
+npm run site:dev      # local documentation site
+npm run site:test
+npm run site:check
+npm run site:build
 ```
 
 ## Locked out of the admin account?
