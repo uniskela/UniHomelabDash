@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { access, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import test from "node:test";
+import { promisify } from "node:util";
+import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const readRoot = (path) =>
   readFile(new URL(`../../${path}`, import.meta.url), "utf8");
+const execFileAsync = promisify(execFile);
 
 test("Astro targets the UniHomelabDash GitHub Pages project path", async () => {
   const config = await read("astro.config.mjs");
@@ -169,4 +173,56 @@ test("Starlight has a custom searchable-site-safe 404 entry", async () => {
   assert.match(notFound, /pagefind:\s*false/);
   assert.match(notFound, /draft:\s*true/);
   assert.match(notFound, /getting-started\/overview/);
+});
+
+test("root lint ignores Astro-generated output", async () => {
+  const root = new URL("../../", import.meta.url);
+  const generatedDirectories = [
+    new URL("../.astro/", import.meta.url),
+    new URL("../dist/", import.meta.url),
+  ];
+  const generatedFiles = generatedDirectories.map(
+    (directory) => new URL("eslint-ignore-contract.js", directory),
+  );
+  const eslint = new URL("node_modules/eslint/bin/eslint.js", root);
+
+  await Promise.all(
+    generatedDirectories.map((directory) =>
+      mkdir(directory, { recursive: true }),
+    ),
+  );
+  await Promise.all(
+    generatedFiles.map((file) => writeFile(file, "const = ;\n")),
+  );
+
+  try {
+    await execFileAsync(
+      process.execPath,
+      [
+        fileURLToPath(eslint),
+        ...generatedFiles.map((file) => fileURLToPath(file)),
+        "--no-warn-ignored",
+      ],
+      { cwd: fileURLToPath(root) },
+    );
+  } finally {
+    await Promise.all(generatedFiles.map(unlink));
+  }
+});
+
+test("root typecheck stays isolated from the Astro package", async () => {
+  const root = new URL("../../", import.meta.url);
+  const typescript = new URL("node_modules/typescript/bin/tsc", root);
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [fileURLToPath(typescript), "--showConfig"],
+    { cwd: fileURLToPath(root) },
+  );
+  const config = JSON.parse(stdout);
+
+  assert.equal(
+    config.files.some((file) => file.startsWith("./site/")),
+    false,
+    "root TypeScript inputs must not include the independent site package",
+  );
 });
