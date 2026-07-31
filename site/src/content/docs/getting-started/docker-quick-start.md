@@ -66,4 +66,4 @@ Pin a `vX.Y.Z` or `X.Y.Z` tag when repeatable deployments matter.
 UniHomelabDash is intended for a trusted LAN or VPN. Before making it reachable
 beyond that boundary, use HTTPS, set `COOKIE_SECURE=true`, configure
 `PUBLIC_URL`, and add access control at the reverse proxy or VPN layer. Read the
-[security guide](../operations/security/) before enabling provider actions.
+[security guide](../../operations/security/) before enabling provider actions.
