@@ -13,6 +13,7 @@
 # testing
 /coverage
 /.superpowers/
+/.worktrees/
 
 # next.js
 /.next/
