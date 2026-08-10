@@ -37,7 +37,8 @@ function EnabledStackList() {
     async function load() {
       setLoading(true);
       try {
-        const response = await fetch("/api/stacks", {
+        const url = refreshToken === 0 ? "/api/stacks" : "/api/stacks?refresh=1";
+        const response = await fetch(url, {
           signal: controller.signal,
           cache: "no-store",
         });

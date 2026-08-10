@@ -15,6 +15,7 @@ import type { PortainerStackListItem } from "@/lib/providers/portainer/stack-nor
 type PortainerEndpoint = {
   Id: number;
   Name?: string;
+  Status?: number;
   URL?: string;
   PublicURL?: string;
   Type?: number;

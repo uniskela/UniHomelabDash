@@ -85,7 +85,7 @@ The default Compose file still does **not** mount the Docker socket.
 
 ## Portainer integration (v0.6.0+)
 
-- Portainer integrations remain read-only. v0.6.0 added container lists and logs; v0.7.0 adds stack lifecycle status.
+- Portainer integrations remain read-only. v0.6.0 added container lists and logs; v0.7.0 added stack lifecycle status; v0.8.0 adds endpoint-aware availability and read-only stack container membership.
 - Authentication uses Portainer access tokens sent in `X-API-Key`.
 - Tokens and optional custom CA certificates are encrypted at rest in the providers store.
 - Use dedicated least-privilege Portainer users/teams for dashboard access.
@@ -93,6 +93,10 @@ The default Compose file still does **not** mount the Docker socket.
 - Container inventory loads asynchronously from `/api/containers` so the page shell stays responsive while endpoints respond.
 - Stack inventory loads asynchronously from authenticated `/api/stacks` and includes only normalized name, lifecycle status, stack type, endpoint/provider labels, and timestamps.
 - Stack environment variables, deployment files, raw Portainer responses, and credentials are never returned to the browser.
+- A disconnected endpoint makes a stack **Unavailable** before membership is requested; the last reported lifecycle is retained only as context.
+- Server-only membership matching first resolves the selected provider/integration and endpoint, then uses exact Compose (`com.docker.compose.project`) or Swarm (`com.docker.stack.namespace`) labels. The response is sanitized to normalized container display fields and exposes zero secrets, raw labels, stack configuration, or credentials.
+- Stack membership is process-local cached only and is never persisted to the database. No stale membership is returned for a disconnected endpoint.
+- Stack actions, restart, redeploy, inferred stack health, and arbitrary commands remain unavailable.
 - Stack results include supported Docker endpoints only; Kubernetes and Azure endpoints are excluded.
 - Aggregated stack results use a process-local 30-second cache; provider changes invalidate it.
 - Optional tunables (process-local, single-instance only):

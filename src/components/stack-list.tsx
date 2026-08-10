@@ -10,9 +10,11 @@ import {
   Search,
   Settings,
   ShieldAlert,
+  Unplug,
 } from "lucide-react";
 import { ControlSelect } from "@/components/control-select";
 import { EmptyState } from "@/components/empty-state";
+import { StackDetailSheet } from "@/components/stack-detail-sheet";
 import { StatTile } from "@/components/stat-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ const statusOptions: ReadonlyArray<{ value: StackStatusFilter; label: string }> 
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
   { value: "unknown", label: "Unknown" },
+  { value: "unavailable", label: "Unavailable" },
 ];
 
 export function StackList({
@@ -52,7 +55,22 @@ export function StackList({
   const [status, setStatus] = useState<StackStatusFilter>("all");
   const [endpoint, setEndpoint] = useState("all");
   const [dismissedWarning, setDismissedWarning] = useState<string | null>(null);
+  const [selectedStackSnapshot, setSelectedStackSnapshot] = useState<StackResource | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [originatingElement, setOriginatingElement] = useState<HTMLElement | null>(null);
 
+  const openStack = (stack: StackResource, element: HTMLElement) => {
+    setOriginatingElement(element);
+    setSelectedStackSnapshot(stack);
+    setSheetOpen(true);
+  };
+
+  const selectedStack = useMemo(() => {
+    if (!selectedStackSnapshot) {
+      return null;
+    }
+    return stacks.find((stack) => stack.id === selectedStackSnapshot.id) ?? selectedStackSnapshot;
+  }, [selectedStackSnapshot, stacks]);
   const summary = useMemo(() => getStackSummary(stacks), [stacks]);
   const endpointOptions = useMemo(
     () => [
@@ -129,7 +147,7 @@ export function StackList({
         </div>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <StatTile icon={<Layers3 />} label="Total" value={summary.total.toString()} />
         <StatTile
           icon={<CircleCheck />}
@@ -148,6 +166,12 @@ export function StackList({
           label="Unknown"
           value={summary.unknown.toString()}
           tone={summary.unknown > 0 ? "warning" : "neutral"}
+        />
+        <StatTile
+          icon={<Unplug />}
+          label="Unavailable"
+          value={summary.unavailable.toString()}
+          tone={summary.unavailable > 0 ? "danger" : "neutral"}
         />
       </div>
 
@@ -194,7 +218,7 @@ export function StackList({
       {filtered.length > 0 ? (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((stack) => (
-            <StackCard key={stack.id} stack={stack} />
+            <StackCard key={stack.id} stack={stack} onOpen={openStack} />
           ))}
         </div>
       ) : (
@@ -210,13 +234,31 @@ export function StackList({
           }}
         />
       )}
+
+      <StackDetailSheet
+        stack={selectedStack}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        originatingElement={originatingElement}
+      />
     </div>
   );
 }
 
-function StackCard({ stack }: { stack: StackResource }) {
+function StackCard({
+  stack,
+  onOpen,
+}: {
+  stack: StackResource;
+  onOpen: (stack: StackResource, element: HTMLElement) => void;
+}) {
   return (
-    <article className="rounded-xl border border-border/80 bg-card/70 p-4 shadow-sm">
+    <button
+      type="button"
+      aria-label={`View containers for ${stack.name}`}
+      onClick={(event) => onOpen(stack, event.currentTarget)}
+      className="w-full rounded-xl border border-border/80 bg-card/70 p-4 text-left shadow-sm transition-colors hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate font-medium">{stack.name}</h2>
@@ -224,6 +266,11 @@ function StackCard({ stack }: { stack: StackResource }) {
         </div>
         <StackStatusBadge status={stack.status} />
       </div>
+      {stack.status === "unavailable" ? (
+        <p className="mt-3 text-xs text-destructive">
+          Endpoint disconnected. Last reported lifecycle: {stack.reportedStatus}.
+        </p>
+      ) : null}
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <StackDetail label="Endpoint" value={stack.endpointName} />
         <StackDetail label="Provider" value={stack.providerName} />
@@ -234,7 +281,7 @@ function StackCard({ stack }: { stack: StackResource }) {
           <StackDetail label="Updated" value={new Date(stack.updatedAt).toLocaleString()} />
         ) : null}
       </dl>
-    </article>
+    </button>
   );
 }
 
@@ -255,6 +302,7 @@ function StackStatusBadge({ status }: { status: StackStatus }) {
         "capitalize",
         status === "active" && "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
         status === "inactive" && "border-amber-500/30 bg-amber-500/10 text-amber-300",
+        status === "unavailable" && "border-destructive/30 bg-destructive/10 text-destructive",
         status === "unknown" && "text-muted-foreground"
       )}
     >

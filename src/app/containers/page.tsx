@@ -8,12 +8,22 @@ import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth/session-user";
 import { getDockerProvidersAction, getPortainerProvidersAction } from "@/lib/providers/actions";
 import { readContainerViewPreferences } from "@/lib/providers/container-preferences-store";
+import { parseInitialContainerQuery } from "@/lib/providers/container-query-params";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export default async function ContainersPage() {
+type ContainerSearchParams = {
+  q?: string | string[];
+};
+
+export default async function ContainersPage({
+  searchParams,
+}: {
+  searchParams: Promise<ContainerSearchParams>;
+}) {
   await requireAuth();
+  const params = await searchParams;
   const dockerProviders = await getDockerProvidersAction();
   const portainerProviders = await getPortainerProvidersAction();
   const providers = [...dockerProviders, ...portainerProviders];
@@ -21,6 +31,7 @@ export default async function ContainersPage() {
   const actionsEnabled = dockerProviders.some((provider) => provider.enabled && !provider.readOnly);
   const connectionStatus = !enabled ? "disabled" : "connected";
   const viewPreferences = readContainerViewPreferences();
+  const initialSearchQuery = parseInitialContainerQuery(params.q);
 
   return (
     <div className="space-y-8">
@@ -53,6 +64,7 @@ export default async function ContainersPage() {
         enabled={enabled}
         actionsEnabled={actionsEnabled}
         initialPreferences={viewPreferences}
+        initialSearchQuery={initialSearchQuery}
       />
     </div>
   );

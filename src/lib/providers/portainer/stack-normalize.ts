@@ -1,4 +1,10 @@
-import type { StackResource, StackStatus, StackType } from "@/lib/providers/types";
+import type {
+  EndpointStatus,
+  StackLifecycleStatus,
+  StackResource,
+  StackStatus,
+  StackType,
+} from "@/lib/providers/types";
 
 export type PortainerStackListItem = {
   Id: number;
@@ -11,7 +17,7 @@ export type PortainerStackListItem = {
   [key: string]: unknown;
 };
 
-export function normalizePortainerStackStatus(value: number | undefined): StackStatus {
+export function normalizePortainerStackStatus(value: number | undefined): StackLifecycleStatus {
   if (value === 1) {
     return "active";
   }
@@ -19,6 +25,26 @@ export function normalizePortainerStackStatus(value: number | undefined): StackS
     return "inactive";
   }
   return "unknown";
+}
+
+export function normalizePortainerEndpointStatus(value: number | undefined): EndpointStatus {
+  if (value === 1) return "connected";
+  if (value === 2) return "disconnected";
+  return "unknown";
+}
+
+export function effectiveStackStatus(
+  reportedStatus: StackLifecycleStatus,
+  endpointStatus: EndpointStatus
+): StackStatus {
+  return endpointStatus === "disconnected" ? "unavailable" : reportedStatus;
+}
+
+export function parseStackResourceId(resourceId: string) {
+  const delimiter = resourceId.lastIndexOf(":");
+  const providerId = resourceId.slice(0, delimiter).trim();
+  const stackId = resourceId.slice(delimiter + 1).trim();
+  return delimiter > 0 && providerId && stackId ? { providerId, stackId } : null;
 }
 
 export function normalizePortainerStackType(value: number | undefined): StackType {
@@ -45,12 +71,18 @@ export function portainerStackToResource(input: {
   providerId: string;
   providerName: string;
   endpointName: string;
+  endpointStatus?: EndpointStatus;
   item: PortainerStackListItem;
 }): StackResource {
+  const reportedStatus = normalizePortainerStackStatus(input.item.Status);
+  const endpointStatus = input.endpointStatus ?? "unknown";
+
   return {
     id: `${input.providerId}:${input.item.Id}`,
     name: input.item.Name?.trim() || `Stack ${input.item.Id}`,
-    status: normalizePortainerStackStatus(input.item.Status),
+    status: effectiveStackStatus(reportedStatus, endpointStatus),
+    reportedStatus,
+    endpointStatus,
     type: normalizePortainerStackType(input.item.Type),
     endpointId: input.item.EndpointId,
     endpointName: input.endpointName,

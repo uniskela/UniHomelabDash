@@ -31,12 +31,19 @@ If port 3000 is already in use:
 HOST_PORT=3003 docker compose up --build
 ```
 
-### Upgrading from v0.6.x
+### Upgrading from v0.7.x
 
 1. Pull or rebuild: `docker compose up --build -d`.
 2. No database migration or new environment variable is required; existing services, users, and provider settings are preserved.
-3. Enabled Portainer integrations now expose read-only stack lifecycle status from the new **Containers → Stacks** view.
-4. Portainer stack actions, container membership, and inferred stack health are intentionally not included in v0.7.0.
+3. Disconnected Portainer endpoints now show **Unavailable** on their stack cards while preserving the last reported lifecycle for context.
+4. Connected stack cards open a read-only container membership drawer. **View in Containers** opens the existing filtered inventory.
+5. There is no stale membership displayed for disconnected endpoints, database migration, stack action, or inferred stack health in v0.8.0.
+
+### Pre-1.0 versioning
+
+UniHomelabDash is pre-1.0. Releases may progress through v0.10.0, v0.25.0, and
+beyond; v1.0.0 is an explicit stability milestone rather than an automatic
+numbering threshold.
 
 ### Upgrading from v0.4.x
 
@@ -166,21 +173,21 @@ For the first GHCR push, set **Settings → Actions → General → Workflow per
 
 ### Maintainer release checklist
 
-After the v0.7.0 PR is merged to the default branch, tag the merge commit and push the tag:
+After the v0.8.0 PR is merged to the default branch, tag the merge commit and push the tag:
 
 ```bash
 git switch main
 git pull
-git tag -a v0.7.0 -m "v0.7.0"
-git push origin v0.7.0
+git tag -a v0.8.0 -m "v0.8.0"
+git push origin v0.8.0
 ```
 
-Publish a GitHub Release from tag `v0.7.0`.
+Publish a GitHub Release from tag `v0.8.0`.
 
 Release title:
 
 ```text
-UniHomelabDash v0.7.0
+UniHomelabDash v0.8.0
 ```
 
 Release description:
@@ -188,17 +195,15 @@ Release description:
 ```markdown
 ## Highlights
 
-- View read-only Portainer stacks across enabled integrations from the new **Containers → Stacks** screen.
-- See active, inactive, unknown, and total lifecycle summaries with stack search, status filters, and endpoint filters.
-- Keep healthy stack results visible when another Portainer integration fails; returned errors are redacted and cached briefly.
-- Updated Next.js, React, SQLite, Radix, Tailwind, and development tooling within their existing major versions.
-- Resolved all dependency advisories reported while preparing the release.
+- Disconnected Portainer endpoints now show **Unavailable** while preserving the last reported lifecycle for context.
+- Open connected stack cards for read-only container membership, then use **View in Containers** to open the existing filtered inventory.
+- Stack membership is server-only, sanitized, and never persisted to the database.
 
 ## Upgrade notes
 
-- Rebuild/restart as usual (`docker compose up --build -d`). No schema migration required.
+- Rebuild/restart as usual (`docker compose up --build -d`). No schema migration or new environment variable is required.
 - Existing services, users, container preferences, and provider credentials are preserved.
-- Portainer remains read-only; stack actions and inferred container health are not part of this release.
+- Portainer remains read-only. Stack actions, inferred stack health, and stale membership for disconnected endpoints are not part of this release.
 
 ## Verification
 
@@ -210,10 +215,10 @@ Release description:
 
 ## Container images
 
-- `docker pull ghcr.io/uniskela/unihomelabdash:v0.7.0`
-- `docker pull ghcr.io/uniskela/unihomelabdash:0.7.0`
-- `docker pull uniskela/unihomelabdash:v0.7.0`
-- `docker pull uniskela/unihomelabdash:0.7.0`
+- `docker pull ghcr.io/uniskela/unihomelabdash:v0.8.0`
+- `docker pull ghcr.io/uniskela/unihomelabdash:0.8.0`
+- `docker pull uniskela/unihomelabdash:v0.8.0`
+- `docker pull uniskela/unihomelabdash:0.8.0`
 ```
 
 ### Maintainer-only: internal infrastructure
@@ -242,6 +247,7 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - Add containers to the dashboard through the manual service form with safe health URL prefill
 - Read-only Portainer integrations with endpoint container status and logs via API token
 - Read-only Portainer stack lifecycle status with provider/endpoint filtering and partial-failure isolation
+- Endpoint-aware stack availability and read-only stack container membership with filtered container inventory links
 
 ## What it does not do (yet)
 

@@ -20,11 +20,23 @@ import {
   portainerContainerToProviderResource,
   endpointHostFromPortainerEndpoint,
 } from "@/lib/providers/portainer/normalize";
-import { portainerStackToResource } from "@/lib/providers/portainer/stack-normalize";
+import {
+  normalizePortainerEndpointStatus,
+  portainerStackToResource,
+} from "@/lib/providers/portainer/stack-normalize";
+import {
+  matchesPortainerStackContainer,
+  portainerContainerToStackResource,
+} from "@/lib/providers/portainer/stack-containers";
+import {
+  getCachedStackMembership,
+  setCachedStackMembership,
+} from "@/lib/providers/stack-membership-cache";
 import type {
   ConnectionTestResult,
   ContainerLogsOptions,
   ContainerLogsResult,
+  ListStackContainersResult,
   ListResourcesResult,
   ProviderContext,
   ProviderHandler,
@@ -50,6 +62,7 @@ export const portainerProviderHandler: ProviderHandler = {
       "container.logs",
       "stack.list",
       "stack.status",
+      "stack.containers",
     ],
     supportsCredentials: true,
   },
@@ -184,21 +197,91 @@ export const portainerProviderHandler: ProviderHandler = {
         .filter((endpoint) => isPortainerDockerEndpoint(endpoint.Type))
         .map((endpoint) => [
           endpoint.Id,
-          endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`,
+          {
+            name: endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`,
+            status: normalizePortainerEndpointStatus(endpoint.Status),
+          },
         ])
     );
 
     return {
       resources: stacks
         .filter((stack) => dockerEndpoints.has(stack.EndpointId))
-        .map((stack) =>
-          portainerStackToResource({
+        .map((stack) => {
+          const endpoint = dockerEndpoints.get(stack.EndpointId);
+
+          return portainerStackToResource({
             providerId: context.provider.id,
             providerName: context.provider.name,
-            endpointName: dockerEndpoints.get(stack.EndpointId) ?? `Endpoint ${stack.EndpointId}`,
+            endpointName: endpoint?.name ?? `Endpoint ${stack.EndpointId}`,
+            endpointStatus: endpoint?.status,
             item: stack,
-          })
-        ),
+          });
+        }),
+    };
+  },
+
+  async listStackContainers(
+    context: ProviderContext,
+    stackId: string,
+    options: { bypassCache?: boolean } = {}
+  ): Promise<ListStackContainersResult> {
+    if (!/^[1-9]\d*$/.test(stackId)) {
+      return { kind: "not_found", resources: [] };
+    }
+    const parsedStackId = Number(stackId);
+    if (!Number.isSafeInteger(parsedStackId)) {
+      return { kind: "not_found", resources: [] };
+    }
+
+    const config = parsePortainerConfig(context.config);
+    const credentials = parsePortainerCredentials(context.credentials);
+    const validationError = validatePortainerConfig(config, credentials);
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
+    const [endpoints, stacks] = await Promise.all([
+      listPortainerEndpoints(config, credentials),
+      listPortainerStacks(config, credentials),
+    ]);
+    const stack = stacks.find((item) => item.Id === parsedStackId);
+    const endpoint = endpoints.find(
+      (item) => item.Id === stack?.EndpointId && isPortainerDockerEndpoint(item.Type)
+    );
+    if (!stack || !endpoint) {
+      return { kind: "not_found", resources: [] };
+    }
+
+    const endpointStatus = normalizePortainerEndpointStatus(endpoint.Status);
+    if (endpointStatus === "disconnected") {
+      return { kind: "unavailable", reason: "endpoint_disconnected", resources: [] };
+    }
+
+    const stackResource = portainerStackToResource({
+      providerId: context.provider.id,
+      providerName: context.provider.name,
+      endpointName: endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`,
+      endpointStatus,
+      item: stack,
+    });
+
+    if (!options.bypassCache) {
+      const cached = getCachedStackMembership(stackResource.id);
+      if (cached) {
+        return { kind: "ok", resources: cached.resources, cachedAt: cached.cachedAt };
+      }
+    }
+
+    const containers = await listPortainerEndpointContainers(config, credentials, endpoint.Id);
+    const resources = containers
+      .filter((item) => matchesPortainerStackContainer(item, stackResource))
+      .map((item) => portainerContainerToStackResource({ stack: stackResource, item }));
+    setCachedStackMembership(stackResource.id, resources);
+
+    return {
+      kind: "ok",
+      resources,
     };
   },
 

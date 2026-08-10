@@ -20,26 +20,41 @@ export function AsyncContainerList({
   enabled,
   actionsEnabled = false,
   initialPreferences = defaultContainerViewPreferences,
+  initialSearchQuery = "",
 }: {
   enabled: boolean;
   actionsEnabled?: boolean;
   initialPreferences?: ContainerViewPreferences;
+  initialSearchQuery?: string;
 }) {
   if (!enabled) {
-    return <ContainerList containers={[]} enabled={false} actionsEnabled={actionsEnabled} />;
+    return (
+      <ContainerList
+        containers={[]}
+        enabled={false}
+        actionsEnabled={actionsEnabled}
+        initialSearchQuery={initialSearchQuery}
+      />
+    );
   }
 
   return (
-    <EnabledContainerList actionsEnabled={actionsEnabled} initialPreferences={initialPreferences} />
+    <EnabledContainerList
+      actionsEnabled={actionsEnabled}
+      initialPreferences={initialPreferences}
+      initialSearchQuery={initialSearchQuery}
+    />
   );
 }
 
 function EnabledContainerList({
   actionsEnabled,
   initialPreferences,
+  initialSearchQuery,
 }: {
   actionsEnabled: boolean;
   initialPreferences: ContainerViewPreferences;
+  initialSearchQuery: string;
 }) {
   const [containers, setContainers] = useState<ProviderResource[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -125,6 +140,7 @@ function EnabledContainerList({
       enabled
       actionsEnabled={actionsEnabled}
       initialPreferences={initialPreferences}
+      initialSearchQuery={initialSearchQuery}
       onRefresh={refresh}
     />
   );
