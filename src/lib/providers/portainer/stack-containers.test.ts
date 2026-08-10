@@ -29,6 +29,7 @@ const swarmStack: StackResource = {
 const unknownStack: StackResource = {
   ...composeStack,
   id: "portainer-1:44",
+  name: "monitoring",
   type: "Unknown",
 };
 
@@ -50,7 +51,7 @@ test("matchesPortainerStackContainer uses exact labels for Compose, Swarm, and u
   assert.equal(matchesPortainerStackContainer(swarmMember, composeStack), false);
   assert.equal(matchesPortainerStackContainer(swarmMember, swarmStack), true);
   assert.equal(matchesPortainerStackContainer(composeMember, swarmStack), false);
-  assert.equal(matchesPortainerStackContainer(composeMember, unknownStack), true);
+  assert.equal(matchesPortainerStackContainer(swarmMember, unknownStack), true);
   assert.equal(matchesPortainerStackContainer(similarlyNamed, composeStack), false);
 });
 
