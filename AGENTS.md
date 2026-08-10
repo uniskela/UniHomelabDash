@@ -315,11 +315,11 @@ A feature is done when:
 
 ## Current Priority
 
-v0.6.2 in progress: Containers UI polish — hide containers, view/group layouts, and prefixed search.
+v0.7.0 in progress: read-only Portainer stack list and lifecycle status.
 
 Next focus (see ROADMAP.md):
 
-* Portainer stack/status expansion
+* Portainer action safety design (restart/redeploy remains disabled)
 * Alerts and activity feed foundation
 
 Do not chase every homelab integration at once.

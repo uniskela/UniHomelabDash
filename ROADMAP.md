@@ -310,7 +310,7 @@ Success criteria:
 
 ## Phase 7 — Portainer Integration
 
-Status: In progress (v0.6.0)
+Status: In progress (v0.7.0)
 
 Goal: Support users who manage homelabs through Portainer.
 
@@ -333,15 +333,23 @@ Completed in v0.6.2:
 * Hide individual containers (persisted) with show-hidden / unhide-all controls
 * Dismissible Containers warning banner and readable Host dropdown options in dark mode
 
+Completed in v0.7.0:
+
+* Read-only Portainer stack list and lifecycle status on `/stacks`
+* Active, inactive, unknown, and total stack summaries
+* Stack search plus lifecycle status and endpoint filters
+* Multi-provider aggregation with isolated, redacted partial failures and a short in-memory cache
+* Docker-endpoint-only filtering; Kubernetes and Azure endpoints remain out of scope
+* Shared Containers / Stacks workload navigation without adding another mobile navigation item
+
 Planned next increments:
 
-* Stack list and stack status views
 * Explicit Portainer action support (restart/redeploy) only after additional safety checks
 
 Success criteria:
 
 * User can manage common Portainer tasks without opening Portainer.
-* Integration handles API failures gracefully.
+* Integration handles API failures gracefully. (met for read-only containers, logs, and stacks)
 * Actions are clearly labelled and confirmed.
 
 ---
