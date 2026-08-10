@@ -85,9 +85,22 @@ async function main() {
   const baseUrl = `http://127.0.0.1:${port}`;
   const databasePath = path.join(os.tmpdir(), `unihomelabdash-stack-sheet-${process.pid}.sqlite`);
   seedProvider(databasePath);
+  const nextDevArgs = [
+    path.join(root, "node_modules", "next", "dist", "bin", "next"),
+    "dev",
+    "-H",
+    "127.0.0.1",
+    "-p",
+    String(port),
+  ];
+  assert.deepEqual(
+    nextDevArgs.slice(2, 4),
+    ["-H", "127.0.0.1"],
+    "The lifecycle test server must be loopback-bound before auth is disabled."
+  );
   const server = spawn(
     process.execPath,
-    [path.join(root, "node_modules", "next", "dist", "bin", "next"), "dev", "-p", String(port)],
+    nextDevArgs,
     {
       cwd: root,
       env: {
