@@ -17,9 +17,10 @@ reported lifecycle remains visible for context; UniHomelabDash does not infer
 stack health from it.
 
 Connected Docker stack cards open a read-only container membership drawer.
-Membership is matched on the server with exact Compose or Swarm stack labels,
-then returned as sanitized container display data. **View in Containers** opens
-the existing filtered inventory for that container.
+Membership is resolved on the server within the requested provider/integration
+and endpoint before exact Compose or Swarm stack-label matching, then returned
+as sanitized container display data. **View in Containers** opens the existing
+filtered inventory for that container.
 
 The drawer does not retain a prior stack's membership, and disconnected
 endpoints do not return cached membership. There is no database migration or

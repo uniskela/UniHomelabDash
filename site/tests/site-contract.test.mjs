@@ -106,17 +106,24 @@ test("privileged integration docs carry explicit safety boundaries", async () =>
 });
 
 test("Portainer docs define stack availability, read-only membership, and pre-1.0 versioning", async () => {
-  const [portainer, roadmap] = await Promise.all([
+  const [portainer, roadmap, architecture, security, agents] = await Promise.all([
     read("src/content/docs/integrations/portainer.md"),
     read("src/content/docs/project/roadmap.md"),
+    readRoot("ARCHITECTURE.md"),
+    readRoot("SECURITY.md"),
+    readRoot("AGENTS.md"),
   ]);
 
   assert.match(portainer, /stack availability/i);
   assert.match(portainer, /disconnected endpoints/i);
   assert.match(portainer, /read-only container membership/i);
   assert.match(portainer, /no stack actions/i);
+  assert.match(portainer, /provider\/integration\s+and endpoint/i);
   assert.match(roadmap, /v0\.8\.0/);
   assert.match(roadmap, /v0\.10\.0/);
+  assert.match(architecture, /requested provider\/integration and endpoint/i);
+  assert.match(security, /selected provider\/integration and endpoint/i);
+  assert.match(agents, /BEGIN:nextjs-agent-rules/);
 });
 
 test("operations docs cover required production and recovery settings", async () => {

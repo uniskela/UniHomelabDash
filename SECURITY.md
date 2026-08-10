@@ -94,7 +94,7 @@ The default Compose file still does **not** mount the Docker socket.
 - Stack inventory loads asynchronously from authenticated `/api/stacks` and includes only normalized name, lifecycle status, stack type, endpoint/provider labels, and timestamps.
 - Stack environment variables, deployment files, raw Portainer responses, and credentials are never returned to the browser.
 - A disconnected endpoint makes a stack **Unavailable** before membership is requested; the last reported lifecycle is retained only as context.
-- Server-only membership matching uses exact Compose (`com.docker.compose.project`) or Swarm (`com.docker.stack.namespace`) labels. The response is sanitized to normalized container display fields and exposes zero secrets, raw labels, stack configuration, or credentials.
+- Server-only membership matching first resolves the selected provider/integration and endpoint, then uses exact Compose (`com.docker.compose.project`) or Swarm (`com.docker.stack.namespace`) labels. The response is sanitized to normalized container display fields and exposes zero secrets, raw labels, stack configuration, or credentials.
 - Stack membership is process-local cached only and is never persisted to the database. No stale membership is returned for a disconnected endpoint.
 - Stack actions, restart, redeploy, inferred stack health, and arbitrary commands remain unavailable.
 - Stack results include supported Docker endpoints only; Kubernetes and Azure endpoints are excluded.
