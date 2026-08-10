@@ -16,6 +16,28 @@ test("containers page loads shell without blocking on inventory", () => {
   assert.equal(source.includes("listContainerResources"), false);
 });
 
+test("stack drawer navigation initializes the containers search with exact resource scope", () => {
+  const pageSource = readFileSync(join(process.cwd(), "src/app/containers/page.tsx"), "utf8");
+  const asyncListSource = readFileSync(
+    join(process.cwd(), "src/components/async-container-list.tsx"),
+    "utf8"
+  );
+  const listSource = readFileSync(join(process.cwd(), "src/components/container-list.tsx"), "utf8");
+  const sheetSource = readFileSync(
+    join(process.cwd(), "src/components/stack-detail-sheet.tsx"),
+    "utf8"
+  );
+
+  assert.ok(pageSource.includes("searchParams"));
+  assert.ok(pageSource.includes("parseInitialContainerQuery"));
+  assert.ok(pageSource.includes("initialSearchQuery={initialSearchQuery}"));
+  assert.ok(asyncListSource.includes("initialSearchQuery"));
+  assert.ok(listSource.includes("useState(initialSearchQuery)"));
+  assert.ok(sheetSource.includes("buildContainerResourceQuery(container.providerId, container.id)"));
+  assert.ok(sheetSource.includes('"/containers?q=" + encodeURIComponent(query)'));
+  assert.ok(sheetSource.includes("View in Containers"));
+});
+
 test("stacks page loads shell without blocking on inventory", () => {
   const source = readFileSync(join(process.cwd(), "src/app/stacks/page.tsx"), "utf8");
   assert.ok(source.includes("await requireAuth()"));

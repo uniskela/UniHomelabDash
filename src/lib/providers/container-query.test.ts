@@ -65,6 +65,15 @@ test("matchesContainerQuery targets the requested field", () => {
   assert.equal(matches("provider:portainer"), true);
 });
 
+test("matchesContainerQuery exactly scopes provider and endpoint resource identifiers", () => {
+  const resource = container({ id: "7:abc123", providerId: "provider-1" });
+
+  assert.equal(matches('provider-id:"provider-1" resource-id:"7:abc123"', resource), true);
+  assert.equal(matches('provider-id:"provider" resource-id:"7:abc123"', resource), false);
+  assert.equal(matches('provider-id:"provider-1" resource-id:"abc"', resource), false);
+  assert.equal(matches("provider:portainer id:abc", resource), true);
+});
+
 test("matchesContainerQuery understands running and stopped status shortcuts", () => {
   assert.equal(matches("status:running"), true);
   assert.equal(matches("status:stopped"), false);

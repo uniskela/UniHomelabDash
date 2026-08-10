@@ -17,7 +17,9 @@ export type ContainerQueryField =
   | "port"
   | "id"
   | "label"
-  | "provider";
+  | "provider"
+  | "providerId"
+  | "resourceId";
 
 export type ContainerQueryTerm = {
   field: ContainerQueryField;
@@ -47,6 +49,8 @@ const fieldAliases: Record<string, ContainerQueryField> = {
   label: "label",
   labels: "label",
   provider: "provider",
+  "provider-id": "providerId",
+  "resource-id": "resourceId",
 };
 
 /** Prefixes offered in the UI hint, in display order. */
@@ -122,6 +126,10 @@ function matchesTerm(container: ProviderResource, term: ContainerQueryTerm) {
         includes(containerProviderLabel(container), value) ||
         includes(container.providerType, value)
       );
+    case "providerId":
+      return container.providerId?.toLowerCase() === value;
+    case "resourceId":
+      return container.id.toLowerCase() === value;
     default:
       return containerSearchHaystack(container).includes(value);
   }

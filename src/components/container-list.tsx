@@ -108,6 +108,7 @@ export function ContainerList({
   enabled,
   actionsEnabled = false,
   initialPreferences = defaultContainerViewPreferences,
+  initialSearchQuery = "",
   onRefresh,
 }: {
   containers: ProviderResource[];
@@ -116,6 +117,7 @@ export function ContainerList({
   enabled: boolean;
   actionsEnabled?: boolean;
   initialPreferences?: ContainerViewPreferences;
+  initialSearchQuery?: string;
   onRefresh?: () => void;
 }) {
   const [selected, setSelected] = useState<ProviderResource | null>(null);
@@ -123,7 +125,7 @@ export function ContainerList({
   const [submittedAction, setSubmittedAction] = useState<ContainerAction | null>(null);
   const [filter, setFilter] = useState<ContainerStatusFilter>("all");
   const [hostFilter, setHostFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [showHidden, setShowHidden] = useState(false);
   const [showSearchTips, setShowSearchTips] = useState(false);
   const [dismissedWarning, setDismissedWarning] = useState<string | null>(null);

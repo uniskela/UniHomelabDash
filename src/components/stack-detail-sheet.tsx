@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { CircleAlert, LoaderCircle, Unplug } from "lucide-react";
 import { ContainerStatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   StackContainerRequestController,
   type StackContainerRequestState,
 } from "@/lib/providers/stack-container-request";
+import { buildContainerResourceQuery } from "@/lib/providers/container-query-params";
 import type { StackContainerResource, StackResource } from "@/lib/providers/types";
 
 export function StackDetailSheet({
@@ -200,6 +202,9 @@ function StateNotice({
 }
 
 function ContainerRow({ container }: { container: StackContainerResource }) {
+  const query = buildContainerResourceQuery(container.providerId, container.id);
+  const href = "/containers?q=" + encodeURIComponent(query);
+
   return (
     <article className="rounded-xl border border-border/80 bg-card/70 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -215,6 +220,9 @@ function ContainerRow({ container }: { container: StackContainerResource }) {
           <ContainerDetail label="Created" value={new Date(container.createdAt).toLocaleString()} />
         ) : null}
       </dl>
+      <Button variant="outline" size="sm" className="mt-4" asChild>
+        <Link href={href}>View in Containers</Link>
+      </Button>
     </article>
   );
 }
