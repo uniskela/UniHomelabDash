@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth/session-user";
 import { decryptCredentials } from "@/lib/providers/credentials";
 import type { DockerConnectionMode } from "@/lib/providers/docker/config";
 import { mergePortainerCredentialUpdates } from "@/lib/providers/portainer/credentials-merge";
+import { invalidateStackMembershipCache } from "@/lib/providers/stack-membership-cache";
 import {
   getProviderRowById,
   getProviderRowByType,
@@ -349,6 +350,7 @@ export async function executeContainerAction(
 function revalidateProviderPaths() {
   invalidateContainerListCache();
   invalidateStackListCache();
+  invalidateStackMembershipCache();
   revalidatePath("/settings");
   revalidatePath("/containers");
   revalidatePath("/stacks");

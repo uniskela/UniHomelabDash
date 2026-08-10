@@ -10,6 +10,7 @@ import {
   invalidateStackListCache,
   setCachedStackList,
 } from "@/lib/providers/stack-list-cache";
+import { dispatchStackContainerListing } from "@/lib/providers/stack-container-dispatch";
 import {
   buildProviderContext,
   getProviderHandler,
@@ -220,6 +221,20 @@ export async function listStackResources(options: { bypassCache?: boolean } = {}
 }
 
 export { invalidateStackListCache };
+
+export async function listStackContainerResources(
+  resourceId: string,
+  options: { bypassCache?: boolean } = {}
+) {
+  return dispatchStackContainerListing(resourceId, options, {
+    getProviderRow: (providerId) => {
+      const row = getProviderRowById(providerId);
+      return row ? toProviderRow(row) : undefined;
+    },
+    getHandler: getProviderHandler,
+    buildContext: buildProviderContext,
+  });
+}
 
 export async function getProviderLogs(
   providerType: ProviderType,

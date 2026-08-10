@@ -28,6 +28,10 @@ import {
   matchesPortainerStackContainer,
   portainerContainerToStackResource,
 } from "@/lib/providers/portainer/stack-containers";
+import {
+  getCachedStackMembership,
+  setCachedStackMembership,
+} from "@/lib/providers/stack-membership-cache";
 import type {
   ConnectionTestResult,
   ContainerLogsOptions,
@@ -219,7 +223,8 @@ export const portainerProviderHandler: ProviderHandler = {
 
   async listStackContainers(
     context: ProviderContext,
-    stackId: string
+    stackId: string,
+    options: { bypassCache?: boolean } = {}
   ): Promise<ListStackContainersResult> {
     if (!/^[1-9]\d*$/.test(stackId)) {
       return { kind: "not_found", resources: [] };
@@ -260,13 +265,23 @@ export const portainerProviderHandler: ProviderHandler = {
       endpointStatus,
       item: stack,
     });
+
+    if (!options.bypassCache) {
+      const cached = getCachedStackMembership(stackResource.id);
+      if (cached) {
+        return { kind: "ok", resources: cached.resources, cachedAt: cached.cachedAt };
+      }
+    }
+
     const containers = await listPortainerEndpointContainers(config, credentials, endpoint.Id);
+    const resources = containers
+      .filter((item) => matchesPortainerStackContainer(item, stackResource))
+      .map((item) => portainerContainerToStackResource({ stack: stackResource, item }));
+    setCachedStackMembership(stackResource.id, resources);
 
     return {
       kind: "ok",
-      resources: containers
-        .filter((item) => matchesPortainerStackContainer(item, stackResource))
-        .map((item) => portainerContainerToStackResource({ stack: stackResource, item })),
+      resources,
     };
   },
 

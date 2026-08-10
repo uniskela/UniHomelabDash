@@ -198,6 +198,14 @@ test("portainer provider resolves only exact containers for connected stacks", a
     assert.equal("labels" in connected.resources[0]!, false);
     assert.equal("Env" in connected.resources[0]!, false);
 
+    const cached = await portainerProviderHandler.listStackContainers?.(context, "42");
+    assert.ok(cached && cached.kind === "ok");
+    assert.equal(typeof cached.cachedAt, "number");
+    assert.equal(
+      requestedPaths.filter((path) => path === "/api/endpoints/7/docker/containers/json?all=1").length,
+      1
+    );
+
     const disconnected = await portainerProviderHandler.listStackContainers?.(context, "43");
     assert.deepEqual(disconnected, {
       kind: "unavailable",
