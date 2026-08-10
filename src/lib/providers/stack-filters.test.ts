@@ -45,15 +45,27 @@ const stacks: StackResource[] = [
     providerId: "provider-2",
     providerName: "Backup Portainer",
   },
+  {
+    id: "provider-1:4",
+    name: "nextcloud",
+    status: "unavailable",
+    reportedStatus: "active",
+    endpointStatus: "disconnected",
+    type: "Compose",
+    endpointId: 9,
+    endpointName: "Nextcloud",
+    providerId: "provider-1",
+    providerName: "Primary Portainer",
+  },
 ];
 
 test("getStackSummary counts lifecycle states", () => {
   assert.deepEqual(getStackSummary(stacks), {
-    total: 3,
+    total: 4,
     active: 1,
     inactive: 1,
     unknown: 1,
-    unavailable: 0,
+    unavailable: 1,
   });
 });
 
@@ -70,6 +82,10 @@ test("listStackEndpointOptions keeps same-named endpoints provider-scoped", () =
     {
       value: "provider-1:7",
       label: "Docker host · Primary Portainer",
+    },
+    {
+      value: "provider-1:9",
+      label: "Nextcloud · Primary Portainer",
     },
   ]);
 });
@@ -88,5 +104,9 @@ test("filterStacks combines lifecycle, endpoint, and broad text search", () => {
   assert.deepEqual(
     filterStacks(stacks, { search: "backup portainer" }).map((stack) => stack.name),
     ["unknown stack"]
+  );
+  assert.deepEqual(
+    filterStacks(stacks, { status: "unavailable" }).map((stack) => stack.name),
+    ["nextcloud"]
   );
 });

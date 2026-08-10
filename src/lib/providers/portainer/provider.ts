@@ -20,7 +20,10 @@ import {
   portainerContainerToProviderResource,
   endpointHostFromPortainerEndpoint,
 } from "@/lib/providers/portainer/normalize";
-import { portainerStackToResource } from "@/lib/providers/portainer/stack-normalize";
+import {
+  normalizePortainerEndpointStatus,
+  portainerStackToResource,
+} from "@/lib/providers/portainer/stack-normalize";
 import type {
   ConnectionTestResult,
   ContainerLogsOptions,
@@ -184,21 +187,27 @@ export const portainerProviderHandler: ProviderHandler = {
         .filter((endpoint) => isPortainerDockerEndpoint(endpoint.Type))
         .map((endpoint) => [
           endpoint.Id,
-          endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`,
+          {
+            name: endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`,
+            status: normalizePortainerEndpointStatus(endpoint.Status),
+          },
         ])
     );
 
     return {
       resources: stacks
         .filter((stack) => dockerEndpoints.has(stack.EndpointId))
-        .map((stack) =>
-          portainerStackToResource({
+        .map((stack) => {
+          const endpoint = dockerEndpoints.get(stack.EndpointId);
+
+          return portainerStackToResource({
             providerId: context.provider.id,
             providerName: context.provider.name,
-            endpointName: dockerEndpoints.get(stack.EndpointId) ?? `Endpoint ${stack.EndpointId}`,
+            endpointName: endpoint?.name ?? `Endpoint ${stack.EndpointId}`,
+            endpointStatus: endpoint?.status,
             item: stack,
-          })
-        ),
+          });
+        }),
     };
   },
 

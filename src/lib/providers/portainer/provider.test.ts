@@ -64,8 +64,9 @@ test("portainer provider lists stacks only for Docker endpoints", async () => {
     if (request.url === "/api/endpoints") {
       response.end(
         JSON.stringify([
-          { Id: 7, Name: "Docker host", Type: 1 },
-          { Id: 9, Name: "Kubernetes", Type: 5 },
+          { Id: 7, Name: "Docker host", Type: 1, Status: 1 },
+          { Id: 8, Name: "Nextcloud", Type: 2, Status: 2 },
+          { Id: 9, Name: "Kubernetes", Type: 5, Status: 1 },
         ])
       );
       return;
@@ -74,7 +75,8 @@ test("portainer provider lists stacks only for Docker endpoints", async () => {
       response.end(
         JSON.stringify([
           { Id: 42, Name: "media", Type: 2, EndpointId: 7, Status: 1 },
-          { Id: 43, Name: "cluster", Type: 3, EndpointId: 9, Status: 1 },
+          { Id: 43, Name: "nextcloud", Type: 2, EndpointId: 8, Status: 1 },
+          { Id: 44, Name: "cluster", Type: 3, EndpointId: 9, Status: 1 },
         ])
       );
       return;
@@ -96,10 +98,14 @@ test("portainer provider lists stacks only for Docker endpoints", async () => {
     );
 
     assert.ok(result);
-    assert.equal(result.resources.length, 1);
+    assert.equal(result.resources.length, 2);
     assert.equal(result.resources[0]?.name, "media");
     assert.equal(result.resources[0]?.endpointName, "Docker host");
     assert.equal(result.resources[0]?.providerName, "Portainer");
+    assert.equal(result.resources[1]?.name, "nextcloud");
+    assert.equal(result.resources[1]?.status, "unavailable");
+    assert.equal(result.resources[1]?.reportedStatus, "active");
+    assert.equal(result.resources[1]?.endpointStatus, "disconnected");
   } finally {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));
