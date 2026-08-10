@@ -13,6 +13,8 @@ const stacks: StackResource[] = [
     id: "provider-1:1",
     name: "media",
     status: "active",
+    reportedStatus: "active",
+    endpointStatus: "connected",
     type: "Compose",
     endpointId: 7,
     endpointName: "Docker host",
@@ -23,6 +25,8 @@ const stacks: StackResource[] = [
     id: "provider-1:2",
     name: "archive",
     status: "inactive",
+    reportedStatus: "inactive",
+    endpointStatus: "connected",
     type: "Swarm",
     endpointId: 8,
     endpointName: "Archive host",
@@ -33,6 +37,8 @@ const stacks: StackResource[] = [
     id: "provider-2:3",
     name: "unknown stack",
     status: "unknown",
+    reportedStatus: "unknown",
+    endpointStatus: "unknown",
     type: "Unknown",
     endpointId: 7,
     endpointName: "Docker host",
@@ -47,6 +53,7 @@ test("getStackSummary counts lifecycle states", () => {
     active: 1,
     inactive: 1,
     unknown: 1,
+    unavailable: 0,
   });
 });
 

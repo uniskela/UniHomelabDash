@@ -53,7 +53,11 @@ export type ListResourcesResult = {
   warning?: string;
 };
 
-export type StackStatus = "active" | "inactive" | "unknown";
+export type StackLifecycleStatus = "active" | "inactive" | "unknown";
+
+export type EndpointStatus = "connected" | "disconnected" | "unknown";
+
+export type StackStatus = StackLifecycleStatus | "unavailable";
 
 export type StackType = "Swarm" | "Compose" | "Kubernetes" | "Unknown";
 
@@ -61,6 +65,8 @@ export type StackResource = {
   id: string;
   name: string;
   status: StackStatus;
+  reportedStatus: StackLifecycleStatus;
+  endpointStatus: EndpointStatus;
   type: StackType;
   endpointId: number;
   endpointName: string;

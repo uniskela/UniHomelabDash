@@ -7,6 +7,8 @@ const mediaStack: StackResource = {
   id: "provider-1:42",
   name: "media",
   status: "active",
+  reportedStatus: "active",
+  endpointStatus: "connected",
   type: "Compose",
   endpointId: 7,
   endpointName: "Docker host",
