@@ -109,4 +109,8 @@ test("filterStacks combines lifecycle, endpoint, and broad text search", () => {
     filterStacks(stacks, { status: "unavailable" }).map((stack) => stack.name),
     ["nextcloud"]
   );
+  assert.deepEqual(
+    filterStacks(stacks, { search: "unavailable" }).map((stack) => stack.name),
+    ["nextcloud"]
+  );
 });
