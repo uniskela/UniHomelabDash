@@ -73,7 +73,8 @@ Add the **stack.containers** provider capability and an optional handler method:
 
     listStackContainers?(
       context: ProviderContext,
-      stackId: string
+      stackId: string,
+      options?: { bypassCache?: boolean }
     ): Promise<ListStackContainersResult>;
 
 Only Portainer implements it.
@@ -82,7 +83,7 @@ The stack listing flow remains a paired request for endpoint inventory and stack
 
 Container membership is fetched only when the user opens a stack:
 
-1. The authenticated route receives the stable provider-scoped stack ID.
+1. The authenticated route receives the once-decoded stable provider-scoped stack ID from the dynamic path segment; it does not decode that value a second time.
 2. The server resolves the enabled Portainer provider from that ID.
 3. The provider refetches or reuses the short-lived safe stack and endpoint inventory and verifies that the requested stack belongs to that provider and a supported Docker endpoint.
 4. If the endpoint is disconnected, it returns a typed unavailable result without calling the Docker gateway.
@@ -166,7 +167,7 @@ Distinct drawer states cover loading, no containers, endpoint unavailable, stack
 
 ### Containers-page link
 
-The Containers page will accept one optional, length-limited **q** query parameter and use it only as the initial value of the existing search field. **View in Containers** supplies the full provider-scoped container resource ID through the existing **id:** search prefix, which uniquely carries the Portainer endpoint and Docker container ID. The existing query parser remains authoritative. Missing, oversized, or invalid values fall back to the current unfiltered behavior.
+The Containers page will accept one optional, length-limited **q** query parameter and use it only as the initial value of the existing search field. Add exact **provider-id:** and **resource-id:** query terms while preserving the existing partial-match **provider:** and **id:** terms for interactive search. **View in Containers** supplies both exact IDs, preventing collisions between Portainer integrations and partial container-ID matches. The existing query parser remains authoritative. Missing, oversized, or invalid values fall back to the current unfiltered behavior.
 
 ## Error Handling and Security
 
@@ -205,7 +206,7 @@ The Containers page will accept one optional, length-limited **q** query paramet
 - Keyboard activation and focus restoration.
 - Desktop drawer and phone full-screen sheet.
 - Loading, empty, unavailable, retry, and no-filter-result states.
-- Safe **q** initialization and provider-scoped **id:** links from the drawer.
+- Safe **q** initialization and combined exact **provider-id:** plus **resource-id:** links from the drawer.
 - Dark mode and responsive layouts.
 - Multiple Portainer providers with duplicate stack or endpoint names.
 - Regression coverage for authentication, provider settings, container listing, Docker actions, and logs.
@@ -222,7 +223,7 @@ The Containers page will accept one optional, length-limited **q** query paramet
 - A Portainer stack whose endpoint reports disconnected is shown as Unavailable and is excluded from Active.
 - Its drawer shows the last reported lifecycle but no stale containers.
 - A connected Compose or Swarm stack shows only its current exact-match containers.
-- Container rows can open the Containers page with a provider-scoped resource-ID filter.
+- Container rows can open the Containers page with exact provider-ID and resource-ID filters.
 - No stack or container actions are introduced.
 - No secret, raw stack object, unrestricted label set, or deployment content reaches the frontend.
 - Existing providers and container functionality remain green through the complete verification suite.
