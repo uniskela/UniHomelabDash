@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CircleAlert,
   CircleCheck,
@@ -57,10 +57,10 @@ export function StackList({
   const [dismissedWarning, setDismissedWarning] = useState<string | null>(null);
   const [selectedStack, setSelectedStack] = useState<StackResource | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const originatingElement = useRef<HTMLElement | null>(null);
+  const [originatingElement, setOriginatingElement] = useState<HTMLElement | null>(null);
 
   const openStack = (stack: StackResource, element: HTMLElement) => {
-    originatingElement.current = element;
+    setOriginatingElement(element);
     setSelectedStack(stack);
     setSheetOpen(true);
   };
@@ -233,7 +233,7 @@ export function StackList({
         stack={selectedStack}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        originatingElement={originatingElement.current}
+        originatingElement={originatingElement}
       />
     </div>
   );
@@ -261,7 +261,9 @@ function StackCard({
         <StackStatusBadge status={stack.status} />
       </div>
       {stack.status === "unavailable" ? (
-        <p className="mt-3 text-xs text-destructive">Endpoint disconnected</p>
+        <p className="mt-3 text-xs text-destructive">
+          Endpoint disconnected. Last reported lifecycle: {stack.reportedStatus}.
+        </p>
       ) : null}
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <StackDetail label="Endpoint" value={stack.endpointName} />

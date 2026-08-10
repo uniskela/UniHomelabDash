@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { CircleAlert, LoaderCircle, Unplug } from "lucide-react";
 import { ContainerStatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -11,22 +11,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  lastReportedLifecycle,
+  restoreStackDetailFocus,
+  StackContainerRequestController,
+  type StackContainerRequestState,
+} from "@/lib/providers/stack-container-request";
 import type { StackContainerResource, StackResource } from "@/lib/providers/types";
-
-type StackContainersPayload = {
-  containers?: StackContainerResource[];
-  reason?: string | null;
-};
-
-type RequestState =
-  | { kind: "idle" | "loading" }
-  | { kind: "ok"; containers: StackContainerResource[] }
-  | { kind: "empty" }
-  | { kind: "unavailable" }
-  | { kind: "unauthenticated" }
-  | { kind: "not-found" }
-  | { kind: "server-error" }
-  | { kind: "network-error" };
 
 export function StackDetailSheet({
   stack,
@@ -39,101 +30,43 @@ export function StackDetailSheet({
   onOpenChange: (open: boolean) => void;
   originatingElement: HTMLElement | null;
 }) {
-  const [requestState, setRequestState] = useState<RequestState>({ kind: "idle" });
-  const requestController = useRef<AbortController | null>(null);
-  const requestVersion = useRef(0);
-
-  const loadContainers = useCallback(async (resource: StackResource, refresh: boolean) => {
-    requestController.current?.abort();
-    requestController.current = null;
-    requestVersion.current += 1;
-    const version = requestVersion.current;
-
-    if (resource.endpointStatus === "disconnected") {
-      setRequestState({ kind: "unavailable" });
-      return;
-    }
-
-    const controller = new AbortController();
-    requestController.current = controller;
-    setRequestState({ kind: "loading" });
-
-    try {
-      const search = refresh ? "?refresh=1" : "";
-      const response = await fetch(
-        `/api/stacks/${encodeURIComponent(resource.id)}/containers${search}`,
-        { cache: "no-store", signal: controller.signal }
-      );
-      const payload = (await response.json().catch(() => null)) as StackContainersPayload | null;
-
-      if (controller.signal.aborted || requestVersion.current !== version) {
-        return;
-      }
-
-      if (response.status === 401) {
-        setRequestState({ kind: "unauthenticated" });
-        return;
-      }
-      if (response.status === 404) {
-        setRequestState({ kind: "not-found" });
-        return;
-      }
-      if (response.status === 502) {
-        setRequestState({ kind: "server-error" });
-        return;
-      }
-      if (!response.ok) {
-        setRequestState({ kind: "network-error" });
-        return;
-      }
-      if (payload?.reason === "endpoint_disconnected") {
-        setRequestState({ kind: "unavailable" });
-        return;
-      }
-
-      const containers = payload?.containers ?? [];
-      setRequestState(
-        containers.length > 0 ? { kind: "ok", containers } : { kind: "empty" }
-      );
-    } catch {
-      if (!controller.signal.aborted && requestVersion.current === version) {
-        setRequestState({ kind: "network-error" });
-      }
-    }
-  }, []);
+  const [requestState, setRequestState] = useState<StackContainerRequestState>({ kind: "idle" });
+  const [controller] = useState(() => new StackContainerRequestController());
 
   useEffect(() => {
     if (!open || !stack) {
-      requestController.current?.abort();
-      requestController.current = null;
-      requestVersion.current += 1;
-      setRequestState({ kind: "idle" });
+      controller.abort();
       return;
     }
 
-    void loadContainers(stack, false);
+    void controller.load(stack, false, setRequestState);
 
     return () => {
-      requestController.current?.abort();
-      requestController.current = null;
-      requestVersion.current += 1;
+      controller.abort();
     };
-  }, [loadContainers, open, stack]);
+  }, [controller, open, stack]);
 
   const retry = () => {
     if (stack) {
-      void loadContainers(stack, true);
+      void controller.load(stack, true, setRequestState);
     }
   };
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      controller.abort();
+      setRequestState({ kind: "idle" });
+    }
+    onOpenChange(nextOpen);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
         className="data-[side=right]:w-full sm:max-w-xl"
         onCloseAutoFocus={(event) => {
-          event.preventDefault();
-          originatingElement?.focus();
+          restoreStackDetailFocus(event, originatingElement);
         }}
       >
         <SheetHeader>
@@ -143,14 +76,26 @@ export function StackDetailSheet({
           </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-          <ContainerContent state={requestState} onRetry={retry} />
+          <ContainerContent
+            state={requestState}
+            onRetry={retry}
+            reportedStatus={stack?.reportedStatus}
+          />
         </div>
       </SheetContent>
     </Sheet>
   );
 }
 
-function ContainerContent({ state, onRetry }: { state: RequestState; onRetry: () => void }) {
+function ContainerContent({
+  state,
+  onRetry,
+  reportedStatus,
+}: {
+  state: StackContainerRequestState;
+  onRetry: () => void;
+  reportedStatus?: StackResource["reportedStatus"];
+}) {
   if (state.kind === "idle") {
     return null;
   }
@@ -183,7 +128,7 @@ function ContainerContent({ state, onRetry }: { state: RequestState; onRetry: ()
       <StateNotice
         icon={Unplug}
         title="Endpoint unavailable"
-        description="This endpoint is disconnected, so container membership was not requested."
+        description={`This endpoint is disconnected, so container membership was not requested.${reportedStatus ? ` ${lastReportedLifecycle(reportedStatus)}` : ""}`}
       />
     );
   }
