@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Box, Settings } from "lucide-react";
 import { AsyncContainerList } from "@/components/async-container-list";
 import { PageHeader } from "@/components/page-header";
+import { WorkloadTabs } from "@/components/workload-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth/session-user";
@@ -47,6 +48,7 @@ export default async function ContainersPage() {
         }
       />
 
+      <WorkloadTabs active="containers" />
       <AsyncContainerList
         enabled={enabled}
         actionsEnabled={actionsEnabled}

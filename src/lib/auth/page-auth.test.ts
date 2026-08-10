@@ -7,6 +7,7 @@ const protectedPages = [
   "src/app/page.tsx",
   "src/app/services/page.tsx",
   "src/app/containers/page.tsx",
+  "src/app/stacks/page.tsx",
   "src/app/settings/page.tsx",
   "src/app/alerts/page.tsx",
 ];

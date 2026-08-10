@@ -15,3 +15,10 @@ test("containers page loads shell without blocking on inventory", () => {
   assert.ok(source.includes("AsyncContainerList"));
   assert.equal(source.includes("listContainerResources"), false);
 });
+
+test("stacks page loads shell without blocking on inventory", () => {
+  const source = readFileSync(join(process.cwd(), "src/app/stacks/page.tsx"), "utf8");
+  assert.ok(source.includes("await requireAuth()"));
+  assert.ok(source.includes("AsyncStackList"));
+  assert.equal(source.includes("listStackResources"), false);
+});

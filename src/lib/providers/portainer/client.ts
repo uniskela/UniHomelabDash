@@ -10,6 +10,7 @@ import type {
   PortainerProviderConfig,
 } from "@/lib/providers/portainer/config";
 import { decodeDockerLogResponse } from "@/lib/providers/docker/log-stream";
+import type { PortainerStackListItem } from "@/lib/providers/portainer/stack-normalize";
 
 type PortainerEndpoint = {
   Id: number;
@@ -193,6 +194,23 @@ export async function listPortainerEndpoints(
   });
 }
 
+export async function listPortainerStacks(
+  config: PortainerProviderConfig,
+  credentials: PortainerCredentials
+) {
+  const response = await portainerRequest<unknown>({
+    config,
+    credentials,
+    path: "/api/stacks",
+  });
+
+  if (!Array.isArray(response) || !response.every(isPortainerStackListItem)) {
+    throw new Error("Portainer returned an invalid stack list.");
+  }
+
+  return response;
+}
+
 export async function listPortainerEndpointContainers(
   config: PortainerProviderConfig,
   credentials: PortainerCredentials,
@@ -233,3 +251,19 @@ export async function getPortainerContainerLogs(
 }
 
 export type { DockerListItem, PortainerEndpoint };
+
+function isPortainerStackListItem(value: unknown): value is PortainerStackListItem {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const item = value as Record<string, unknown>;
+  return (
+    typeof item.Id === "number" &&
+    Number.isFinite(item.Id) &&
+    item.Id > 0 &&
+    typeof item.EndpointId === "number" &&
+    Number.isFinite(item.EndpointId) &&
+    item.EndpointId > 0
+  );
+}

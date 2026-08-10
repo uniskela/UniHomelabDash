@@ -4,6 +4,12 @@ import {
   invalidateContainerListCache,
   setCachedContainerList,
 } from "@/lib/providers/container-list-cache";
+import { aggregateStackListings } from "@/lib/providers/stack-aggregation";
+import {
+  getCachedStackList,
+  invalidateStackListCache,
+  setCachedStackList,
+} from "@/lib/providers/stack-list-cache";
 import {
   buildProviderContext,
   getProviderHandler,
@@ -177,6 +183,43 @@ export async function listContainerResources(options: { bypassCache?: boolean } 
 }
 
 export { invalidateContainerListCache };
+
+export async function listStackResources(options: { bypassCache?: boolean } = {}) {
+  if (!options.bypassCache) {
+    const cached = getCachedStackList();
+    if (cached) {
+      return cached;
+    }
+  }
+
+  const rows = listEnabledProviderRows().filter((item) => item.type === "portainer");
+  if (rows.length === 0) {
+    return {
+      resources: [],
+      error: "Portainer is not configured or enabled.",
+      cachedAt: null,
+    };
+  }
+
+  const handler = getProviderHandler("portainer");
+  if (!handler?.listStacks) {
+    return {
+      resources: [],
+      error: "Portainer stack listing is not supported.",
+      cachedAt: null,
+    };
+  }
+
+  const result = await aggregateStackListings(
+    rows.map((row) => ({
+      name: row.name,
+      list: () => handler.listStacks!(buildProviderContext(toProviderRow(row))),
+    }))
+  );
+  return setCachedStackList(result);
+}
+
+export { invalidateStackListCache };
 
 export async function getProviderLogs(
   providerType: ProviderType,

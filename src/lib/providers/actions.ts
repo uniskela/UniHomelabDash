@@ -13,7 +13,12 @@ import {
   rowToPublicView,
   toProviderRow,
 } from "@/lib/providers/registry";
-import { executeProviderAction, invalidateContainerListCache, testProviderConnection } from "@/lib/providers/runtime";
+import {
+  executeProviderAction,
+  invalidateContainerListCache,
+  invalidateStackListCache,
+  testProviderConnection,
+} from "@/lib/providers/runtime";
 import {
   createDockerProvider,
   createPortainerProvider,
@@ -343,6 +348,8 @@ export async function executeContainerAction(
 
 function revalidateProviderPaths() {
   invalidateContainerListCache();
+  invalidateStackListCache();
   revalidatePath("/settings");
   revalidatePath("/containers");
+  revalidatePath("/stacks");
 }

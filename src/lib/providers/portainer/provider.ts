@@ -3,6 +3,7 @@ import {
   getPortainerContainerLogs,
   listPortainerEndpointContainers,
   listPortainerEndpoints,
+  listPortainerStacks,
 } from "@/lib/providers/portainer/client";
 import {
   parsePortainerConfig,
@@ -19,6 +20,7 @@ import {
   portainerContainerToProviderResource,
   endpointHostFromPortainerEndpoint,
 } from "@/lib/providers/portainer/normalize";
+import { portainerStackToResource } from "@/lib/providers/portainer/stack-normalize";
 import type {
   ConnectionTestResult,
   ContainerLogsOptions,
@@ -45,7 +47,13 @@ export const portainerProviderHandler: ProviderHandler = {
     type: "portainer",
     name: "Portainer",
     description: "Read-only container status and logs through the Portainer API gateway.",
-    capabilities: ["container.list", "container.status", "container.logs"],
+    capabilities: [
+      "container.list",
+      "container.status",
+      "container.logs",
+      "stack.list",
+      "stack.status",
+    ],
     supportsCredentials: true,
   },
 
@@ -159,6 +167,41 @@ export const portainerProviderHandler: ProviderHandler = {
     return {
       resources,
       warning: warnings.length > 0 ? warnings.join(" ") : undefined,
+    };
+  },
+
+  async listStacks(context: ProviderContext) {
+    const config = parsePortainerConfig(context.config);
+    const credentials = parsePortainerCredentials(context.credentials);
+    const validationError = validatePortainerConfig(config, credentials);
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
+    const [endpoints, stacks] = await Promise.all([
+      listPortainerEndpoints(config, credentials),
+      listPortainerStacks(config, credentials),
+    ]);
+    const dockerEndpoints = new Map(
+      endpoints
+        .filter((endpoint) => isPortainerDockerEndpoint(endpoint.Type))
+        .map((endpoint) => [
+          endpoint.Id,
+          endpoint.Name?.trim() || `Endpoint ${endpoint.Id}`,
+        ])
+    );
+
+    return {
+      resources: stacks
+        .filter((stack) => dockerEndpoints.has(stack.EndpointId))
+        .map((stack) =>
+          portainerStackToResource({
+            providerId: context.provider.id,
+            providerName: context.provider.name,
+            endpointName: dockerEndpoints.get(stack.EndpointId) ?? `Endpoint ${stack.EndpointId}`,
+            item: stack,
+          })
+        ),
     };
   },
 
