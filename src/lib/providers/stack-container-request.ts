@@ -21,7 +21,10 @@ export class StackContainerRequestController {
   private controller: AbortController | null = null;
   private version = 0;
 
-  constructor(private readonly fetcher: StackContainerFetch = fetch) {}
+  constructor(
+    private readonly fetcher: StackContainerFetch = (input, init) =>
+      globalThis.fetch(input, init)
+  ) {}
 
   abort() {
     this.controller?.abort();

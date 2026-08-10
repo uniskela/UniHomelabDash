@@ -135,6 +135,27 @@ test("stack container request maps network failures and retries with refresh", a
   ]);
 });
 
+test("stack container request preserves the native fetch receiver", async () => {
+  const originalFetch = globalThis.fetch;
+  let receiverCorrect = false;
+  globalThis.fetch = function (this: unknown) {
+    receiverCorrect = this === globalThis;
+    return Promise.resolve(response(200, { containers: [] }));
+  } as typeof fetch;
+
+  try {
+    const controller = new StackContainerRequestController();
+    const result = recorder();
+
+    await controller.load(connectedStack, false, result.setState);
+
+    assert.equal(receiverCorrect, true);
+    assert.deepEqual(result.states, [{ kind: "loading" }, { kind: "empty" }]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("stack container request suppresses stale responses after close aborts it", async () => {
   let resolveResponse: ((value: Response) => void) | undefined;
   let signal: AbortSignal | undefined;
