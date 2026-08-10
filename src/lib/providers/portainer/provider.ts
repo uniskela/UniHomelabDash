@@ -36,10 +36,7 @@ import type {
 const DOCKER_ENDPOINT_TYPES = new Set([1, 2, 4]);
 
 export function isPortainerDockerEndpoint(type: number | undefined) {
-  if (type === undefined) {
-    return true;
-  }
-  return DOCKER_ENDPOINT_TYPES.has(type);
+  return type !== undefined && DOCKER_ENDPOINT_TYPES.has(type);
 }
 
 export const portainerProviderHandler: ProviderHandler = {

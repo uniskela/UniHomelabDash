@@ -51,7 +51,7 @@ test("isPortainerDockerEndpoint includes Edge Agent Docker and excludes Kubernet
   assert.equal(isPortainerDockerEndpoint(1), true);
   assert.equal(isPortainerDockerEndpoint(2), true);
   assert.equal(isPortainerDockerEndpoint(4), true);
-  assert.equal(isPortainerDockerEndpoint(undefined), true);
+  assert.equal(isPortainerDockerEndpoint(undefined), false);
   assert.equal(isPortainerDockerEndpoint(3), false);
   assert.equal(isPortainerDockerEndpoint(5), false);
   assert.equal(isPortainerDockerEndpoint(6), false);
