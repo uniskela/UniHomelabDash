@@ -8,7 +8,8 @@ export type ProviderCapability =
   | "container.stop"
   | "container.restart"
   | "stack.list"
-  | "stack.status";
+  | "stack.status"
+  | "stack.containers";
 
 export type ProviderType = "manual" | "docker" | "portainer";
 
@@ -81,6 +82,25 @@ export type ListStacksResult = {
   warning?: string;
 };
 
+export type StackContainerResource = {
+  id: string;
+  name: string;
+  state: ContainerState;
+  status: string;
+  image: string;
+  ports: string[];
+  createdAt?: string;
+  providerId: string;
+  providerName: string;
+  endpointId: number;
+  endpointName: string;
+};
+
+export type ListStackContainersResult =
+  | { kind: "ok"; resources: StackContainerResource[]; cachedAt?: number }
+  | { kind: "unavailable"; reason: "endpoint_disconnected"; resources: [] }
+  | { kind: "not_found"; resources: [] };
+
 export type ProviderDefinitionMeta = {
   type: ProviderType;
   name: string;
@@ -135,6 +155,11 @@ export interface ProviderHandler {
   testConnection(context: ProviderContext): Promise<ConnectionTestResult>;
   listResources(context: ProviderContext): Promise<ListResourcesResult>;
   listStacks?(context: ProviderContext): Promise<ListStacksResult>;
+  listStackContainers?(
+    context: ProviderContext,
+    stackId: string,
+    options?: { bypassCache?: boolean }
+  ): Promise<ListStackContainersResult>;
   getLogs?(
     context: ProviderContext,
     resourceId: string,
