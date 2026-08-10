@@ -97,6 +97,29 @@ export function lastReportedLifecycle(status: StackResource["reportedStatus"]) {
   return `Last reported lifecycle: ${status}.`;
 }
 
+export function stackContainerAnnouncement(state: StackContainerRequestState) {
+  switch (state.kind) {
+    case "idle":
+      return "";
+    case "loading":
+      return "Loading read-only container membership.";
+    case "ok":
+      return "Container membership loaded.";
+    case "empty":
+      return "No containers found for this stack.";
+    case "unavailable":
+      return "Stack containers are unavailable while the endpoint is disconnected.";
+    case "unauthenticated":
+      return "Your session expired. Sign in again to view stack containers.";
+    case "not-found":
+      return "Stack not found.";
+    case "server-error":
+      return "Container details unavailable.";
+    case "network-error":
+      return "Could not load stack containers.";
+  }
+}
+
 export function restoreStackDetailFocus(
   event: { preventDefault: () => void },
   originatingElement: Pick<HTMLElement, "focus"> | null

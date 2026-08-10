@@ -225,3 +225,116 @@ test("portainer provider resolves only exact containers for connected stacks", a
     });
   }
 });
+
+async function withMutableStackMembershipServer(
+  run: (fixture: {
+    context: ProviderContext;
+    requestedPaths: string[];
+    setContainerImage: (image: string) => void;
+    setEndpointStatus: (status: number) => void;
+  }) => Promise<void>
+) {
+  const requestedPaths: string[] = [];
+  let containerImage = "nextcloud:cached";
+  let endpointStatus = 1;
+  const server = http.createServer((request, response) => {
+    requestedPaths.push(request.url ?? "");
+    response.writeHead(200, { "content-type": "application/json" });
+
+    if (request.url === "/api/endpoints") {
+      response.end(JSON.stringify([{ Id: 7, Name: "Docker host", Type: 1, Status: endpointStatus }]));
+      return;
+    }
+    if (request.url === "/api/stacks") {
+      response.end(
+        JSON.stringify([
+          { Id: 52, Name: "nextcloud-aio", Type: 2, EndpointId: 7, Status: 1 },
+        ])
+      );
+      return;
+    }
+    if (request.url === "/api/endpoints/7/docker/containers/json?all=1") {
+      response.end(
+        JSON.stringify([
+          {
+            Id: "member",
+            Names: ["/nextcloud"],
+            Image: containerImage,
+            State: "running",
+            Status: "Up 1 hour",
+            Labels: { "com.docker.compose.project": "nextcloud-aio" },
+          },
+        ])
+      );
+      return;
+    }
+    response.writeHead(404);
+    response.end();
+  });
+
+  await new Promise<void>((resolve, reject) => {
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => resolve());
+  });
+  const address = server.address();
+  assert.ok(address && typeof address !== "string");
+
+  try {
+    await run({
+      context: providerContext({ baseUrl: `http://127.0.0.1:${address.port}` }),
+      requestedPaths,
+      setContainerImage: (image) => { containerImage = image; },
+      setEndpointStatus: (status) => { endpointStatus = status; },
+    });
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+}
+
+test("portainer provider bypasses successful membership cache on refresh", async () => {
+  await withMutableStackMembershipServer(async ({
+    context,
+    requestedPaths,
+    setContainerImage,
+  }) => {
+    const initial = await portainerProviderHandler.listStackContainers?.(context, "52");
+    assert.ok(initial && initial.kind === "ok");
+    assert.equal(initial.resources[0]?.image, "nextcloud:cached");
+
+    setContainerImage("nextcloud:refreshed");
+    const refreshed = await portainerProviderHandler.listStackContainers?.(context, "52", {
+      bypassCache: true,
+    });
+
+    assert.ok(refreshed && refreshed.kind === "ok");
+    assert.equal(refreshed.resources[0]?.image, "nextcloud:refreshed");
+    assert.equal(
+      requestedPaths.filter((path) => path === "/api/endpoints/7/docker/containers/json?all=1").length,
+      2
+    );
+  });
+});
+
+test("portainer provider checks endpoint connectivity before returning cached membership", async () => {
+  await withMutableStackMembershipServer(async ({ context, requestedPaths, setEndpointStatus }) => {
+    const initial = await portainerProviderHandler.listStackContainers?.(context, "52", {
+      bypassCache: true,
+    });
+    assert.ok(initial && initial.kind === "ok");
+
+    setEndpointStatus(2);
+    const disconnected = await portainerProviderHandler.listStackContainers?.(context, "52");
+
+    assert.deepEqual(disconnected, {
+      kind: "unavailable",
+      reason: "endpoint_disconnected",
+      resources: [],
+    });
+    assert.equal(
+      requestedPaths.filter((path) => path === "/api/endpoints/7/docker/containers/json?all=1").length,
+      1
+    );
+  });
+});

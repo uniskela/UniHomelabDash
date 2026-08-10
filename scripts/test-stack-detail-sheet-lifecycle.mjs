@@ -120,12 +120,19 @@ async function main() {
     const page = await browser.newPage();
     await page.addInitScript(() => {
       const nativeFetch = window.fetch.bind(window);
-      window.__stackDetailLifecycle = { containerRequestStarted: false, containerRequestAborted: false };
+      window.__stackDetailLifecycle = {
+        containerRequestStarted: false,
+        containerRequestAborted: false,
+        containerRequestCount: 0,
+        resolveContainerRequest: null,
+      };
       window.fetch = (input, init) => {
         const url = String(input);
         if (url.includes("/api/stacks/") && url.endsWith("/containers")) {
           window.__stackDetailLifecycle.containerRequestStarted = true;
-          return new Promise((_, reject) => {
+          window.__stackDetailLifecycle.containerRequestCount += 1;
+          return new Promise((resolve, reject) => {
+            window.__stackDetailLifecycle.resolveContainerRequest = resolve;
             init?.signal?.addEventListener("abort", () => {
               window.__stackDetailLifecycle.containerRequestAborted = true;
               reject(new DOMException("The operation was aborted.", "AbortError"));
@@ -157,14 +164,50 @@ async function main() {
     await trigger.waitFor({ state: "visible", timeout: 10_000 });
     await trigger.click();
     await page.waitForFunction(() => window.__stackDetailLifecycle.containerRequestStarted);
-    await page.locator('[data-slot="sheet-content"]').waitFor({ state: "visible" });
+    const sheet = page.locator('[data-slot="sheet-content"]');
+    await sheet.waitFor({ state: "visible" });
+    await sheet.getByText("Compose stack").waitFor({ state: "visible" });
+    await sheet.getByText("Status: active").waitFor({ state: "visible" });
+    await sheet.getByText("Last reported lifecycle: active").waitFor({ state: "visible" });
+    await sheet.getByRole("status").getByText("Loading read-only container membership.").waitFor({
+      state: "attached",
+    });
+    await page.evaluate(() => {
+      window.__stackDetailLifecycle.resolveContainerRequest?.(
+        new Response(JSON.stringify({ containers: [] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      );
+    });
+    await sheet.getByRole("status").getByText("No containers found for this stack.").waitFor({
+      state: "attached",
+    });
 
+    await page.keyboard.press("Escape");
+    assert.equal(
+      await trigger.evaluate((element) => document.activeElement === element),
+      true,
+      "closing the drawer should restore focus to its stack trigger"
+    );
+
+    await page.evaluate(() => {
+      window.__stackDetailLifecycle.containerRequestStarted = false;
+      window.__stackDetailLifecycle.containerRequestAborted = false;
+    });
+    await trigger.click();
+    await page.waitForFunction(
+      () =>
+        window.__stackDetailLifecycle.containerRequestStarted &&
+        window.__stackDetailLifecycle.containerRequestCount === 2
+    );
+    await sheet.waitFor({ state: "visible" });
     await page.keyboard.press("Escape");
     await page.waitForFunction(() => window.__stackDetailLifecycle.containerRequestAborted);
     assert.equal(
       await trigger.evaluate((element) => document.activeElement === element),
       true,
-      "closing the drawer should restore focus to its stack trigger"
+      "closing a pending request should restore focus to its stack trigger"
     );
 
     console.log("PASS stack detail sheet closes, aborts its request, and restores trigger focus");

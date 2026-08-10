@@ -15,6 +15,7 @@ import {
 import {
   lastReportedLifecycle,
   restoreStackDetailFocus,
+  stackContainerAnnouncement,
   StackContainerRequestController,
   type StackContainerRequestState,
 } from "@/lib/providers/stack-container-request";
@@ -74,10 +75,15 @@ export function StackDetailSheet({
         <SheetHeader>
           <SheetTitle>{stack?.name ?? "Stack containers"}</SheetTitle>
           <SheetDescription>
-            {stack ? `${stack.endpointName} · ${stack.providerName}` : "Read-only container membership."}
+            {stack
+              ? `${stack.type} stack · Status: ${stack.status} · ${lastReportedLifecycle(stack.reportedStatus)} ${stack.endpointName} · ${stack.providerName}`
+              : "Read-only container membership."}
           </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+            {stackContainerAnnouncement(requestState)}
+          </p>
           <ContainerContent
             state={requestState}
             onRetry={retry}

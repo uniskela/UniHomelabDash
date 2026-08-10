@@ -4,6 +4,7 @@ import {
   StackContainerRequestController,
   lastReportedLifecycle,
   restoreStackDetailFocus,
+  stackContainerAnnouncement,
   type StackContainerRequestState,
 } from "./stack-container-request";
 import type { StackResource } from "./types";
@@ -192,4 +193,24 @@ test("stack detail focus restoration prevents default and restores the trigger",
 
 test("last reported lifecycle preserves the status behind an unavailable effective state", () => {
   assert.equal(lastReportedLifecycle("active"), "Last reported lifecycle: active.");
+});
+
+test("stack container announcements describe asynchronous result transitions", () => {
+  assert.equal(stackContainerAnnouncement({ kind: "idle" }), "");
+  assert.equal(
+    stackContainerAnnouncement({ kind: "loading" }),
+    "Loading read-only container membership."
+  );
+  assert.equal(
+    stackContainerAnnouncement({ kind: "ok", containers: [] }),
+    "Container membership loaded."
+  );
+  assert.equal(
+    stackContainerAnnouncement({ kind: "empty" }),
+    "No containers found for this stack."
+  );
+  assert.equal(
+    stackContainerAnnouncement({ kind: "server-error" }),
+    "Container details unavailable."
+  );
 });
