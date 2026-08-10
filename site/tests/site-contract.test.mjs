@@ -4,6 +4,7 @@ import { access, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import test from "node:test";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const readRoot = (path) =>
@@ -102,6 +103,20 @@ test("privileged integration docs carry explicit safety boundaries", async () =>
   assert.match(portainer, /read-only/i);
   assert.match(portainer, /least-privilege/i);
   assert.doesNotMatch(portainer, /stack actions are available/i);
+});
+
+test("Portainer docs define stack availability, read-only membership, and pre-1.0 versioning", async () => {
+  const [portainer, roadmap] = await Promise.all([
+    read("src/content/docs/integrations/portainer.md"),
+    read("src/content/docs/project/roadmap.md"),
+  ]);
+
+  assert.match(portainer, /stack availability/i);
+  assert.match(portainer, /disconnected endpoints/i);
+  assert.match(portainer, /read-only container membership/i);
+  assert.match(portainer, /no stack actions/i);
+  assert.match(roadmap, /v0\.8\.0/);
+  assert.match(roadmap, /v0\.10\.0/);
 });
 
 test("operations docs cover required production and recovery settings", async () => {
@@ -212,16 +227,20 @@ test("root lint ignores Astro-generated output", async () => {
 
 test("root typecheck stays isolated from the Astro package", async () => {
   const root = new URL("../../", import.meta.url);
-  const typescript = new URL("node_modules/typescript/bin/tsc", root);
-  const { stdout } = await execFileAsync(
-    process.execPath,
-    [fileURLToPath(typescript), "--showConfig"],
-    { cwd: fileURLToPath(root) },
+  const rootPath = fileURLToPath(root);
+  const configPath = fileURLToPath(new URL("tsconfig.json", root));
+  const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+  assert.equal(configFile.error, undefined);
+
+  const config = ts.parseJsonConfigFileContent(
+    configFile.config,
+    ts.sys,
+    rootPath,
   );
-  const config = JSON.parse(stdout);
+  const sitePath = fileURLToPath(new URL("site/", root));
 
   assert.equal(
-    config.files.some((file) => file.startsWith("./site/")),
+    config.fileNames.some((file) => file.startsWith(sitePath)),
     false,
     "root TypeScript inputs must not include the independent site package",
   );

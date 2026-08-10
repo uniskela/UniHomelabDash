@@ -337,7 +337,7 @@ Success criteria:
 
 ## Phase 7 — Portainer Integration
 
-Status: In progress (v0.7.0)
+Status: In progress (v0.8.0)
 
 Goal: Support users who manage homelabs through Portainer.
 
@@ -368,6 +368,13 @@ Completed in v0.7.0:
 * Multi-provider aggregation with isolated, redacted partial failures and a short in-memory cache
 * Docker-endpoint-only filtering; Kubernetes and Azure endpoints remain out of scope
 * Shared Containers / Stacks workload navigation without adding another mobile navigation item
+
+Completed in v0.8.0:
+
+* Endpoint-aware stack availability: disconnected endpoints show **Unavailable** while retaining the last reported lifecycle status
+* Read-only stack container membership drawer for connected Docker stacks
+* Link from a member container to the existing filtered Containers inventory
+* Server-only exact-label membership matching with sanitized responses and no database persistence
 
 Planned next increments:
 

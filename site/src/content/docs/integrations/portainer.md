@@ -1,15 +1,30 @@
 ---
 title: Portainer
-description: Add read-only Portainer endpoints, containers, and logs.
+description: Add read-only Portainer endpoints, containers, logs, and stack availability.
 sidebar:
   order: 3
 ---
 
-Portainer support in v0.6.2 is **read-only**. It discovers Docker endpoints,
-lists their containers in the shared Containers page, and retrieves container
-logs through the Portainer Docker gateway.
+Portainer support in v0.8.0 is **read-only**. It discovers Docker endpoints,
+lists their containers in the shared Containers page, retrieves container logs
+through the Portainer Docker gateway, and shows stack availability and lifecycle
+status.
 
-Stack lists, stack status, restart, and redeploy remain planned work.
+## Stack availability and containers
+
+Disconnected endpoints show **Unavailable** on their stack cards. The last
+reported lifecycle remains visible for context; UniHomelabDash does not infer
+stack health from it.
+
+Connected Docker stack cards open a read-only container membership drawer.
+Membership is matched on the server with exact Compose or Swarm stack labels,
+then returned as sanitized container display data. **View in Containers** opens
+the existing filtered inventory for that container.
+
+The drawer does not retain a prior stack's membership, and disconnected
+endpoints do not return cached membership. There is no database migration or
+stack membership persistence in v0.8.0. There are **no stack actions**:
+restart, redeploy, and other stack changes remain unavailable.
 
 ## Create a dedicated token
 
@@ -36,7 +51,8 @@ endpoints.
 
 Container inventory loads endpoints in parallel. A failed endpoint enters a
 short cooldown while healthy endpoints continue to render. Results use a short
-process-local cache.
+process-local cache. Stack membership uses the same server-only, short-lived
+approach and is never persisted.
 
 | Variable | Default | Purpose |
 | --- | ---: | --- |
