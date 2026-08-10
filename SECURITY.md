@@ -26,7 +26,7 @@ UniHomelabDash requires authentication for dashboard access. Read this before de
 |----------|----------|---------|
 | `SESSION_SECRET` | **Yes in production** | HMAC secret for session and setup cookies |
 | `COOKIE_SECURE` | No | Set to `true` only when served over HTTPS (reverse proxy with TLS). Default off for LAN HTTP. |
-| `PUBLIC_URL` | No | Public origin for auth redirects behind a reverse proxy (e.g. `https://dash.pike.homes`). Preferred over trusting proxy headers. |
+| `PUBLIC_URL` | No | Public origin for auth redirects behind a reverse proxy (e.g. `https://dash.example.com`). Preferred over trusting proxy headers. |
 | `TRUST_PROXY_HEADERS` | No | Set to `true` only behind a reverse proxy that strips spoofed `X-Forwarded-*` headers. Requires `ALLOWED_HOSTS`. Default off. |
 | `ALLOWED_HOSTS` | No | Comma-separated hostnames allowed in `X-Forwarded-Host` when `TRUST_PROXY_HEADERS=true`. |
 | `AUTH_DISABLED` | No | Set to `true` to bypass auth in development only |
@@ -85,12 +85,16 @@ The default Compose file still does **not** mount the Docker socket.
 
 ## Portainer integration (v0.6.0+)
 
-- Portainer integrations are read-only in v0.6.0 (container list and logs only).
+- Portainer integrations remain read-only. v0.6.0 added container lists and logs; v0.7.0 adds stack lifecycle status.
 - Authentication uses Portainer access tokens sent in `X-API-Key`.
 - Tokens and optional custom CA certificates are encrypted at rest in the providers store.
 - Use dedicated least-privilege Portainer users/teams for dashboard access.
 - Prefer HTTPS (`:9443`) and private network exposure only.
 - Container inventory loads asynchronously from `/api/containers` so the page shell stays responsive while endpoints respond.
+- Stack inventory loads asynchronously from authenticated `/api/stacks` and includes only normalized name, lifecycle status, stack type, endpoint/provider labels, and timestamps.
+- Stack environment variables, deployment files, raw Portainer responses, and credentials are never returned to the browser.
+- Stack results include supported Docker endpoints only; Kubernetes and Azure endpoints are excluded.
+- Aggregated stack results use a process-local 30-second cache; provider changes invalidate it.
 - Optional tunables (process-local, single-instance only):
   - `UH_PORTAINER_LIST_TIMEOUT_MS` (default `5000`) — timeout for per-endpoint container list calls
   - `UH_PORTAINER_ENDPOINT_COOLDOWN_MS` (default `120000`) — skip recently failed endpoints briefly
@@ -111,13 +115,9 @@ For **security vulnerabilities**, use [GitHub Security Advisories](https://githu
 
 For other bugs, open a [GitHub issue](https://github.com/uniskela/UniHomelabDash/issues) with steps to reproduce. Do not include real homelab URLs or credentials.
 
-## Known dependency advisories
+## Dependency security status
 
-### PostCSS and sharp (transitive via Next.js)
-
-`npm audit` may report PostCSS and sharp advisories via `next@16.2.x`, which currently bundles `postcss@8.4.31` and `sharp@0.34.5` under `node_modules/next`. Direct app dependencies are patched (`next@16.2.12`, top-level `sharp@0.35.3`), but nested advisories remain until upstream Next.js releases updated bundled transitives.
-
-Security-critical Next.js runtime advisories from July 2026 are patched in `16.2.11+`; this project is pinned above that (`16.2.12`). We continue tracking nested transitive advisories for the next stable Next.js minor that updates those bundled packages.
+The v0.7.0 dependency refresh updates Next.js to 16.3.0 and resolves the previously documented transitive PostCSS, sharp, nanoid, brace-expansion, fast-uri, Hono, and js-yaml advisories. `npm audit` reported zero vulnerabilities when the v0.7.0 release candidate was prepared on 2026-08-10. Audit results are point-in-time; operators should continue tracking new upstream advisories.
 
 ### esbuild (drizzle-kit dev tooling)
 

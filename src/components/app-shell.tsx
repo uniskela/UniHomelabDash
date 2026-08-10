@@ -135,5 +135,8 @@ function MobileNavLink({
 }
 
 function isActive(pathname: string, href: string) {
+  if (href === "/containers") {
+    return pathname.startsWith("/containers") || pathname.startsWith("/stacks");
+  }
   return href === "/" ? pathname === href : pathname.startsWith(href);
 }

@@ -6,7 +6,9 @@ export type ProviderCapability =
   | "container.logs"
   | "container.start"
   | "container.stop"
-  | "container.restart";
+  | "container.restart"
+  | "stack.list"
+  | "stack.status";
 
 export type ProviderType = "manual" | "docker" | "portainer";
 
@@ -48,6 +50,28 @@ export type ContainerLogsResult = {
 
 export type ListResourcesResult = {
   resources: ProviderResource[];
+  warning?: string;
+};
+
+export type StackStatus = "active" | "inactive" | "unknown";
+
+export type StackType = "Swarm" | "Compose" | "Kubernetes" | "Unknown";
+
+export type StackResource = {
+  id: string;
+  name: string;
+  status: StackStatus;
+  type: StackType;
+  endpointId: number;
+  endpointName: string;
+  providerId: string;
+  providerName: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ListStacksResult = {
+  resources: StackResource[];
   warning?: string;
 };
 
@@ -104,6 +128,7 @@ export interface ProviderHandler {
   meta: ProviderDefinitionMeta;
   testConnection(context: ProviderContext): Promise<ConnectionTestResult>;
   listResources(context: ProviderContext): Promise<ListResourcesResult>;
+  listStacks?(context: ProviderContext): Promise<ListStacksResult>;
   getLogs?(
     context: ProviderContext,
     resourceId: string,

@@ -74,8 +74,8 @@ export function decryptCredentials(
 export function redactSecrets(message: string) {
   return message
     .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
-    .replace(/password[=:]\S+/gi, "password=[redacted]")
-    .replace(/token[=:]\S+/gi, "token=[redacted]")
-    .replace(/api[_-]?key[=:]\S+/gi, (match) => `${match.split(/[=:]/)[0]}=[redacted]`)
-    .replace(/secret[=:]\S+/gi, "secret=[redacted]");
+    .replace(
+      /((?:x-)?api[_-]?key|password|token|secret)(\s*[=:]\s*)\S+/gi,
+      "$1$2[redacted]"
+    );
 }
