@@ -145,27 +145,59 @@ async function main() {
     const stack = {
       id: "provider-1:42",
       name: "Media",
-      status: "active",
+      status: "unavailable",
       reportedStatus: "active",
-      endpointStatus: "connected",
+      endpointStatus: "disconnected",
       type: "Compose",
       endpointId: 7,
       endpointName: "Docker host",
       providerId: "provider-1",
       providerName: "Lifecycle test Portainer",
     };
+    let releaseRefresh;
+    let markRefreshRequested;
+    const refreshRequested = new Promise((resolve) => {
+      markRefreshRequested = resolve;
+    });
 
-    await page.route("**/api/stacks", (route) =>
-      route.fulfill({ contentType: "application/json", body: JSON.stringify({ stacks: [stack] }) })
-    );
+    await page.route("**/api/stacks*", async (route) => {
+      const requestUrl = new URL(route.request().url());
+      if (requestUrl.searchParams.get("refresh") === "1") {
+        markRefreshRequested?.();
+        await new Promise((resolve) => {
+          releaseRefresh = resolve;
+        });
+        await route.fulfill({
+          contentType: "application/json",
+          body: JSON.stringify({
+            stacks: [{ ...stack, status: "active", endpointStatus: "connected" }],
+          }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ stacks: [stack] }),
+      });
+    });
 
     await page.goto(`${baseUrl}/stacks`, { waitUntil: "domcontentloaded" });
     const trigger = page.getByRole("button", { name: "View containers for Media" });
     await trigger.waitFor({ state: "visible", timeout: 10_000 });
+    await page.getByRole("button", { name: "Refresh" }).click();
+    await refreshRequested;
     await trigger.click();
-    await page.waitForFunction(() => window.__stackDetailLifecycle.containerRequestStarted);
     const sheet = page.locator('[data-slot="sheet-content"]');
     await sheet.waitFor({ state: "visible" });
+    await sheet.getByText("Status: unavailable").waitFor({ state: "visible" });
+    assert.equal(
+      await page.evaluate(() => window.__stackDetailLifecycle.containerRequestStarted),
+      false,
+      "a disconnected stack should not request container membership"
+    );
+    releaseRefresh?.();
+    await page.waitForFunction(() => window.__stackDetailLifecycle.containerRequestStarted);
     await sheet.getByText("Compose stack").waitFor({ state: "visible" });
     await sheet.getByText("Status: active").waitFor({ state: "visible" });
     await sheet.getByText("Last reported lifecycle: active").waitFor({ state: "visible" });

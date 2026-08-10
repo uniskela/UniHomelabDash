@@ -55,16 +55,22 @@ export function StackList({
   const [status, setStatus] = useState<StackStatusFilter>("all");
   const [endpoint, setEndpoint] = useState("all");
   const [dismissedWarning, setDismissedWarning] = useState<string | null>(null);
-  const [selectedStack, setSelectedStack] = useState<StackResource | null>(null);
+  const [selectedStackSnapshot, setSelectedStackSnapshot] = useState<StackResource | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [originatingElement, setOriginatingElement] = useState<HTMLElement | null>(null);
 
   const openStack = (stack: StackResource, element: HTMLElement) => {
     setOriginatingElement(element);
-    setSelectedStack(stack);
+    setSelectedStackSnapshot(stack);
     setSheetOpen(true);
   };
 
+  const selectedStack = useMemo(() => {
+    if (!selectedStackSnapshot) {
+      return null;
+    }
+    return stacks.find((stack) => stack.id === selectedStackSnapshot.id) ?? selectedStackSnapshot;
+  }, [selectedStackSnapshot, stacks]);
   const summary = useMemo(() => getStackSummary(stacks), [stacks]);
   const endpointOptions = useMemo(
     () => [
