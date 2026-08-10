@@ -1,6 +1,10 @@
 node_modules
 .next
+.worktrees
 data
 npm-debug.log*
 .env*
 .git
+site/.astro
+site/dist
+site/node_modules
