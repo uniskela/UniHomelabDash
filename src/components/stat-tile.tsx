@@ -1,17 +1,19 @@
 import { cn } from "@/lib/utils";
 
-type StatTone = "neutral" | "healthy" | "warning";
+type StatTone = "neutral" | "healthy" | "warning" | "danger";
 
 const toneClasses: Record<StatTone, string> = {
   neutral: "border-border/60 bg-card/80",
   healthy: "border-rose-400/20 bg-rose-400/5",
   warning: "border-amber-500/30 bg-amber-500/5",
+  danger: "border-destructive/30 bg-destructive/5",
 };
 
 const iconToneClasses: Record<StatTone, string> = {
   neutral: "bg-muted text-muted-foreground",
   healthy: "bg-rose-400/10 text-rose-300",
   warning: "bg-amber-500/10 text-amber-300",
+  danger: "bg-destructive/10 text-destructive",
 };
 
 export function StatTile({

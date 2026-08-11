@@ -27,11 +27,11 @@ LABEL org.opencontainers.image.title="UniHomelabDash" \
   org.opencontainers.image.vendor="Uniskela" \
   org.opencontainers.image.url="https://github.com/uniskela/UniHomelabDash"
 RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/drizzle ./drizzle
-COPY --from=builder /app/scripts ./scripts
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --chown=nextjs:nextjs --from=builder /app/public ./public
+COPY --chown=nextjs:nextjs --from=builder /app/drizzle ./drizzle
+COPY --chown=nextjs:nextjs --from=builder /app/scripts ./scripts
+COPY --chown=nextjs:nextjs --from=builder /app/.next/standalone ./
+COPY --chown=nextjs:nextjs --from=builder /app/.next/static ./.next/static
 RUN mkdir -p /app/data && chown -R nextjs:nextjs /app/data
 USER nextjs
 EXPOSE 3000

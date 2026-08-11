@@ -2,18 +2,17 @@
 
 import { useCallback, useState } from "react";
 import { saveContainerViewPreferencesAction } from "@/lib/providers/container-preferences-actions";
-import type { ContainerViewPreferences } from "@/lib/providers/container-preferences";
+import type { ContainerWorkspacePreferences } from "@/lib/providers/container-preferences";
 
 /**
- * Keeps view preferences responsive locally while persisting them for the
- * single admin user, so hidden containers and layout survive reloads and are
- * shared between phone and desktop.
+ * Keeps workspace preferences responsive locally while persisting them for the
+ * single admin user, so hidden containers and saved views survive reloads.
  */
-export function useContainerViewPreferences(initial: ContainerViewPreferences) {
+export function useContainerViewPreferences(initial: ContainerWorkspacePreferences) {
   const [preferences, setPreferences] = useState(initial);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const update = useCallback((next: ContainerViewPreferences) => {
+  const update = useCallback((next: ContainerWorkspacePreferences) => {
     setPreferences(next);
 
     saveContainerViewPreferencesAction(next)

@@ -36,8 +36,14 @@ A Docker socket mount can grant host-level power and is not made safe merely by
 adding `:ro`. Unencrypted Docker TCP is similarly privileged. Prefer private
 network boundaries, TLS for remote Engines, and explicit action confirmation.
 
-Portainer is read-only in the current release, but its token can still reveal
-inventory and logs. Use a dedicated least-privilege account.
+Portainer defaults to read-only. Enabling **Allow container actions** permits
+start, stop, and restart only—stack restart and redeploy remain unavailable.
+Tokens can still reveal inventory, logs, and sanitized inspect data. Use a
+dedicated least-privilege account.
+
+Inspect responses restrict label **values** to an allowlist (Compose project,
+Swarm namespace, OCI title / version / vendor) and never return environment
+variables, command arrays, healthcheck output, or host bind mount sources.
 
 ## Health checks and logs
 

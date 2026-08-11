@@ -24,11 +24,17 @@ Provider code and credentials stay server-side. Browser components receive
 resource models and allowed capabilities—not connection tokens, TLS keys, or a
 Docker socket.
 
+Container inspect and stats (v0.9.0) are `providerId`-scoped. The server loads
+the provider instance from SQLite and derives its type from that row. Responses
+are sanitized (label-value allowlist; no env, cmd, healthcheck output, or bind
+sources) and use short process-local caches (inspect 30s, stats 5s).
+
 ## Trust boundaries
 
 Authentication protects every dashboard route. A provider can fail without
 crashing unrelated providers, and disruptive capabilities remain opt-in with
-confirmation at the UI and enforcement at the runtime.
+confirmation at the UI and enforcement at the runtime. Portainer container
+actions use the same read-only default as Docker; stack mutations stay disabled.
 
 The default Compose stack does not mount `/var/run/docker.sock`. Operators
 choose privileged connectivity separately after reading the security guidance.

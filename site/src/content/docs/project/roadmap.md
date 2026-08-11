@@ -15,17 +15,25 @@ homelab platform.
 - Local SQLite persistence
 - Single-administrator authentication
 - Typed provider system and encrypted credential helper
-- Multiple Docker connections, logs, and opt-in actions
-- Read-only Portainer endpoints, containers, and logs
+- Multiple Docker connections, logs, inspect/stats, and opt-in actions
+- Portainer endpoints, containers, logs, inspect/stats, and opt-in container actions
+- v0.7.0 read-only Portainer stack lifecycle status
+- v0.8.0 endpoint-aware stack availability and read-only container membership
+- v0.9.0 Container Control Centre: control drawer, saved views, improved logs
 - Fast asynchronous container inventory, cache, cooldown, and filters
-- Container layout, grouping, hidden-item, and prefixed-search preferences
+- Container layout, grouping, hidden-item, prefixed-search, and saved-view preferences
 - Public GitHub Pages website and core operator/contributor documentation
 
 ## Current focus
 
-1. Portainer stack and status expansion
-2. Carefully scoped Portainer actions only after additional safety checks
-3. Alerts and activity-feed foundation
+1. Alerts and activity-feed foundation
+2. Portainer stack action safety (restart/redeploy remains deferred)
+
+## Release versioning
+
+The project is pre-1.0. Releases may proceed through **v0.10.0**, **v0.25.0**,
+and beyond as useful increments ship. **v1.0.0** is an explicit stability
+milestone, not an automatic result of reaching a particular number.
 
 ## Later
 

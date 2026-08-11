@@ -6,7 +6,12 @@ import {
   isStoppedContainer,
 } from "@/lib/providers/container-fields";
 import { matchesContainerQuery, parseContainerQuery } from "@/lib/providers/container-query";
-import type { ContainerGroupMode } from "@/lib/providers/container-preferences";
+import type {
+  ContainerGroupMode,
+  ContainerSortDirection,
+  ContainerSortField,
+  ContainerStatusFilter,
+} from "@/lib/providers/container-preferences";
 import type { ProviderResource } from "@/lib/providers/types";
 
 export {
@@ -16,10 +21,11 @@ export {
   containerProviderCaption,
   containerProviderLabel,
   isRunningContainer,
+  isStartableContainer,
   isStoppedContainer,
 } from "@/lib/providers/container-fields";
 
-export type ContainerStatusFilter = "all" | "running" | "stopped";
+export type { ContainerStatusFilter };
 
 export type ContainerGroup = {
   key: string;
@@ -33,16 +39,24 @@ export function listContainerHostOptions(containers: ProviderResource[]) {
   );
 }
 
+export function listContainerProviderOptions(containers: ProviderResource[]) {
+  return Array.from(new Set(containers.map(containerProviderLabel))).sort((a, b) =>
+    a.localeCompare(b)
+  );
+}
+
 export function filterContainers(
   containers: ProviderResource[],
   options: {
     status?: ContainerStatusFilter;
     host?: string;
+    provider?: string;
     search?: string;
   } = {}
 ) {
   const status = options.status ?? "all";
   const host = options.host?.trim() ?? "";
+  const provider = options.provider?.trim() ?? "";
   const terms = parseContainerQuery(options.search ?? "");
 
   return containers.filter((container) => {
@@ -53,6 +67,9 @@ export function filterContainers(
       return false;
     }
     if (host && containerHostLabel(container) !== host) {
+      return false;
+    }
+    if (provider && containerProviderLabel(container) !== provider) {
       return false;
     }
 
@@ -75,6 +92,39 @@ export function splitHiddenContainers(containers: ProviderResource[], hiddenKeys
   }
 
   return { visible, concealed };
+}
+
+export function sortContainers(
+  containers: ProviderResource[],
+  field: ContainerSortField,
+  direction: ContainerSortDirection
+) {
+  const factor = direction === "desc" ? -1 : 1;
+  return [...containers].sort((a, b) => {
+    const delta = compareContainers(a, b, field);
+    if (delta !== 0) {
+      return delta * factor;
+    }
+    return a.name.localeCompare(b.name) * factor;
+  });
+}
+
+function compareContainers(a: ProviderResource, b: ProviderResource, field: ContainerSortField) {
+  switch (field) {
+    case "state":
+      return (statusRank[a.status] ?? 9) - (statusRank[b.status] ?? 9);
+    case "host":
+      return containerHostLabel(a).localeCompare(containerHostLabel(b));
+    case "provider":
+      return containerProviderLabel(a).localeCompare(containerProviderLabel(b));
+    case "image":
+      return (a.image ?? "").localeCompare(b.image ?? "");
+    case "createdAt":
+      return (a.createdAt ?? "").localeCompare(b.createdAt ?? "");
+    case "name":
+    default:
+      return a.name.localeCompare(b.name);
+  }
 }
 
 export function groupContainers(

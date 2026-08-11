@@ -15,20 +15,26 @@ The shared contract uses capabilities such as:
 ```ts
 type ProviderCapability =
   | "service.status"
-  | "service.logs"
-  | "service.restart"
-  | "service.start"
-  | "service.stop"
   | "service.open"
-  | "resource.cpu"
-  | "resource.memory"
-  | "resource.storage"
-  | "alerts.read";
+  | "container.list"
+  | "container.status"
+  | "container.logs"
+  | "container.inspect"
+  | "container.stats"
+  | "container.start"
+  | "container.stop"
+  | "container.restart"
+  | "stack.list"
+  | "stack.status"
+  | "stack.containers";
 ```
 
 The UI discovers what an instance supports and hides or disables unsupported
 controls. The server-side runtime still validates every requested capability;
 browser visibility is not the permission boundary.
+
+`container.inspect` and `container.stats` (v0.9.0) return sanitized snapshots
+only. Action capabilities remain gated by each provider's read-only setting.
 
 ## Provider responsibilities
 

@@ -1,3 +1,4 @@
+import { sanitizeLabelsRecord } from "@/lib/providers/container-labels";
 import type { ContainerResource, ContainerState } from "@/lib/providers/types";
 
 type DockerListItem = {
@@ -85,7 +86,7 @@ export function normalizeDockerListItem(item: DockerListItem): ContainerResource
     status: item.Status ?? item.State ?? "unknown",
     ports: formatContainerPorts(item.Ports),
     createdAt: item.Created ? new Date(item.Created * 1000).toISOString() : "",
-    labels: item.Labels ?? {},
+    labels: sanitizeLabelsRecord(item.Labels),
   };
 }
 

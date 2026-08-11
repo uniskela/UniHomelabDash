@@ -43,7 +43,7 @@ test("normalizeDockerListItem maps docker list payload", () => {
     State: "running",
     Status: "Up 2 hours",
     Created: 1_700_000_000,
-    Labels: { app: "web" },
+    Labels: { "com.docker.compose.project": "web", app: "web" },
     Ports: [{ PrivatePort: 80, PublicPort: 8080, Type: "tcp" }],
   });
 
@@ -51,4 +51,6 @@ test("normalizeDockerListItem maps docker list payload", () => {
   assert.equal(result.name, "web");
   assert.equal(result.state, "running");
   assert.deepEqual(result.ports, ["8080:80/tcp"]);
+  assert.equal(result.labels["com.docker.compose.project"], "web");
+  assert.equal(result.labels.app, "");
 });

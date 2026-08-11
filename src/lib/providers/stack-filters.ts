@@ -13,7 +13,7 @@ export function getStackSummary(stacks: StackResource[]) {
       summary[stack.status] += 1;
       return summary;
     },
-    { total: 0, active: 0, inactive: 0, unknown: 0 }
+    { total: 0, active: 0, inactive: 0, unknown: 0, unavailable: 0 }
   );
 }
 

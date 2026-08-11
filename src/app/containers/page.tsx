@@ -8,19 +8,30 @@ import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth/session-user";
 import { getDockerProvidersAction, getPortainerProvidersAction } from "@/lib/providers/actions";
 import { readContainerViewPreferences } from "@/lib/providers/container-preferences-store";
+import { parseInitialContainerQuery } from "@/lib/providers/container-query-params";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export default async function ContainersPage() {
+type ContainerSearchParams = {
+  q?: string | string[];
+};
+
+export default async function ContainersPage({
+  searchParams,
+}: {
+  searchParams: Promise<ContainerSearchParams>;
+}) {
   await requireAuth();
+  const params = await searchParams;
   const dockerProviders = await getDockerProvidersAction();
   const portainerProviders = await getPortainerProvidersAction();
   const providers = [...dockerProviders, ...portainerProviders];
   const enabled = providers.some((provider) => provider.enabled);
-  const actionsEnabled = dockerProviders.some((provider) => provider.enabled && !provider.readOnly);
+  const actionsEnabled = providers.some((provider) => provider.enabled && !provider.readOnly);
   const connectionStatus = !enabled ? "disabled" : "connected";
   const viewPreferences = readContainerViewPreferences();
+  const initialSearchQuery = parseInitialContainerQuery(params.q);
 
   return (
     <div className="space-y-8">
@@ -29,8 +40,8 @@ export default async function ContainersPage() {
         title="Containers"
         description={
           actionsEnabled
-            ? "Container status from your Docker and Portainer integrations. Destructive actions require confirmation and only appear for Docker integrations with actions enabled."
-            : "Read-only container status from your Docker and Portainer integrations. Enable Docker actions in Settings to start, stop, or restart."
+            ? "Container status from your Docker and Portainer integrations. Destructive actions require confirmation and only appear for integrations with actions enabled."
+            : "Read-only container status from your Docker and Portainer integrations. Enable Docker or Portainer actions in Settings to start, stop, or restart."
         }
         actions={
           <>
@@ -53,6 +64,7 @@ export default async function ContainersPage() {
         enabled={enabled}
         actionsEnabled={actionsEnabled}
         initialPreferences={viewPreferences}
+        initialSearchQuery={initialSearchQuery}
       />
     </div>
   );

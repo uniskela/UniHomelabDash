@@ -11,9 +11,9 @@ type StackInventory = {
 
 export function createStacksGetHandler(dependencies: {
   authorize: () => Promise<SessionUser>;
-  listStacks: () => Promise<StackInventory>;
+  listStacks: (options: { bypassCache: boolean }) => Promise<StackInventory>;
 }) {
-  return async function getStacks() {
+  return async function getStacks(request: Request) {
     try {
       await dependencies.authorize();
     } catch (error) {
@@ -23,7 +23,8 @@ export function createStacksGetHandler(dependencies: {
       throw error;
     }
 
-    const result = await dependencies.listStacks();
+    const bypassCache = new URL(request.url).searchParams.get("refresh") === "1";
+    const result = await dependencies.listStacks({ bypassCache });
     return NextResponse.json({
       stacks: result.resources,
       error: result.error ?? null,

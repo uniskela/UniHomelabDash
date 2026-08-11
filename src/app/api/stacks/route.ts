@@ -6,5 +6,5 @@ export const runtime = "nodejs";
 
 export const GET = createStacksGetHandler({
   authorize: requireAuth,
-  listStacks: listStackResources,
+  listStacks: (options) => listStackResources(options),
 });

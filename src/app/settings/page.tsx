@@ -115,7 +115,8 @@ export default async function SettingsPage() {
             </CardTitle>
             <CardDescription>
               Connect homelab providers behind authentication. Docker supports read-only status,
-              optional actions, and remote TCP/TLS. Portainer is read-only in this release.
+              optional actions, and remote TCP/TLS. Portainer supports read-only status plus
+              optional container actions (disabled by default).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-8 pt-0">

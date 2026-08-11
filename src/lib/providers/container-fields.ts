@@ -8,6 +8,11 @@ export function isStoppedContainer(status: string) {
   return status === "exited" || status === "dead" || status === "created" || status === "paused";
 }
 
+/** States that may show a Start action (paused is intentionally excluded). */
+export function isStartableContainer(status: string) {
+  return status === "exited" || status === "dead" || status === "created";
+}
+
 /** Prefer Portainer endpoint name, then remote host, then provider name. */
 export function containerHostLabel(container: ProviderResource) {
   const endpointName = container.meta?.endpointName?.trim();
@@ -44,8 +49,17 @@ export function containerHideKey(container: ProviderResource) {
   return `${containerHostLabel(container)}::${container.name}`;
 }
 
+/**
+ * Label pairs for search. Hidden (non-allowlisted) values are empty after
+ * sanitization, so we expose the key alone and only `key=value` when visible.
+ */
 export function containerLabelPairs(container: ProviderResource) {
-  return Object.entries(container.labels ?? {}).map(([key, value]) => `${key}=${value}`);
+  return Object.entries(container.labels ?? {}).flatMap(([key, value]) => {
+    if (value) {
+      return [key, `${key}=${value}`];
+    }
+    return [key];
+  });
 }
 
 /** Everything a bare (unprefixed) search term is matched against. */

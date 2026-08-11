@@ -5,7 +5,8 @@ sidebar:
   order: 2
 ---
 
-Docker integrations support container inventory, details, logs, and optional
+Docker integrations support container inventory, the control drawer
+(Overview / Metrics / Logs), inspect, short-lived stats, logs, and optional
 start/stop/restart actions. Add and manage each Docker host separately in
 **Settings → Integrations**.
 
@@ -13,10 +14,15 @@ start/stop/restart actions. Add and manage each Docker host separately in
 
 Actions are **disabled by default** for every integration. Enabling actions is a
 provider-level choice, and every start, stop, or restart still requires a
-confirmation naming the container.
+confirmation naming the container, provider, and current state.
 
 No browser code receives Docker credentials or socket access. The provider runs
 server-side and exposes only fixed capabilities—never raw shell execution.
+
+Inspect and stats responses are sanitized: only allowlisted label values appear,
+and environment variables, command arrays, healthcheck output, and bind mount
+sources are omitted. Detail routes are scoped by `providerId` and resolve the
+provider type from the database row.
 
 ## Local Unix socket
 
