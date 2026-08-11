@@ -30,10 +30,20 @@ export function ContainerMetricsPanel({
   const [tabVisible, setTabVisible] = useState(
     () => typeof document === "undefined" || document.visibilityState === "visible"
   );
-  const [lastStats, setLastStats] = useState<ContainerStatsSnapshot | null>(null);
+  const [retainedStats, setRetainedStats] = useState<ContainerStatsSnapshot | null>(null);
   const consecutiveFailures = useRef(0);
   const loadedOnce = useRef(false);
   const lastCountedState = useRef<ContainerStatsRequestState | null>(null);
+
+  // Keep the last successful sample across soft refreshes / transient errors.
+  // Adjust during render (React-recommended) instead of syncing in an effect.
+  if (disconnected) {
+    if (retainedStats !== null) {
+      setRetainedStats(null);
+    }
+  } else if (state.kind === "ok" && retainedStats !== state.stats) {
+    setRetainedStats(state.stats);
+  }
 
   useEffect(() => {
     if (loadedOnce.current) {
@@ -50,18 +60,6 @@ export function ContainerMetricsPanel({
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
-
-  useEffect(() => {
-    if (state.kind === "ok") {
-      setLastStats(state.stats);
-    }
-  }, [state]);
-
-  useEffect(() => {
-    if (disconnected) {
-      setLastStats(null);
-    }
-  }, [disconnected]);
 
   useEffect(() => {
     if (lastCountedState.current === state) {
@@ -112,7 +110,7 @@ export function ContainerMetricsPanel({
     return () => window.clearInterval(timer);
   }, [liveActive, onLoad]);
 
-  const stats = state.kind === "ok" ? state.stats : lastStats;
+  const stats = state.kind === "ok" ? state.stats : retainedStats;
   const errorMessage = metricsErrorMessage(state);
   const refreshing = state.kind === "loading" && Boolean(stats);
 
