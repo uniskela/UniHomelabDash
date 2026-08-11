@@ -16,17 +16,21 @@ export function ContainerMetricsPanel({
   state,
   onLoad,
   disconnected = false,
+  active = true,
   className,
 }: {
   state: ContainerStatsRequestState;
   onLoad: (refresh: boolean) => void | Promise<void>;
   disconnected?: boolean;
+  /** False when another drawer tab is selected; pauses Live polling. */
+  active?: boolean;
   className?: string;
 }) {
   const [live, setLive] = useState(false);
   const [tabVisible, setTabVisible] = useState(
     () => typeof document === "undefined" || document.visibilityState === "visible"
   );
+  const [lastStats, setLastStats] = useState<ContainerStatsSnapshot | null>(null);
   const consecutiveFailures = useRef(0);
   const loadedOnce = useRef(false);
   const lastCountedState = useRef<ContainerStatsRequestState | null>(null);
@@ -48,6 +52,18 @@ export function ContainerMetricsPanel({
   }, []);
 
   useEffect(() => {
+    if (state.kind === "ok") {
+      setLastStats(state.stats);
+    }
+  }, [state]);
+
+  useEffect(() => {
+    if (disconnected) {
+      setLastStats(null);
+    }
+  }, [disconnected]);
+
+  useEffect(() => {
     if (lastCountedState.current === state) {
       return;
     }
@@ -66,7 +82,7 @@ export function ContainerMetricsPanel({
     }
   }, [state]);
 
-  const liveActive = live && !disconnected;
+  const liveActive = live && !disconnected && active && tabVisible;
 
   function handleLiveChange(next: boolean) {
     if (next) {
@@ -81,7 +97,7 @@ export function ContainerMetricsPanel({
   }
 
   useEffect(() => {
-    if (!liveActive || !tabVisible) {
+    if (!liveActive) {
       return;
     }
 
@@ -94,10 +110,11 @@ export function ContainerMetricsPanel({
     }, LIVE_INTERVAL_MS);
 
     return () => window.clearInterval(timer);
-  }, [liveActive, tabVisible, onLoad]);
+  }, [liveActive, onLoad]);
 
-  const stats = state.kind === "ok" ? state.stats : null;
+  const stats = state.kind === "ok" ? state.stats : lastStats;
   const errorMessage = metricsErrorMessage(state);
+  const refreshing = state.kind === "loading" && Boolean(stats);
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -110,7 +127,7 @@ export function ContainerMetricsPanel({
           <div className="flex items-center gap-2">
             <Switch
               id="metrics-live"
-              checked={liveActive}
+              checked={live && !disconnected}
               onCheckedChange={handleLiveChange}
               disabled={disconnected}
             />
@@ -147,6 +164,10 @@ export function ContainerMetricsPanel({
             <p className="text-xs text-amber-300" role="status">
               {errorMessage} Showing last successful sample.
             </p>
+          ) : refreshing ? (
+            <p className="text-xs text-muted-foreground" role="status">
+              Refreshing snapshot…
+            </p>
           ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <MetricTile label="CPU" value={formatPercent(stats.cpuPercent)} tone="rose" />
@@ -175,8 +196,8 @@ export function ContainerMetricsPanel({
           </div>
           {live ? (
             <p className="text-[0.65rem] text-muted-foreground">
-              Live refresh every 5s while this tab is visible. Stops after three consecutive
-              failures.
+              Live refresh every 5s while the Metrics tab and browser tab are visible. Stops after
+              three consecutive failures.
             </p>
           ) : null}
         </>

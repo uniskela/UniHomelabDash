@@ -265,6 +265,7 @@ export function ContainerControlDrawer({
                         state={statsState}
                         onLoad={loadStats}
                         disconnected={disconnected}
+                        active={tab === "metrics"}
                       />
                     ) : null}
                   </TabsContent>
