@@ -83,9 +83,19 @@ The default Compose file still does **not** mount the Docker socket.
 - Actions are blocked when read-only mode is enabled (default for existing installs).
 - A compromised admin session could trigger disruptive container operations. Treat admin credentials like root access on the Docker host.
 
+### Container inspect and stats (v0.9.0+)
+
+- Authenticated routes require `providerId`. The server resolves the provider row from the database and uses that row's type; clients cannot force a different provider type for inspect, stats, or actions.
+- Capabilities: `container.inspect` and `container.stats` (Docker Engine or Portainer Docker gateway).
+- Process-local caches: inspect **30s**, stats **5s**. Refresh can bypass cache when requested.
+- Label **values** are limited to an allowlist: `com.docker.compose.project`, `com.docker.stack.namespace`, `org.opencontainers.image.title`, `org.opencontainers.image.version`, and `org.opencontainers.image.vendor`. Other keys may appear for search, but values are hidden.
+- Inspect responses never include environment variables, command arrays, healthcheck output/logs, or host bind mount `Source` paths. Mount destinations and volume names may be shown.
+
 ## Portainer integration (v0.6.0+)
 
-- Portainer integrations remain read-only. v0.6.0 added container lists and logs; v0.7.0 added stack lifecycle status; v0.8.0 adds endpoint-aware availability and read-only stack container membership.
+- Portainer defaults to read-only. v0.6.0 added container lists and logs; v0.7.0 added stack lifecycle status; v0.8.0 adds endpoint-aware availability and read-only stack container membership; v0.9.0 adds inspect/stats and optional container start/stop/restart.
+- Container actions follow the same opt-in as Docker: enable **Allow container actions** (`readOnly: false`) per integration. Confirmation UI shows provider, endpoint (when present), and current state before start/stop/restart.
+- Stack restart, redeploy, and other stack mutations remain unavailable.
 - Authentication uses Portainer access tokens sent in `X-API-Key`.
 - Tokens and optional custom CA certificates are encrypted at rest in the providers store.
 - Use dedicated least-privilege Portainer users/teams for dashboard access.

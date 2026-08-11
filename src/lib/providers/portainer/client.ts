@@ -251,6 +251,47 @@ export async function getPortainerContainerLogs(
   return logs ?? "";
 }
 
+export async function inspectPortainerContainer(
+  config: PortainerProviderConfig,
+  credentials: PortainerCredentials,
+  endpointId: number,
+  containerId: string
+) {
+  return portainerRequest<unknown>({
+    config,
+    credentials,
+    path: `/api/endpoints/${endpointId}/docker/containers/${encodeURIComponent(containerId)}/json`,
+  });
+}
+
+export async function getPortainerContainerStats(
+  config: PortainerProviderConfig,
+  credentials: PortainerCredentials,
+  endpointId: number,
+  containerId: string
+) {
+  return portainerRequest<unknown>({
+    config,
+    credentials,
+    path: `/api/endpoints/${endpointId}/docker/containers/${encodeURIComponent(containerId)}/stats?stream=false`,
+  });
+}
+
+export async function runPortainerContainerAction(
+  config: PortainerProviderConfig,
+  credentials: PortainerCredentials,
+  endpointId: number,
+  containerId: string,
+  action: "start" | "stop" | "restart"
+) {
+  await portainerRequest({
+    config,
+    credentials,
+    path: `/api/endpoints/${endpointId}/docker/containers/${encodeURIComponent(containerId)}/${action}`,
+    method: "POST",
+  });
+}
+
 export type { DockerListItem, PortainerEndpoint };
 
 function isPortainerStackListItem(value: unknown): value is PortainerStackListItem {

@@ -32,7 +32,8 @@ test("stack drawer navigation initializes the containers search with exact resou
   assert.ok(pageSource.includes("parseInitialContainerQuery"));
   assert.ok(pageSource.includes("initialSearchQuery={initialSearchQuery}"));
   assert.ok(asyncListSource.includes("initialSearchQuery"));
-  assert.ok(listSource.includes("useState(initialSearchQuery)"));
+  assert.ok(listSource.includes("withInitialSearch(resolveActiveView(initialPreferences), initialSearchQuery)"));
+  assert.ok(listSource.includes("function withInitialSearch"));
   assert.ok(sheetSource.includes("buildContainerResourceQuery(container.providerId, container.id)"));
   assert.ok(sheetSource.includes('"/containers?q=" + encodeURIComponent(query)'));
   assert.ok(sheetSource.includes("View in Containers"));

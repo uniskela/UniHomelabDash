@@ -36,7 +36,7 @@ export function PortainerIntegrationSettings({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1 text-sm text-muted-foreground">
           <p>Configure one or more Portainer API connections.</p>
-          <p>Portainer integrations are read-only in this release.</p>
+          <p>Container actions are opt-in and disabled by default.</p>
         </div>
         <form action={createPortainerProviderAction}>
           <Button type="submit" size="sm">
@@ -79,6 +79,7 @@ export function PortainerIntegrationSettings({
 
 function PortainerIntegrationCard({ provider }: { provider: ProviderPublicView }) {
   const [enabled, setEnabled] = useState(provider.enabled);
+  const [allowActions, setAllowActions] = useState(!provider.readOnly);
   const [clearToken, setClearToken] = useState(false);
   const [clearCaCert, setClearCaCert] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -136,6 +137,16 @@ function PortainerIntegrationCard({ provider }: { provider: ProviderPublicView }
           onCheckedChange={setEnabled}
           disabled={configurePending}
           hiddenName="enabled"
+        />
+
+        <ToggleRow
+          id={`portainer-allow-actions-${provider.id}`}
+          label="Allow container actions"
+          description="Enable start, stop, and restart with confirmation prompts. Off by default."
+          checked={allowActions}
+          onCheckedChange={setAllowActions}
+          disabled={configurePending}
+          hiddenName="allowActions"
         />
 
         <div className="space-y-2">

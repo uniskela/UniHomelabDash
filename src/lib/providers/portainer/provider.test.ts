@@ -24,11 +24,16 @@ function providerContext(config: Record<string, unknown>): ProviderContext {
   };
 }
 
-test("portainer provider advertises read-only capabilities", () => {
+test("portainer provider advertises inspect, stats, and optional action capabilities", () => {
   assert.deepEqual(portainerProviderHandler.meta.capabilities, [
     "container.list",
     "container.status",
     "container.logs",
+    "container.inspect",
+    "container.stats",
+    "container.start",
+    "container.stop",
+    "container.restart",
     "stack.list",
     "stack.status",
     "stack.containers",

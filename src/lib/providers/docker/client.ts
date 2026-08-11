@@ -224,4 +224,28 @@ export async function runDockerContainerAction(
   });
 }
 
+export async function inspectDockerContainer(
+  config: DockerProviderConfig,
+  credentials: DockerTlsCredentials,
+  containerId: string
+) {
+  return dockerRequest<unknown>({
+    config,
+    credentials,
+    path: `/containers/${encodeURIComponent(containerId)}/json`,
+  });
+}
+
+export async function getDockerContainerStats(
+  config: DockerProviderConfig,
+  credentials: DockerTlsCredentials,
+  containerId: string
+) {
+  return dockerRequest<unknown>({
+    config,
+    credentials,
+    path: `/containers/${encodeURIComponent(containerId)}/stats?stream=false`,
+  });
+}
+
 export type { DockerListItem };

@@ -93,6 +93,7 @@ export function upsertPortainerProvider(input: {
   id?: string;
   name?: string;
   enabled: boolean;
+  readOnly?: boolean;
   config?: Record<string, unknown>;
   credentials?: Record<string, string>;
   preserveCredentials?: boolean;
@@ -113,6 +114,7 @@ export function upsertPortainerProvider(input: {
     credentialsEncrypted = null;
   }
 
+  const readOnly = input.readOnly ?? existing?.readOnly ?? true;
   const name = limitName(input.name) || existing?.name || "Portainer";
 
   if (existing) {
@@ -121,7 +123,7 @@ export function upsertPortainerProvider(input: {
       .set({
         name,
         enabled: input.enabled,
-        readOnly: true,
+        readOnly,
         configJson: JSON.stringify(config),
         credentialsEncrypted,
         updatedAt: now,
@@ -140,7 +142,7 @@ export function upsertPortainerProvider(input: {
       type: "portainer",
       name,
       enabled: input.enabled,
-      readOnly: true,
+      readOnly,
       configJson: JSON.stringify(config),
       credentialsEncrypted,
       createdAt: now,
@@ -155,6 +157,7 @@ export function createPortainerProvider(name = "Portainer") {
   return upsertPortainerProvider({
     name,
     enabled: false,
+    readOnly: true,
     config: DEFAULT_PORTAINER_CONFIG,
   });
 }

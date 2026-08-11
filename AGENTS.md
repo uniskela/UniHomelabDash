@@ -318,13 +318,13 @@ A feature is done when:
 
 ## Current Priority
 
-v0.8.0 completion: endpoint-aware Portainer stack availability and read-only
-stack container membership.
+v0.9.0 shipped: Container Control Centre (inspect/stats drawer, saved views,
+improved logs, opt-in Portainer container start/stop/restart).
 
 Next focus (see ROADMAP.md):
 
-* Portainer action safety design (restart/redeploy remains disabled)
 * Alerts and activity feed foundation
+* Portainer stack action safety (restart/redeploy remains deferred)
 
 Do not chase every homelab integration at once.
 

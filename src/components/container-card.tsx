@@ -4,7 +4,11 @@ import { Box, Eye, EyeOff } from "lucide-react";
 import { ContainerStatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { containerHostLabel, containerProviderCaption } from "@/lib/providers/container-filters";
-import type { ContainerViewMode } from "@/lib/providers/container-preferences";
+import type {
+  ContainerDensity,
+  ContainerViewMode,
+  ContainerVisibleField,
+} from "@/lib/providers/container-preferences";
 import type { ProviderResource } from "@/lib/providers/types";
 import { cn } from "@/lib/utils";
 
@@ -14,13 +18,22 @@ export function ContainerCard({
   hidden,
   onOpen,
   onToggleHidden,
+  visibleFields,
+  density = "comfortable",
 }: {
   container: ProviderResource;
   view: ContainerViewMode;
   hidden: boolean;
   onOpen: () => void;
   onToggleHidden: () => void;
+  visibleFields?: ContainerVisibleField[];
+  density?: ContainerDensity;
 }) {
+  const fields = new Set<ContainerVisibleField>(
+    visibleFields ?? ["image", "host", "provider", "ports", "statusText"]
+  );
+  const compact = density === "compact";
+
   return (
     <div className="relative">
       <button
@@ -29,14 +42,20 @@ export function ContainerCard({
         className={cn(
           "w-full rounded-xl border border-border/80 bg-card/80 text-left transition hover:border-primary/20 hover:bg-card",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-          view === "tiles" ? "p-3 pr-10" : "p-4 pr-10",
+          view === "tiles"
+            ? compact
+              ? "p-2.5 pr-9"
+              : "p-3 pr-10"
+            : compact
+              ? "p-3 pr-9"
+              : "p-4 pr-10",
           hidden && "border-dashed opacity-60"
         )}
       >
         {view === "tiles" ? (
-          <TileContent container={container} />
+          <TileContent container={container} fields={fields} compact={compact} />
         ) : (
-          <DetailContent container={container} />
+          <DetailContent container={container} fields={fields} compact={compact} />
         )}
       </button>
 
@@ -55,38 +74,79 @@ export function ContainerCard({
   );
 }
 
-function TileContent({ container }: { container: ProviderResource }) {
+function TileContent({
+  container,
+  fields,
+  compact,
+}: {
+  container: ProviderResource;
+  fields: Set<ContainerVisibleField>;
+  compact: boolean;
+}) {
   return (
-    <div className="space-y-2">
+    <div className={cn("space-y-2", compact && "space-y-1.5")}>
       <div className="flex items-center gap-2">
         <Box className="size-3.5 shrink-0 text-muted-foreground" />
-        <span className="truncate text-sm font-medium">{container.name}</span>
+        <span className={cn("truncate font-medium", compact ? "text-xs" : "text-sm")}>
+          {container.name}
+        </span>
       </div>
-      <p className="truncate text-xs text-muted-foreground">{containerHostLabel(container)}</p>
+      {fields.has("host") ? (
+        <p className="truncate text-xs text-muted-foreground">{containerHostLabel(container)}</p>
+      ) : null}
       <ContainerStatusBadge status={container.status} />
     </div>
   );
 }
 
-function DetailContent({ container }: { container: ProviderResource }) {
+function DetailContent({
+  container,
+  fields,
+  compact,
+}: {
+  container: ProviderResource;
+  fields: Set<ContainerVisibleField>;
+  compact: boolean;
+}) {
+  const showProvider = fields.has("provider");
+  const showImage = fields.has("image");
+  const captionParts = [
+    showProvider ? containerProviderCaption(container) : null,
+    showImage ? container.image : null,
+  ].filter(Boolean);
+
   return (
     <>
-      <div className="flex items-start gap-3">
-        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted ring-1 ring-border/60">
-          <Box className="size-4 text-muted-foreground" />
+      <div className={cn("flex items-start gap-3", compact && "gap-2.5")}>
+        <span
+          className={cn(
+            "grid shrink-0 place-items-center rounded-lg bg-muted ring-1 ring-border/60",
+            compact ? "size-8" : "size-10"
+          )}
+        >
+          <Box className={cn("text-muted-foreground", compact ? "size-3.5" : "size-4")} />
         </span>
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex items-start justify-between gap-3">
-            <span className="truncate font-medium">{container.name}</span>
+            <span className={cn("truncate font-medium", compact && "text-sm")}>{container.name}</span>
             <ContainerStatusBadge status={container.status} />
           </div>
-          <p className="truncate font-mono text-xs text-muted-foreground">
-            {containerProviderCaption(container)} · {container.image}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">
-            Host: {containerHostLabel(container)}
-          </p>
-          {container.ports?.length ? (
+          {captionParts.length ? (
+            <p className="truncate font-mono text-xs text-muted-foreground">
+              {captionParts.join(" · ")}
+            </p>
+          ) : null}
+          {fields.has("host") ? (
+            <p className="truncate text-xs text-muted-foreground">
+              Host: {containerHostLabel(container)}
+            </p>
+          ) : null}
+          {fields.has("createdAt") && container.createdAt ? (
+            <p className="truncate text-xs text-muted-foreground">
+              Created: {new Date(container.createdAt).toLocaleString()}
+            </p>
+          ) : null}
+          {fields.has("ports") && container.ports?.length ? (
             <div className="flex flex-wrap gap-1 pt-1">
               {container.ports.slice(0, 3).map((port, index) => (
                 <span
@@ -105,8 +165,15 @@ function DetailContent({ container }: { container: ProviderResource }) {
           ) : null}
         </div>
       </div>
-      {container.summary ? (
-        <p className="mt-2 pl-[3.25rem] text-xs text-muted-foreground">{container.summary}</p>
+      {fields.has("statusText") && container.summary ? (
+        <p
+          className={cn(
+            "mt-2 text-xs text-muted-foreground",
+            compact ? "pl-10" : "pl-[3.25rem]"
+          )}
+        >
+          {container.summary}
+        </p>
       ) : null}
     </>
   );

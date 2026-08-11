@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth/session-user";
 import { decryptCredentials } from "@/lib/providers/credentials";
 import type { DockerConnectionMode } from "@/lib/providers/docker/config";
 import { mergePortainerCredentialUpdates } from "@/lib/providers/portainer/credentials-merge";
+import { invalidateContainerDetailCache } from "@/lib/providers/container-detail-cache";
 import { invalidateStackMembershipCache } from "@/lib/providers/stack-membership-cache";
 import {
   getProviderRowById,
@@ -202,6 +203,8 @@ export async function configurePortainerProviderAction(
   const providerId = String(formData.get("providerId") ?? "").trim() || undefined;
   const name = String(formData.get("name") ?? "Portainer").trim();
   const enabled = formData.get("enabled") === "on" || formData.get("enabled") === "true";
+  const allowActions =
+    formData.get("allowActions") === "on" || formData.get("allowActions") === "true";
   const baseUrl = String(formData.get("baseUrl") ?? "").trim().replace(/\/+$/, "");
   const apiKey = String(formData.get("apiKey") ?? "").trim();
   const caCert = String(formData.get("caCert") ?? "").trim();
@@ -240,6 +243,7 @@ export async function configurePortainerProviderAction(
     id: providerId,
     name,
     enabled,
+    readOnly: !allowActions,
     config: { baseUrl },
     credentials,
     preserveCredentials,
@@ -337,8 +341,16 @@ export async function executeContainerAction(
     return { ok: false, message: "Invalid container action request." };
   }
 
-  const result = await executeProviderAction("docker", action, containerId, providerId);
+  const row = getProviderRowById(providerId);
+  if (!row || (row.type !== "docker" && row.type !== "portainer")) {
+    return { ok: false, message: "Provider is not configured or enabled." };
+  }
+
+  const result = await executeProviderAction(row.type, action, containerId, providerId);
   invalidateContainerListCache();
+  if (result.ok) {
+    invalidateContainerDetailCache(providerId, containerId);
+  }
   revalidatePath("/containers");
 
   return {
@@ -349,6 +361,7 @@ export async function executeContainerAction(
 
 function revalidateProviderPaths() {
   invalidateContainerListCache();
+  invalidateContainerDetailCache();
   invalidateStackListCache();
   invalidateStackMembershipCache();
   revalidatePath("/settings");

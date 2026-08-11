@@ -28,7 +28,7 @@ export default async function ContainersPage({
   const portainerProviders = await getPortainerProvidersAction();
   const providers = [...dockerProviders, ...portainerProviders];
   const enabled = providers.some((provider) => provider.enabled);
-  const actionsEnabled = dockerProviders.some((provider) => provider.enabled && !provider.readOnly);
+  const actionsEnabled = providers.some((provider) => provider.enabled && !provider.readOnly);
   const connectionStatus = !enabled ? "disabled" : "connected";
   const viewPreferences = readContainerViewPreferences();
   const initialSearchQuery = parseInitialContainerQuery(params.q);
@@ -40,8 +40,8 @@ export default async function ContainersPage({
         title="Containers"
         description={
           actionsEnabled
-            ? "Container status from your Docker and Portainer integrations. Destructive actions require confirmation and only appear for Docker integrations with actions enabled."
-            : "Read-only container status from your Docker and Portainer integrations. Enable Docker actions in Settings to start, stop, or restart."
+            ? "Container status from your Docker and Portainer integrations. Destructive actions require confirmation and only appear for integrations with actions enabled."
+            : "Read-only container status from your Docker and Portainer integrations. Enable Docker or Portainer actions in Settings to start, stop, or restart."
         }
         actions={
           <>

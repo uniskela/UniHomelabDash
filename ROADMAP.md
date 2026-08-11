@@ -337,7 +337,7 @@ Success criteria:
 
 ## Phase 7 — Portainer Integration
 
-Status: In progress (v0.8.0)
+Status: In progress (v0.9.0)
 
 Goal: Support users who manage homelabs through Portainer.
 
@@ -376,15 +376,47 @@ Completed in v0.8.0:
 * Link from a member container to the existing filtered Containers inventory
 * Server-only exact-label membership matching with sanitized responses and no database persistence
 
-Planned next increments:
+Completed in v0.9.0 (Container Control Centre; shared with Docker):
 
-* Explicit Portainer action support (restart/redeploy) only after additional safety checks
+* Opt-in Portainer container start/stop/restart (disabled by default via `readOnly`, same pattern as Docker)
+* Container inspect and live stats via the Portainer Docker gateway (`container.inspect` / `container.stats`)
+* Unified container control drawer (Overview / Metrics / Logs) for Docker and Portainer containers
+* Saved container views (versioned workspace preferences) with filters, layout, and field visibility
+* Improved log reader in the control drawer
+* Label value allowlist sanitization; inspect never exposes env, cmd, healthcheck output, or bind mount sources
+* `providerId`-scoped inspect/stats/action routes resolve provider type from the database row
+
+Deferred / planned next increments:
+
+* Portainer stack restart/redeploy (and other stack actions) only after additional safety design
+* Bulk container actions, terminals, streaming logs, and historical metrics charts remain out of scope
 
 Success criteria:
 
-* User can manage common Portainer tasks without opening Portainer.
-* Integration handles API failures gracefully. (met for read-only containers, logs, and stacks)
-* Actions are clearly labelled and confirmed.
+* User can manage common Portainer container tasks without opening Portainer. (met for opt-in start/stop/restart)
+* Integration handles API failures gracefully. (met for containers, logs, stacks, inspect, and stats)
+* Actions are clearly labelled and confirmed. (met for container actions; stack actions still unavailable)
+
+---
+
+## Phase 7.5 — Container Control Centre (v0.9.0)
+
+Status: Completed
+
+Goal: Turn the Containers page into a practical mobile-first control surface without expanding into stack mutation or bulk operations.
+
+Completed:
+
+* Control drawer with Overview (sanitized inspect), Metrics (CPU/memory/network/block/PIDs with optional live refresh), and Logs tabs
+* Process-local inspect cache (30s) and stats cache (5s)
+* Saved views and built-in All / Running / Stopped presets; preferences auto-upgrade to a versioned workspace
+* Opt-in actions for Docker and Portainer with confirmation showing provider, endpoint (when present), and current state
+* Stack inventory and membership remain read-only; stack restart/redeploy stay deferred
+
+Success criteria:
+
+* Operators can inspect, watch short-lived metrics, read logs, and safely restart containers from a phone. (met)
+* Secrets and host paths stay off the wire. (met)
 
 ---
 
@@ -644,4 +676,8 @@ The first meaningful release should include:
 * Docker Compose deployment
 * Screenshots in README
 
-That is enough to prove the idea without overbuilding.
+That baseline shipped. Current product focus after v0.9.0 Container Control Centre:
+
+* Alerts and activity feed foundation
+* Portainer stack action safety (restart/redeploy deferred)
+* Keep stack mutation and bulk/terminal features out of scope until safety design is ready

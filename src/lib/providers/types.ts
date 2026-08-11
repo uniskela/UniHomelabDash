@@ -4,6 +4,8 @@ export type ProviderCapability =
   | "container.list"
   | "container.status"
   | "container.logs"
+  | "container.inspect"
+  | "container.stats"
   | "container.start"
   | "container.stop"
   | "container.restart"
@@ -150,6 +152,101 @@ export type ProviderContext = {
   credentials: Record<string, string>;
 };
 
+export type ContainerHealthStatus =
+  | "healthy"
+  | "unhealthy"
+  | "starting"
+  | "none"
+  | "unknown";
+
+export type ContainerRestartPolicy = {
+  name: string;
+  maximumRetryCount: number | null;
+};
+
+/** Mount metadata safe for the UI — never includes host bind source paths. */
+export type ContainerSafeMount = {
+  type: string;
+  destination: string;
+  readOnly: boolean;
+  name: string | null;
+};
+
+export type ContainerResourceLimits = {
+  memoryBytes: number | null;
+  nanoCpus: number | null;
+  cpuShares: number | null;
+  pidsLimit: number | null;
+};
+
+/**
+ * Operational labels. Non-allowlisted values are hidden (`value: null`,
+ * `visible: false`) so secrets in arbitrary labels never reach the browser.
+ */
+export type ContainerLabelEntry = {
+  key: string;
+  value: string | null;
+  visible: boolean;
+};
+
+export type ContainerDetailResource = {
+  id: string;
+  name: string;
+  state: ContainerState;
+  status: string;
+  health: ContainerHealthStatus;
+  image: string;
+  imageId: string | null;
+  platform: string | null;
+  createdAt: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  restartPolicy: ContainerRestartPolicy | null;
+  ports: string[];
+  networks: string[];
+  mounts: ContainerSafeMount[];
+  limits: ContainerResourceLimits;
+  labels: ContainerLabelEntry[];
+  providerType: ProviderType;
+  providerId: string;
+  meta?: Record<string, string>;
+};
+
+/** Short-lived operational snapshot — missing counters stay null, never zero-filled. */
+export type ContainerStatsSnapshot = {
+  sampledAt: string;
+  cpuPercent: number | null;
+  memoryUsageBytes: number | null;
+  memoryLimitBytes: number | null;
+  memoryPercent: number | null;
+  networkRxBytes: number | null;
+  networkTxBytes: number | null;
+  blockReadBytes: number | null;
+  blockWriteBytes: number | null;
+  pids: number | null;
+};
+
+export type ContainerUnavailableReason =
+  | "stopped"
+  | "endpoint_disconnected"
+  | "unsupported"
+  | "timeout"
+  | "malformed"
+  | "provider_disabled"
+  | "provider_not_found";
+
+export type ContainerDetailResult =
+  | { kind: "ok"; detail: ContainerDetailResource; cachedAt?: number }
+  | { kind: "unavailable"; reason: ContainerUnavailableReason; message: string }
+  | { kind: "not_found"; message: string }
+  | { kind: "error"; reason: ContainerUnavailableReason; message: string };
+
+export type ContainerStatsResult =
+  | { kind: "ok"; stats: ContainerStatsSnapshot; cachedAt?: number }
+  | { kind: "unavailable"; reason: ContainerUnavailableReason; message: string }
+  | { kind: "not_found"; message: string }
+  | { kind: "error"; reason: ContainerUnavailableReason; message: string };
+
 export interface ProviderHandler {
   meta: ProviderDefinitionMeta;
   testConnection(context: ProviderContext): Promise<ConnectionTestResult>;
@@ -165,6 +262,14 @@ export interface ProviderHandler {
     resourceId: string,
     options?: ContainerLogsOptions
   ): Promise<ContainerLogsResult>;
+  inspectContainer?(
+    context: ProviderContext,
+    resourceId: string
+  ): Promise<ContainerDetailResult>;
+  getContainerStats?(
+    context: ProviderContext,
+    resourceId: string
+  ): Promise<ContainerStatsResult>;
   executeAction?(
     context: ProviderContext,
     action: string,

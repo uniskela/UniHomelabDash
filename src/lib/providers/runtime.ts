@@ -1,5 +1,12 @@
 import { redactSecrets } from "@/lib/providers/credentials";
 import {
+  getCachedContainerInspect,
+  getCachedContainerStats,
+  invalidateContainerDetailCache,
+  setCachedContainerInspect,
+  setCachedContainerStats,
+} from "@/lib/providers/container-detail-cache";
+import {
   getCachedContainerList,
   invalidateContainerListCache,
   setCachedContainerList,
@@ -20,8 +27,10 @@ import {
 } from "@/lib/providers/registry";
 import type {
   ConnectionTestResult,
+  ContainerDetailResult,
   ContainerLogsOptions,
   ContainerLogsResult,
+  ContainerStatsResult,
   ProviderPublicView,
   ProviderResource,
   ProviderType,
@@ -184,6 +193,129 @@ export async function listContainerResources(options: { bypassCache?: boolean } 
 }
 
 export { invalidateContainerListCache };
+export { invalidateContainerDetailCache };
+
+export async function getContainerDetail(
+  resourceId: string,
+  providerId: string,
+  options: { bypassCache?: boolean } = {}
+): Promise<ContainerDetailResult> {
+  const row = getProviderRowById(providerId);
+  if (!row) {
+    return {
+      kind: "unavailable",
+      reason: "provider_not_found",
+      message: "Provider not found.",
+    };
+  }
+  if (!row.enabled) {
+    return {
+      kind: "unavailable",
+      reason: "provider_disabled",
+      message: "Provider is disabled.",
+    };
+  }
+
+  const providerType = row.type as ProviderType;
+  const handler = getProviderHandler(providerType);
+  if (
+    !handler?.inspectContainer ||
+    !handler.meta.capabilities.includes("container.inspect")
+  ) {
+    return {
+      kind: "unavailable",
+      reason: "unsupported",
+      message: "This provider does not support container inspect.",
+    };
+  }
+
+  if (!options.bypassCache) {
+    const cached = getCachedContainerInspect(providerId, resourceId);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  try {
+    const result = await handler.inspectContainer(
+      buildProviderContext(toProviderRow(row)),
+      resourceId
+    );
+    if (result.kind === "ok") {
+      return setCachedContainerInspect(providerId, resourceId, result.detail);
+    }
+    return result;
+  } catch (error) {
+    return {
+      kind: "error",
+      reason: "malformed",
+      message: redactSecrets(
+        error instanceof Error ? error.message : "Failed to inspect container."
+      ),
+    };
+  }
+}
+
+export async function getContainerStatsSnapshot(
+  resourceId: string,
+  providerId: string,
+  options: { bypassCache?: boolean } = {}
+): Promise<ContainerStatsResult> {
+  const row = getProviderRowById(providerId);
+  if (!row) {
+    return {
+      kind: "unavailable",
+      reason: "provider_not_found",
+      message: "Provider not found.",
+    };
+  }
+  if (!row.enabled) {
+    return {
+      kind: "unavailable",
+      reason: "provider_disabled",
+      message: "Provider is disabled.",
+    };
+  }
+
+  const providerType = row.type as ProviderType;
+  const handler = getProviderHandler(providerType);
+  if (
+    !handler?.getContainerStats ||
+    !handler.meta.capabilities.includes("container.stats")
+  ) {
+    return {
+      kind: "unavailable",
+      reason: "unsupported",
+      message: "This provider does not support container stats.",
+    };
+  }
+
+  if (!options.bypassCache) {
+    const cached = getCachedContainerStats(providerId, resourceId);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  try {
+    const result = await handler.getContainerStats(
+      buildProviderContext(toProviderRow(row)),
+      resourceId
+    );
+    if (result.kind === "ok") {
+      return setCachedContainerStats(providerId, resourceId, result.stats);
+    }
+    return result;
+  } catch (error) {
+    return {
+      kind: "error",
+      reason: "malformed",
+      message: redactSecrets(
+        error instanceof Error ? error.message : "Failed to load container stats."
+      ),
+    };
+  }
+}
 
 export async function listStackResources(options: { bypassCache?: boolean } = {}) {
   if (!options.bypassCache) {
