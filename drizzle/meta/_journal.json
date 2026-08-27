@@ -15,6 +15,13 @@
       "when": 1740000001000,
       "tag": "0001_providers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1740000002000,
+      "tag": "0002_activity_alerts",
+      "breakpoints": true
     }
   ]
 }

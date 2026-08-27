@@ -40,6 +40,24 @@ the included Drizzle migrations before the app begins serving requests.
 - Container inventory uses short process-local caches and endpoint cooldowns;
   no external queue or Redis service is required.
 
+## Upgrading to v0.10.0
+
+1. Rebuild or pull as usual. Startup runs Drizzle migration **`0002_activity_alerts`**
+   (adds `activity_events` and `alerts` tables).
+2. Existing services, users, container preferences, and provider credentials are
+   preserved. No manual migration step is required.
+3. Optional **`ACTIVITY_RETENTION_DAYS`** (default `30`) controls how long activity
+   events are kept.
+4. External push notifications and webhooks remain unavailable.
+
+### Dependency notes (v0.10.0)
+
+Compatible patch/minor updates within existing majors were applied where
+available. Major upgrades deferred in prior releases remain deferred.
+
+After an upgrade, sign in, run a health check, and open **Alerts and activity**
+to confirm the feed works before removing a backup.
+
 ## Upgrading to v0.9.0
 
 1. Rebuild or pull as usual. **No schema migration** or new environment variable

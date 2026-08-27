@@ -35,9 +35,11 @@ Use **Check all** when you want a fresh snapshot.
 ## Attention-first behavior
 
 Cards needing attention are presented before healthy cards so a phone-sized
-dashboard answers the most important question first. This is a status view, not
-a monitoring system: checks do not run in the background and there are no alert
-notifications yet.
+dashboard answers the most important question first. When a check transitions
+to **degraded**, v0.10.0 records an open alert and activity event — open
+**Alerts and activity** from Settings or the dashboard shortcut.
+
+Checks still do not run in the background and there are no push notifications.
 
 ## Safe health URLs
 

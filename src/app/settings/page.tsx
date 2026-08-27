@@ -131,15 +131,15 @@ export default async function SettingsPage() {
               <Bell className="size-5" />
               Alerts
             </CardTitle>
-            <CardDescription>Notifications are not available yet.</CardDescription>
+            <CardDescription>In-app alerts and activity feed (v0.10.0).</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 pt-0 text-sm text-muted-foreground">
             <p>
-              Use dashboard health checks today. Alerts for push notifications and provider
-              events will arrive in a later release.
+              Review open alerts from degraded health checks and failed provider
+              connection tests. Container actions appear in the activity feed.
             </p>
             <Link href="/alerts" className="text-foreground underline underline-offset-4">
-              View alerts roadmap
+              Open alerts and activity
             </Link>
           </CardContent>
         </Card>

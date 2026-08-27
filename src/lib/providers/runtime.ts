@@ -450,6 +450,17 @@ async function updateProviderTestState(
   const { getDb } = await import("@/lib/db/client");
   const { providers } = await import("@/lib/db/schema");
   const { eq } = await import("drizzle-orm");
+  const { buildProviderConnectionActivity } = await import("@/lib/activity/types");
+  const { recordActivity } = await import("@/lib/activity/record");
+
+  const [existing] = getDb()
+    .select()
+    .from(providers)
+    .where(eq(providers.id, providerId))
+    .limit(1)
+    .all();
+
+  const hadPreviousError = Boolean(existing?.lastError);
 
   getDb()
     .update(providers)
@@ -460,4 +471,18 @@ async function updateProviderTestState(
     })
     .where(eq(providers.id, providerId))
     .run();
+
+  if (existing) {
+    const activity = buildProviderConnectionActivity({
+      providerId,
+      providerName: existing.name,
+      providerType: existing.type,
+      ok: result.ok,
+      message: result.message,
+      hadPreviousError,
+    });
+    if (activity) {
+      recordActivity(activity);
+    }
+  }
 }

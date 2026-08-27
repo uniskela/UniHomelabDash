@@ -47,3 +47,39 @@ export const providers = sqliteTable("providers", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
+
+export const activitySeverities = ["info", "warning", "error"] as const;
+export type ActivitySeverity = (typeof activitySeverities)[number];
+
+export const alertStatuses = ["open", "acknowledged", "resolved"] as const;
+export type AlertStatus = (typeof alertStatuses)[number];
+
+export const activityEvents = sqliteTable("activity_events", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(),
+  severity: text("severity", { enum: activitySeverities }).notNull(),
+  title: text("title").notNull(),
+  detail: text("detail").notNull().default(""),
+  resourceType: text("resource_type"),
+  resourceId: text("resource_id"),
+  providerId: text("provider_id"),
+  metadataJson: text("metadata_json").notNull().default("{}"),
+  createdAt: text("created_at").notNull(),
+});
+
+export const alerts = sqliteTable("alerts", {
+  id: text("id").primaryKey(),
+  activityEventId: text("activity_event_id"),
+  type: text("type").notNull(),
+  severity: text("severity", { enum: activitySeverities }).notNull(),
+  title: text("title").notNull(),
+  detail: text("detail").notNull().default(""),
+  resourceType: text("resource_type"),
+  resourceId: text("resource_id"),
+  providerId: text("provider_id"),
+  status: text("status", { enum: alertStatuses }).notNull().default("open"),
+  dedupeKey: text("dedupe_key"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  resolvedAt: text("resolved_at"),
+});

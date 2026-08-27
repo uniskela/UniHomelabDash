@@ -182,21 +182,21 @@ For the first GHCR push, set **Settings → Actions → General → Workflow per
 
 ### Maintainer release checklist
 
-After the v0.9.0 PR is merged to the default branch, tag the merge commit and push the tag:
+After the v0.10.0 PR is merged to the default branch, tag the merge commit and push the tag:
 
 ```bash
 git switch main
 git pull
-git tag -a v0.9.0 -m "v0.9.0"
-git push origin v0.9.0
+git tag -a v0.10.0 -m "v0.10.0"
+git push origin v0.10.0
 ```
 
-Publish a GitHub Release from tag `v0.9.0`.
+Publish a GitHub Release from tag `v0.10.0`.
 
 Release title:
 
 ```text
-UniHomelabDash v0.9.0
+UniHomelabDash v0.10.0
 ```
 
 Release description:
@@ -204,16 +204,18 @@ Release description:
 ```markdown
 ## Highlights
 
-- Container Control Centre: Overview / Metrics / Logs drawer with inspect and live stats.
-- Saved container views (versioned workspace) plus improved log reader.
-- Opt-in Portainer container start/stop/restart with confirmation (provider, endpoint, state).
-- Label value allowlist; inspect never exposes env, cmd, healthcheck output, or bind sources.
+- Alerts and activity feed foundation with persisted SQLite events.
+- Active alerts for degraded services and failed provider connection tests.
+- Activity feed for health transitions, provider tests, and container actions.
+- Acknowledge and resolve controls on the `/alerts` page.
+- Dashboard shortcut to alerts when items need attention.
 
 ## Upgrade notes
 
-- Rebuild/restart as usual (`docker compose up --build -d`). No schema migration or new environment variable is required.
-- Existing services, users, container preferences, and provider credentials are preserved. View prefs auto-upgrade to the versioned workspace.
-- Portainer remains read-only until **Allow container actions** is enabled. Stack actions remain unavailable.
+- Rebuild/restart as usual (`docker compose up --build -d`). Startup runs Drizzle migration `0002_activity_alerts`.
+- Existing services, users, container preferences, and provider credentials are preserved.
+- Optional `ACTIVITY_RETENTION_DAYS` (default 30) controls how long activity events are kept.
+- External push notifications and webhooks remain unavailable.
 
 ## Verification
 
@@ -225,10 +227,10 @@ Release description:
 
 ## Container images
 
-- `docker pull ghcr.io/uniskela/unihomelabdash:v0.9.0`
-- `docker pull ghcr.io/uniskela/unihomelabdash:0.9.0`
-- `docker pull uniskela/unihomelabdash:v0.9.0`
-- `docker pull uniskela/unihomelabdash:0.9.0`
+- `docker pull ghcr.io/uniskela/unihomelabdash:v0.10.0`
+- `docker pull ghcr.io/uniskela/unihomelabdash:0.10.0`
+- `docker pull uniskela/unihomelabdash:v0.10.0`
+- `docker pull uniskela/unihomelabdash:0.10.0`
 ```
 
 ### Maintainer-only: internal infrastructure
@@ -260,12 +262,13 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - Portainer integrations with endpoint container status, logs, inspect, and stats via API token
 - Read-only Portainer stack lifecycle status with provider/endpoint filtering and partial-failure isolation
 - Endpoint-aware stack availability and read-only stack container membership with filtered container inventory links
+- In-app alerts and activity feed with health, provider, and container event recording
 
 ## What it does not do (yet)
 
 - Multi-user access or OIDC
 - Proxmox integrations
-- Push notifications or alerts
+- Push notifications, Discord, email, or webhooks
 - Automatic background health polling
 - Portainer stack restart or redeploy actions
 - Bulk container actions, terminals, streaming logs, or historical metrics charts

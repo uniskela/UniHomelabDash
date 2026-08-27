@@ -20,14 +20,15 @@ homelab platform.
 - v0.7.0 read-only Portainer stack lifecycle status
 - v0.8.0 endpoint-aware stack availability and read-only container membership
 - v0.9.0 Container Control Centre: control drawer, saved views, improved logs
+- v0.10.0 Alerts and activity feed foundation (in-app events, open alerts)
 - Fast asynchronous container inventory, cache, cooldown, and filters
 - Container layout, grouping, hidden-item, prefixed-search, and saved-view preferences
 - Public GitHub Pages website and core operator/contributor documentation
 
 ## Current focus
 
-1. Alerts and activity-feed foundation
-2. Portainer stack action safety (restart/redeploy remains deferred)
+1. Portainer stack action safety (restart/redeploy remains deferred)
+2. Background health polling as a follow-on to alerts foundation
 
 ## Release versioning
 

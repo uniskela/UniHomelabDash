@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { AuthError } from "@/lib/auth/types";
 import { requireAuth } from "@/lib/auth/session-user";
+import { buildContainerActionActivity } from "@/lib/activity/types";
+import { recordActivity } from "@/lib/activity/record";
 import { decryptCredentials } from "@/lib/providers/credentials";
 import type { DockerConnectionMode } from "@/lib/providers/docker/config";
 import { mergePortainerCredentialUpdates } from "@/lib/providers/portainer/credentials-merge";
@@ -336,6 +338,7 @@ export async function executeContainerAction(
   const containerId = String(formData.get("containerId") ?? "").trim();
   const providerId = String(formData.get("providerId") ?? "").trim();
   const action = String(formData.get("action") ?? "").trim();
+  const containerName = String(formData.get("containerName") ?? "").trim() || containerId.slice(0, 12);
 
   if (!containerId || !providerId || !["start", "stop", "restart"].includes(action)) {
     return { ok: false, message: "Invalid container action request." };
@@ -347,11 +350,25 @@ export async function executeContainerAction(
   }
 
   const result = await executeProviderAction(row.type, action, containerId, providerId);
+
+  recordActivity(
+    buildContainerActionActivity({
+      containerId,
+      containerName,
+      providerId,
+      providerName: row.name,
+      action,
+      ok: result.ok,
+      message: result.message,
+    })
+  );
+
   invalidateContainerListCache();
   if (result.ok) {
     invalidateContainerDetailCache(providerId, containerId);
   }
   revalidatePath("/containers");
+  revalidatePath("/alerts");
 
   return {
     ok: result.ok,
@@ -367,4 +384,5 @@ function revalidateProviderPaths() {
   revalidatePath("/settings");
   revalidatePath("/containers");
   revalidatePath("/stacks");
+  revalidatePath("/alerts");
 }

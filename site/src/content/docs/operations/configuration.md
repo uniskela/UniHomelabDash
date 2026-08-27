@@ -25,6 +25,7 @@ can use `.env.local`. Never commit either file.
 | `UH_CONTAINER_LIST_CACHE_MS` | `30000` | Process-local aggregated container cache |
 | `UH_PORTAINER_REQUEST_TIMEOUT_MS` | `15000` | General Portainer request timeout |
 | `UH_DOCKER_REQUEST_TIMEOUT_MS` | `15000` | General Docker request timeout |
+| `ACTIVITY_RETENTION_DAYS` | `30` | How long activity events are retained before pruning |
 
 ## Reverse proxy example
 
