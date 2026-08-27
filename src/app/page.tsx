@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Activity, Box, HeartPulse, Plus, Server } from "lucide-react";
+import { Activity, Bell, Box, HeartPulse, Plus, Server } from "lucide-react";
 import { checkAllServiceHealthAction } from "@/lib/services/actions";
+import { countOpenAlerts } from "@/lib/activity/record";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { ServiceCard } from "@/components/service-card";
@@ -26,6 +27,7 @@ export default async function DashboardPage() {
   const degradedCount = services.filter((service) => service.healthStatus === "degraded").length;
   const unknownCount = services.filter((service) => service.healthStatus === "unknown").length;
   const dockerEnabled = isDockerProviderEnabled();
+  const openAlertCount = countOpenAlerts();
 
   return (
     <div className="space-y-8">
@@ -73,6 +75,18 @@ export default async function DashboardPage() {
           tone={degradedCount > 0 ? "warning" : "neutral"}
         />
       </StatTileGrid>
+
+      {openAlertCount > 0 || degradedCount > 0 ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/alerts">
+              <Bell />
+              View alerts
+              {openAlertCount > 0 ? ` (${openAlertCount})` : ""}
+            </Link>
+          </Button>
+        </div>
+      ) : null}
 
       {dockerEnabled ? (
         <div className="flex flex-wrap items-center gap-2">

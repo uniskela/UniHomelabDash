@@ -1,54 +1,80 @@
 import Link from "next/link";
-import { Bell, HeartPulse } from "lucide-react";
+import { Bell } from "lucide-react";
+import { getActivityFeed, getAlertsSummary } from "@/lib/activity/queries";
+import { ActivityFeed } from "@/components/activity-feed";
+import { AlertList } from "@/components/alert-list";
+import { PageHeader } from "@/components/page-header";
+import { StatTile, StatTileGrid } from "@/components/stat-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { requireAuth } from "@/lib/auth/session-user";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function AlertsPage() {
   await requireAuth();
-  return (
-    <div className="space-y-6">
-      <section className="space-y-2">
-        <Badge variant="secondary" className="w-fit">
-          Coming soon
-        </Badge>
-        <h1 className="text-3xl font-semibold tracking-tight">Alerts</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Push notifications and provider-driven alerts are planned for a future release.
-          Use health checks on the dashboard today.
-        </p>
-      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="size-5" />
-            No alerts yet
-          </CardTitle>
-          <CardDescription>
-            Manual services do not send notifications in this version.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start gap-3 rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
-            <HeartPulse className="mt-0.5 size-4 shrink-0 text-foreground" />
-            <p>
-              Run on-demand health checks from the dashboard or Services page to see which
-              URLs are responding right now.
-            </p>
-          </div>
-          <Button asChild variant="secondary">
-            <Link href="/">Go to dashboard</Link>
+  const [summary, activity] = await Promise.all([
+    getAlertsSummary(),
+    getActivityFeed(50),
+  ]);
+
+  const warningCount = summary.openAlerts.filter((alert) => alert.severity === "warning").length;
+  const errorCount = summary.openAlerts.filter((alert) => alert.severity === "error").length;
+
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Operations"
+        title="Alerts and activity"
+        description="In-app visibility for degraded services, provider failures, and recent container actions. External notifications remain planned."
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/">Back to dashboard</Link>
           </Button>
-        </CardContent>
-      </Card>
+        }
+      />
+
+      <StatTileGrid>
+        <StatTile
+          icon={<Bell />}
+          label="Open alerts"
+          value={summary.openCount.toString()}
+          detail={`${errorCount} error · ${warningCount} warning`}
+          tone={summary.openCount > 0 ? "warning" : "neutral"}
+        />
+        <StatTile
+          icon={<Bell />}
+          label="Recent activity"
+          value={activity.length.toString()}
+          detail="Last 50 events"
+          tone="neutral"
+        />
+        <StatTile
+          icon={<Bell />}
+          label="Notifications"
+          value="Off"
+          detail="Push and webhooks planned"
+          tone="neutral"
+        />
+      </StatTileGrid>
+
+      {summary.openCount > 0 ? (
+        <Badge variant="outline" className="w-fit">
+          {summary.openCount} item{summary.openCount === 1 ? "" : "s"} need attention
+        </Badge>
+      ) : null}
+
+      <AlertList
+        title="Active alerts"
+        description="Open and acknowledged items from health checks and provider connection tests."
+        alerts={summary.openAlerts}
+        emptyTitle="No active alerts"
+        emptyDescription="Degraded services and failed provider connection tests appear here."
+      />
+
+      <ActivityFeed events={activity} />
     </div>
   );
 }

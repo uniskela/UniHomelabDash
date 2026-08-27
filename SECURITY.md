@@ -94,6 +94,7 @@ The default Compose file still does **not** mount the Docker socket.
 ## Portainer integration (v0.6.0+)
 
 - Portainer defaults to read-only. v0.6.0 added container lists and logs; v0.7.0 added stack lifecycle status; v0.8.0 adds endpoint-aware availability and read-only stack container membership; v0.9.0 adds inspect/stats and optional container start/stop/restart.
+- v0.10.0 persists activity and alert records server-side only. Event details are redacted before storage. External notification channels remain deferred.
 - Container actions follow the same opt-in as Docker: enable **Allow container actions** (`readOnly: false`) per integration. Confirmation UI shows provider, endpoint (when present), and current state before start/stop/restart.
 - Stack restart, redeploy, and other stack mutations remain unavailable.
 - Authentication uses Portainer access tokens sent in `X-API-Key`.

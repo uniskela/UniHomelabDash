@@ -318,13 +318,13 @@ A feature is done when:
 
 ## Current Priority
 
-v0.9.0 shipped: Container Control Centre (inspect/stats drawer, saved views,
-improved logs, opt-in Portainer container start/stop/restart).
+v0.10.0 shipped: Alerts and activity feed foundation (persisted events, open
+alerts, health/provider/container instrumentation, in-app feed).
 
 Next focus (see ROADMAP.md):
 
-* Alerts and activity feed foundation
 * Portainer stack action safety (restart/redeploy remains deferred)
+* Background health polling as a follow-on to alerts foundation
 
 Do not chase every homelab integration at once.
 

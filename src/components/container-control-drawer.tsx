@@ -408,6 +408,7 @@ export function ContainerControlDrawer({
                   >
                     <input type="hidden" name="containerId" value={container.id} />
                     <input type="hidden" name="providerId" value={container.providerId ?? ""} />
+                    <input type="hidden" name="containerName" value={container.name} />
                     <input type="hidden" name="action" value={pendingAction} />
                     <Button
                       type="submit"
