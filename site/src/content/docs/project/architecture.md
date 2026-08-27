@@ -12,7 +12,7 @@ without forcing a premature monorepo.
 
 ## Current shape
 
-- **React PWA:** mobile-first dashboard, services, containers, alerts shell, and
+- **React PWA:** mobile-first dashboard, services, containers, alerts/activity, and
   settings UI.
 - **Next.js server layer:** authenticated route handlers and server actions.
 - **Provider runtime:** capability discovery, connection tests, reads, and
