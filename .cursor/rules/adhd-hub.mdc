@@ -1,0 +1,22 @@
+---
+description: ADHD Progress Hub — check overlap and save progress on unfinished work
+alwaysApply: true
+---
+
+# ADHD Progress Hub
+
+Project slug: `unihomelabdash`  
+Repo: https://github.com/uniskela/UniHomelabDash  
+Skills: `adhd-hub-session`, `adhd-hub-projects`
+
+**Internal:** maintainer MCP/UI is `https://adhd.pike.homes/mcp` (and `/ui`). Public contributors must not rely on that host — use your own hub or skip.
+
+When starting, resuming, or leaving half-finished work in this workspace:
+
+1. Call MCP `adhd-hub` → `resolve_project` with workspace path `/home/alex/UniHomelabDash` (or cwd), then `session_digest` with a short task query.
+2. Call `check_overlap` before diving in. If hits look related, tell the user what was left open and offer to resume from hub progress notes.
+3. When work is left incomplete, call `upsert_progress` with Done/Next/Blockers and `source_tool: "cursor"`. Also `upsert_thread` for a new unfinished thread.
+4. When the user finishes, call `mark_done` on the thread id.
+5. If the user asks to be reminded later, call `set_reminder`.
+
+Do not invent hub state — only report what the tools return. Prefer summaries; never dump full chat transcripts or secrets into the hub.
