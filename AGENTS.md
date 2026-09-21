@@ -337,3 +337,38 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+<!-- adhd-hub:project-agent:start -->
+<!-- adhd-hub:guidance-version:3 -->
+## ADHD Hub continuity
+
+For substantial work in this project:
+
+- If ADHD Hub MCP tools are missing, errored, unauthorized, or otherwise
+  unavailable: on the first substantial Hub-worthy turn after detecting the
+  outage, the **first line** MUST state that Hub MCP is not available, plus a
+  short fix hint (MCP URL → this Hub's `/mcp`, `ADHD_HUB_AUTH_TOKEN`, restart
+  the agent; skip/cancel Auth if it hangs until Hub OAuth is enabled). Repeat
+  only if Hub status changes, a persistence attempt fails again, or the reply
+  could otherwise imply continuity was saved. Then continue the authorized
+  work. Never invent Hub state or claim a Hub write succeeded.
+- Skip Hub for trivial/read-only/tiny work.
+- Once per meaningful session: `resolve_project`, then `session_digest` with
+  the task query. Reuse resolved context where possible.
+- **One thread = one independently finishable outcome** (not the whole repo).
+  Before updating a thread, compare new work to that thread's Goal; if it does
+  not advance the same outcome, use another thread or create one.
+- Known thread → `upsert_progress(thread_id=...)` with compact structured state
+  (goal / focus / ≤3 next / blocked if any / resume). Do not silently attach
+  to an unrelated open thread.
+- `check_overlap` only before potentially new work; reuse only when the Goal
+  matches. Different goal → separate thread (`force_new_thread` if needed).
+- When leaving mid-task, checkpoint then `pause_thread(thread_id, next_step=...)`
+  with one concrete resume action. `mark_done` only the known completed thread
+  — never close unrelated overlap results.
+- If Hub guidance looks stale (session_digest guidance status, or doctor),
+  mention it once, keep using the current MCP contract, and recommend
+  `adhd-hub setup . --refresh` — do not nag repeatedly or hand-edit AGENTS.md.
+- Summaries only; never secrets, credentials, env files, transcripts, private
+  Hub URLs, internal hosts/IPs, or absolute machine paths in public artifacts.
+<!-- adhd-hub:project-agent:end -->
