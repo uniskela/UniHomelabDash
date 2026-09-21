@@ -4,6 +4,8 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { AuthError } from "@/lib/auth/types";
 import { requireAuth } from "@/lib/auth/session-user";
+import { buildHealthTransitionActivity } from "@/lib/activity/types";
+import { recordActivity } from "@/lib/activity/record";
 import { getDb } from "@/lib/db/client";
 import { services } from "@/lib/db/schema";
 import { checkServiceHealth } from "@/lib/services/health";
@@ -140,6 +142,17 @@ export async function checkServiceHealthAction(formData: FormData) {
 
   const result = await checkServiceHealth(service.healthUrl);
 
+  const activity = buildHealthTransitionActivity({
+    serviceId: service.id,
+    serviceName: service.name,
+    previousStatus: service.healthStatus,
+    nextStatus: result.status,
+    errorMessage: result.errorMessage,
+  });
+  if (activity) {
+    recordActivity(activity);
+  }
+
   getDb()
     .update(services)
     .set({
@@ -169,6 +182,17 @@ export async function checkAllServiceHealthAction() {
     }
 
     const result = await checkServiceHealth(service.healthUrl);
+
+    const activity = buildHealthTransitionActivity({
+      serviceId: service.id,
+      serviceName: service.name,
+      previousStatus: service.healthStatus,
+      nextStatus: result.status,
+      errorMessage: result.errorMessage,
+    });
+    if (activity) {
+      recordActivity(activity);
+    }
 
     getDb()
       .update(services)
@@ -255,4 +279,5 @@ function revalidateServices() {
   revalidatePath("/");
   revalidatePath("/services");
   revalidatePath("/settings");
+  revalidatePath("/alerts");
 }

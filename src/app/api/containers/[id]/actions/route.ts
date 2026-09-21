@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { AuthError } from "@/lib/auth/types";
 import { requireAuth } from "@/lib/auth/session-user";
+import { buildContainerActionActivity } from "@/lib/activity/types";
+import { recordActivity } from "@/lib/activity/record";
 import {
   executeProviderAction,
   invalidateContainerDetailCache,
@@ -31,10 +33,14 @@ export async function POST(
   }
 
   const body = (await request.json().catch(() => null)) as
-    | { action?: unknown; providerId?: unknown }
+    | { action?: unknown; providerId?: unknown; containerName?: unknown }
     | null;
   const action = typeof body?.action === "string" ? body.action : "";
   const providerId = typeof body?.providerId === "string" ? body.providerId.trim() : "";
+  const containerName =
+    typeof body?.containerName === "string" && body.containerName.trim()
+      ? body.containerName.trim()
+      : id.slice(0, 12);
 
   if (!action || !["start", "stop", "restart"].includes(action)) {
     return NextResponse.json({ error: "action must be start, stop, or restart." }, { status: 400 });
@@ -57,6 +63,18 @@ export async function POST(
     action,
     id,
     providerId
+  );
+
+  recordActivity(
+    buildContainerActionActivity({
+      containerId: id,
+      containerName,
+      providerId,
+      providerName: row.name,
+      action,
+      ok: result.ok,
+      message: result.message,
+    })
   );
 
   if (result.ok) {

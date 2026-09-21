@@ -422,32 +422,37 @@ Success criteria:
 
 ## Phase 8 — Alerts and Activity Feed
 
-Status: Planned
+Status: Completed (v0.10.0 foundation)
 
 Goal: Give the user a useful summary of what needs attention.
 
 Features:
 
-* Alerts page.
-* Activity feed.
-* Service down alert.
-* Provider connection failure.
-* Failed action log.
-* Recent restarts/stops.
-* Basic severity levels.
+Completed in v0.10.0:
 
-Future:
+* Activity events persisted in SQLite (`activity_events`, `alerts` tables)
+* In-app Alerts page with active alerts and recent activity feed
+* Service health transition recording (degraded / recovered) on manual checks
+* Provider connection failure and recovery recording on connection tests
+* Container start/stop/restart activity recording (success and failure)
+* Open alert deduplication for service health and provider connection issues
+* Acknowledge and resolve controls for open alerts
+* Dashboard link to `/alerts` when open alerts or degraded services exist
+* Authenticated API routes: `GET /api/activities`, `GET /api/alerts`
+* Optional `ACTIVITY_RETENTION_DAYS` env (default 30 days)
 
-* Discord notifications.
-* Email notifications.
-* Push notifications.
-* Webhooks.
+Deferred / planned next increments:
+
+* Background health polling and automatic alert generation
+* Discord, email, push notifications, and webhooks (Phase 12)
+* Alert rules engine, quiet hours, per-service notification preferences
+* Re-adding Alerts to primary bottom navigation
 
 Success criteria:
 
-* User can quickly see what changed.
-* Failed checks are visible.
-* Actions are auditable.
+* User can quickly see what changed. (met for recorded events)
+* Failed checks are visible. (met via open alerts)
+* Actions are auditable. (met for container actions)
 
 ---
 
@@ -676,8 +681,8 @@ The first meaningful release should include:
 * Docker Compose deployment
 * Screenshots in README
 
-That baseline shipped. Current product focus after v0.9.0 Container Control Centre:
+That baseline shipped. Current product focus after v0.10.0 alerts foundation:
 
-* Alerts and activity feed foundation
 * Portainer stack action safety (restart/redeploy deferred)
+* Background health polling (future increment on alerts foundation)
 * Keep stack mutation and bulk/terminal features out of scope until safety design is ready
