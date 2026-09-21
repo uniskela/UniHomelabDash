@@ -8,5 +8,6 @@
       "include-component-in-tag": false,
       "changelog-path": "CHANGELOG.md"
     }
-  }
+  },
+  "bootstrap-sha": "f48ee815438b56c5ea011c16614b37eb27ced54e"
 }
