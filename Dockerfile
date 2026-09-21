@@ -14,6 +14,8 @@ RUN npm run build
 
 FROM node:24-alpine AS runner
 WORKDIR /app
+# Apply current Alpine security fixes to the shipped runtime layer.
+RUN apk upgrade --no-cache
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_PATH=/app/data/unihomelabdash.sqlite
