@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/uniskela/UniHomelabDash/compare/v0.9.1...v0.10.0) (2026-09-21)
+
+
+### Features
+
+* restore v0.10.0 alerts and activity foundation ([#43](https://github.com/uniskela/UniHomelabDash/issues/43)) ([3592caa](https://github.com/uniskela/UniHomelabDash/commit/3592caa0d06468bbd57a43ca447b28aa834710c0))
+
 ## [0.9.1](https://github.com/uniskela/UniHomelabDash/compare/v0.9.0...v0.9.1) (2026-09-21)
 
 
