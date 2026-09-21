@@ -76,7 +76,7 @@ jobs:
           scan-type: image
           image-ref: unihomelabdash-security:${{ github.sha }}
           scanners: vuln
-          pkg-types: os
+          vuln-type: os
           format: table
           severity: HIGH,CRITICAL
           ignore-unfixed: true
