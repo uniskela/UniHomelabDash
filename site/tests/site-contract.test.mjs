@@ -179,10 +179,10 @@ test("GitHub Actions builds and deploys the isolated Pages artifact", async () =
 
   assert.match(pagesWorkflow, /pages:\s*write/);
   assert.match(pagesWorkflow, /id-token:\s*write/);
-  assert.match(pagesWorkflow, /actions\/configure-pages@v5/);
-  assert.match(pagesWorkflow, /actions\/upload-pages-artifact@v3/);
+  assert.match(pagesWorkflow, /actions\/configure-pages@[a-f0-9]{40}\s+# v\d+(?:\.\d+){0,2}/);
+  assert.match(pagesWorkflow, /actions\/upload-pages-artifact@[a-f0-9]{40}\s+# v\d+(?:\.\d+){0,2}/);
   assert.match(pagesWorkflow, /path:\s*site\/dist/);
-  assert.match(pagesWorkflow, /actions\/deploy-pages@v4/);
+  assert.match(pagesWorkflow, /actions\/deploy-pages@[a-f0-9]{40}\s+# v\d+(?:\.\d+){0,2}/);
   assert.match(ciWorkflow, /npm --prefix site ci/);
   assert.match(ciWorkflow, /npm run site:test/);
   assert.match(ciWorkflow, /npm run site:build/);
