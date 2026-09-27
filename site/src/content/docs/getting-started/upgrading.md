@@ -40,7 +40,9 @@ the included Drizzle migrations before the app begins serving requests.
 - Container inventory uses short process-local caches and endpoint cooldowns;
   no external queue or Redis service is required.
 
-## Upgrading to v0.9.1
+## Upgrading to v0.9.1 (pending release)
+
+These notes apply once tag `v0.9.1` is published.
 
 1. Rebuild or pull as usual. **No schema migration** or new environment variable
    is required.

@@ -31,7 +31,9 @@ If port 3000 is already in use:
 HOST_PORT=3003 docker compose up --build
 ```
 
-### Upgrading from v0.9.0
+### Upgrading from v0.9.0 (to pending v0.9.1)
+
+Once `v0.9.1` is published:
 
 1. Pull or rebuild: `docker compose up --build -d`.
 2. No database schema migration or new environment variable is required.
@@ -200,7 +202,7 @@ Releases are managed with [Release Please](https://github.com/googleapis/release
 2. Confirm Release Please opened a release PR that bumps `package.json` to `0.9.1` and updates `CHANGELOG.md`.
 3. Review the changelog (should cover Phase 7.6 UX polish), then merge the release PR.
 4. Confirm tag `v0.9.1` and the GitHub Release exist.
-5. Confirm the [Docker image workflow](.github/workflows/docker-image.yml) published `v0.9.1` / `0.9.1` / `latest`. If it did not run (Actions token chaining), set repository secret `RELEASE_PLEASE_TOKEN` (PAT with contents + pull-requests) and/or re-run the workflow for the tag.
+5. Confirm the [Docker image workflow](.github/workflows/docker-image.yml) published `v0.9.1` / `0.9.1` / `latest`. If it did not run (Actions token chaining), manually start **Build Docker Image** (`workflow_dispatch`) and select tag `v0.9.1` as the ref. Set repository secret `RELEASE_PLEASE_TOKEN` (PAT with contents + pull-requests) before future releases so tag creation can trigger image builds automatically.
 
 Release title:
 
@@ -271,7 +273,7 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - Aggregated container status across enabled Docker and Portainer integrations
 - Container Control Centre drawer (Overview / Metrics / Logs) with inspect and short-lived live stats
 - Saved container views (filters, layout, density, visible fields) persisted in settings
-- Consistent status colours, calmer Containers controls, and grouped Settings (v0.9.1)
+- Consistent status colours, calmer Containers controls, and grouped Settings (upcoming in v0.9.1)
 - Optional container start/stop/restart with confirmation prompts for Docker and Portainer (disabled by default)
 - Improved container logs reader with line-count and severity filters
 - Manual container list refresh, with filters up front and display options on demand

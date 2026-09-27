@@ -140,7 +140,9 @@ Before announcing a release:
    `CHANGELOG.md`, and on merge creates tag `vX.Y.Z` plus the GitHub Release).
 2. Confirm the [GitHub Actions docker workflow](.github/workflows/docker-image.yml) succeeded.
    If the tag was created with the default `GITHUB_TOKEN` and the image job did
-   not run, set `RELEASE_PLEASE_TOKEN` or re-run the workflow for that tag.
+   not run, manually start the Docker workflow (`workflow_dispatch`) and select
+   the release tag as the ref. Set `RELEASE_PLEASE_TOKEN` before future releases
+   so tag creation can trigger image builds automatically.
 3. In GitHub **Packages** → `unihomelabdash` → **Package settings**, connect the package to `uniskela/UniHomelabDash` and verify OCI labels (title, source, license) appear on GHCR.
 4. Verify pulls work (GHCR and [Docker Hub](https://hub.docker.com/r/uniskela/unihomelabdash)):
    - `docker pull ghcr.io/uniskela/unihomelabdash:vX.Y.Z`
