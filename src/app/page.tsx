@@ -25,8 +25,9 @@ export default async function DashboardPage() {
     (service) => service.healthStatus === "degraded"
   );
   const attentionServices = degradedServices.slice(0, attentionLimit);
-  const attentionIds = new Set(attentionServices.map((service) => service.id));
-  const remainingServices = sortedServices.filter((service) => !attentionIds.has(service.id));
+  const remainingServices = sortedServices.filter(
+    (service) => service.healthStatus !== "degraded"
+  );
   const dashboardServices = remainingServices.slice(0, dashboardLimit);
   const hiddenCount = remainingServices.length - dashboardServices.length;
   const healthyCount = services.filter((service) => service.healthStatus === "healthy").length;
