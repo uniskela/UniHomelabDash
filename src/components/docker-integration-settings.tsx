@@ -1,8 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
-import { CheckCircle2, Plus, PlugZap, Trash2, XCircle } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { Disclosure } from "@/components/disclosure";
+import { ConnectionState, ToggleRow } from "@/components/integration-settings-shared";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   configureDockerProviderAction,
@@ -33,24 +35,27 @@ export function DockerIntegrationSettings({
   providers: ProviderPublicView[];
 }) {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1 text-sm text-muted-foreground">
-          <p>Configure one or more Docker Engine connections.</p>
-          <p>Actions are disabled by default for every integration.</p>
+    <section aria-labelledby="docker-integrations-heading" className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <h3 id="docker-integrations-heading" className="text-base font-medium">
+            Docker
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Connect a local socket or a remote Docker Engine. Actions stay off until you allow them.
+          </p>
         </div>
         <form action={createDockerProviderAction}>
-          <Button type="submit" size="sm">
-            <Plus />
-            Add Docker integration
-          </Button>
+          <PendingSubmitButton size="sm" icon={<Plus aria-hidden />} pendingLabel="Adding…">
+            Add Docker
+          </PendingSubmitButton>
         </form>
       </div>
 
       {providers.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 p-5 text-sm text-muted-foreground">
-          No Docker integrations configured yet. Add one to connect a local socket or remote Docker Engine.
-        </div>
+        <p className="rounded-lg border border-dashed border-border/80 bg-muted/10 p-4 text-sm text-muted-foreground">
+          No Docker integrations yet.
+        </p>
       ) : (
         <div className="grid gap-4">
           {providers.map((provider) => (
@@ -59,8 +64,10 @@ export function DockerIntegrationSettings({
         </div>
       )}
 
-      <div className="space-y-4 rounded-xl border border-border/80 bg-card/40 p-4">
-        <h3 className="text-sm font-medium">Local socket setup</h3>
+      <Disclosure
+        summary="Local socket setup"
+        description="Steps to mount the Docker socket into the UniHomelabDash container."
+      >
         <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
           <li>
             Copy <code className="text-xs">docker-compose.override.example.yml</code> to{" "}
@@ -72,18 +79,11 @@ export function DockerIntegrationSettings({
           <li>Recreate the container, then enable the Docker integration.</li>
           <li>Run Test connection and open the Containers page.</li>
         </ol>
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-3 text-sm text-muted-foreground">
           For remote hosts, use TCP/TLS mode instead. Prefer TLS or VPN-only access on your LAN.
         </p>
-      </div>
-
-      <Link
-        href="/containers"
-        className="inline-flex text-sm text-foreground underline underline-offset-4"
-      >
-        Open containers page
-      </Link>
-    </div>
+      </Disclosure>
+    </section>
   );
 }
 
@@ -125,12 +125,12 @@ function DockerIntegrationCard({ provider }: { provider: ProviderPublicView }) {
   const testFormId = `docker-test-form-${provider.id}`;
 
   return (
-    <div className="space-y-5 rounded-xl border border-border/80 bg-muted/10 p-4">
+    <div className="space-y-5 rounded-xl border border-border/80 bg-card p-4">
       <form action={configureAction} className="space-y-5">
         <input type="hidden" name="providerId" value={provider.id} />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-2">
+          <div className="min-w-0 flex-1 space-y-2 sm:max-w-sm">
             <Label htmlFor={`docker-name-${provider.id}`}>Integration name</Label>
             <Input
               id={`docker-name-${provider.id}`}
@@ -175,33 +175,30 @@ function DockerIntegrationCard({ provider }: { provider: ProviderPublicView }) {
 
         <div className="space-y-2">
           <Label htmlFor={`connectionMode-${provider.id}`}>Connection mode</Label>
-          <select
+          <NativeSelect
             id={`connectionMode-${provider.id}`}
             name="connectionMode"
             value={connectionMode}
             onChange={(event) => setConnectionMode(event.target.value as DockerConnectionMode)}
             disabled={configurePending}
-            className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
           >
             <option value="local">Local unix socket</option>
             <option value="tcp">Remote TCP</option>
             <option value="tls">Remote TCP with TLS</option>
-          </select>
+          </NativeSelect>
         </div>
 
         {connectionMode === "local" ? (
           <div className="space-y-2">
             <Label htmlFor={`socketPath-${provider.id}`}>Docker socket path</Label>
-            <div className="rounded-lg border border-border/80 bg-muted/30 p-3">
-              <Input
-                id={`socketPath-${provider.id}`}
-                name="socketPath"
-                defaultValue={socketPath}
-                placeholder="/var/run/docker.sock"
-                disabled={configurePending}
-                className="border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0"
-              />
-            </div>
+            <Input
+              id={`socketPath-${provider.id}`}
+              name="socketPath"
+              defaultValue={socketPath}
+              placeholder="/var/run/docker.sock"
+              disabled={configurePending}
+              className="font-mono text-sm"
+            />
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
@@ -284,6 +281,7 @@ function DockerIntegrationCard({ provider }: { provider: ProviderPublicView }) {
 
       {provider.enabled ? (
         <ConnectionState
+          targetLabel="Docker Engine"
           statusOk={statusOk}
           statusMessage={statusMessage}
           lastTestedAt={provider.lastTestedAt}
@@ -311,85 +309,6 @@ function DockerIntegrationCard({ provider }: { provider: ProviderPublicView }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function ToggleRow({
-  id,
-  label,
-  description,
-  checked,
-  onCheckedChange,
-  disabled,
-  hiddenName,
-}: {
-  id: string;
-  label: string;
-  description: string;
-  checked: boolean;
-  onCheckedChange: (value: boolean) => void;
-  disabled: boolean;
-  hiddenName: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-border/80 bg-muted/20 p-4">
-      <div className="space-y-1">
-        <Label htmlFor={id} className="text-sm font-medium">
-          {label}
-        </Label>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
-      <input type="hidden" name={hiddenName} value={checked ? "true" : "false"} />
-    </div>
-  );
-}
-
-function ConnectionState({
-  statusOk,
-  statusMessage,
-  lastTestedAt,
-}: {
-  statusOk: boolean;
-  statusMessage: string;
-  lastTestedAt: string | null;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-xl border p-4",
-        statusOk
-          ? "border-rose-400/20 bg-rose-400/5"
-          : statusMessage
-            ? "border-destructive/30 bg-destructive/5"
-            : "border-border/80 bg-muted/20"
-      )}
-    >
-      <div className="flex items-start gap-3">
-        {statusOk ? (
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-rose-300" />
-        ) : statusMessage ? (
-          <XCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
-        ) : (
-          <PlugZap className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-        )}
-        <div className="space-y-1 text-sm">
-          <p className="font-medium">
-            {statusOk ? "Connected to Docker Engine" : statusMessage ? "Connection issue" : "Ready to test"}
-          </p>
-          {lastTestedAt ? (
-            <p className="text-muted-foreground">
-              Last tested {new Date(lastTestedAt).toLocaleString()}
-            </p>
-          ) : null}
-          {statusMessage ? (
-            <p className={statusOk ? "text-muted-foreground" : "text-destructive"} role="alert">
-              {statusMessage}
-            </p>
-          ) : null}
-        </div>
-      </div>
     </div>
   );
 }
