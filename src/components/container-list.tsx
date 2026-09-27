@@ -242,7 +242,7 @@ export function ContainerList({
           refreshing={refreshing}
         />
 
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground empty:hidden">
           {concealed.length > 0 ? (
             <>
               <span>
