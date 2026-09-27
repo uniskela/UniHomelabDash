@@ -10,10 +10,18 @@ The page shell loads immediately while inventory requests run asynchronously.
 
 ## Find a container
 
-Use host, running/stopped, provider, and free-text filters to narrow the list.
-Prefixed search terms can target known fields (`host:`, `name:`, `image:`,
-`status:`, `port:`, `label:`, `provider:`, `id:`), including negation and quoted
-values.
+Use the search box and the **Status**, **Host**, and **Provider** filters to
+narrow the list. Open **Search tips** for prefixed terms that target known
+fields (`host:`, `name:`, `image:`, `status:`, `port:`, `label:`, `provider:`,
+`id:`), including negation and quoted values. **Clear filters** resets the
+search and filters without touching your saved views.
+
+Sort order, layout, grouping, density, and which fields appear on cards live
+under **Display options** so the list stays uncluttered. On phones, the filter
+button opens one sheet with both the filters and the display settings.
+
+The inventory loads once and does not poll in the background. Select
+**Refresh** to fetch a fresh list; it bypasses the short in-memory list cache.
 
 **Saved views** remember search, filters, sort, grouping, layout, density, and
 visible fields. Built-in All / Running / Stopped presets are always available;
@@ -28,8 +36,9 @@ clear partial error instead of taking down the complete page.
 
 Open a container to use the **control drawer** with three tabs:
 
-1. **Overview** — sanitized inspect detail (state, health status, image,
-   networks, safe mounts, limits, and allowlisted label values).
+1. **Overview** — health, status, image, start time, and published ports
+   first. Open **Technical details** for lifecycle, platform, restart policy,
+   networks, safe mounts, limits, and allowlisted label values.
 2. **Metrics** — CPU, memory, network, block I/O, and PIDs from a short-lived
    stats snapshot. Turn on live refresh to poll about every five seconds while
    the tab is open (process-local stats cache is five seconds).
@@ -51,6 +60,7 @@ Treat copied output as sensitive and review it before attaching it to an issue.
 
 Actions appear only when the individual Docker or Portainer integration allows
 them. They are disabled by default (**Allow container actions** in Settings).
+When actions are off, the drawer says so and links to the integration settings.
 
 Every action:
 

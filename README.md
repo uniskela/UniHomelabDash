@@ -256,6 +256,7 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - Saved container views (filters, layout, density, visible fields) persisted in settings
 - Optional container start/stop/restart with confirmation prompts for Docker and Portainer (disabled by default)
 - Improved container logs reader with line-count and severity filters
+- Manual container list refresh, with filters up front and display options on demand
 - Add containers to the dashboard through the manual service form with safe health URL prefill
 - Portainer integrations with endpoint container status, logs, inspect, and stats via API token
 - Read-only Portainer stack lifecycle status with provider/endpoint filtering and partial-failure isolation
@@ -300,7 +301,7 @@ Behaviour in v0.1.0:
 - The UniHomelabDash server must be able to reach the URL from the host or container
 - LAN-only hostnames work when the app runs on the same network
 
-Edit and delete services from the **Services** page (overflow menu on each card). The dashboard is for quick open and health overview.
+Edit and delete services from the **Services** page (overflow menu on each card). The dashboard is for quick open and health overview: degraded services appear once under **Needs attention**, and everything else under **Other services**.
 
 ## Development
 
