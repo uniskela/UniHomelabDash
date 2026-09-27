@@ -420,13 +420,13 @@ Success criteria:
 
 ---
 
-## Phase 7.6 — UX Polish Pass
+## Phase 7.6 — UX Polish Pass (v0.9.1)
 
-Status: Completed (unreleased)
+Status: Completed in v0.9.1
 
 Goal: Make the shipped surfaces easier to scan and use on phones before adding alerts.
 
-Completed:
+Completed in v0.9.1:
 
 * Shared status colours: green for healthy/running/active/connected, amber for warning, red for stopped/critical; brand rose reserved for actions
 * Desktop layout no longer scrolls sideways beside the sidebar; container cards no longer overflow on phones
@@ -694,7 +694,8 @@ The first meaningful release should include:
 * Docker Compose deployment
 * Screenshots in README
 
-That baseline shipped. Current product focus after v0.9.0 Container Control Centre:
+That baseline shipped. After v0.9.0 Container Control Centre and v0.9.1 UX
+polish, current product focus:
 
 * Alerts and activity feed foundation
 * Portainer stack action safety (restart/redeploy deferred)
