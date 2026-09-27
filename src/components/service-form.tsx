@@ -47,7 +47,7 @@ export function ServiceForm({
           required
           maxLength={80}
           defaultValue={service?.name ?? defaults?.name}
-          placeholder="Jellyfin"
+          placeholder="e.g. Jellyfin"
           autoComplete="off"
         />
       </Field>
@@ -59,7 +59,7 @@ export function ServiceForm({
           type="url"
           required
           defaultValue={service?.url}
-          placeholder="https://jellyfin.example.local"
+          placeholder="e.g. https://jellyfin.example.local"
           autoComplete="off"
         />
       </Field>
@@ -71,7 +71,7 @@ export function ServiceForm({
             name="category"
             maxLength={50}
             defaultValue={service?.category ?? defaults?.category ?? "General"}
-            placeholder="Media"
+            placeholder="e.g. Media"
           />
         </Field>
 
@@ -82,7 +82,7 @@ export function ServiceForm({
             maxLength={8}
             aria-describedby="icon-hint"
             defaultValue={service?.icon ?? defaults?.icon}
-            placeholder="JF"
+            placeholder="e.g. JF"
           />
         </Field>
       </div>
@@ -93,7 +93,7 @@ export function ServiceForm({
           name="host"
           maxLength={80}
           defaultValue={service?.host ?? defaults?.host}
-          placeholder="docker-01"
+          placeholder="e.g. docker-01"
         />
       </Field>
 
@@ -109,7 +109,7 @@ export function ServiceForm({
           aria-describedby="healthUrl-hint"
           autoComplete="off"
           defaultValue={service?.healthUrl ?? defaults?.healthUrl}
-          placeholder="https://jellyfin.example.local/health"
+          placeholder="e.g. https://jellyfin.example.local/health"
         />
       </Field>
 
@@ -119,7 +119,7 @@ export function ServiceForm({
           name="notes"
           maxLength={500}
           defaultValue={service?.notes ?? defaults?.notes}
-          placeholder="Runs on the media VM. Manual entry only."
+          placeholder="e.g. Runs on the media VM."
           rows={4}
         />
       </Field>
