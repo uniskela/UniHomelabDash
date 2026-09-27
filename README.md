@@ -237,6 +237,8 @@ Suggested release highlights (Release Please will also generate commit-based not
 
 After each meaningful `feat` / `fix` land on `main`, Release Please opens or updates a release PR. Merge that PR to tag and publish. Optional secret `RELEASE_PLEASE_TOKEN` lets the created tag trigger image builds under a non-`GITHUB_TOKEN` identity.
 
+If a PR uses a `Release-As: X.Y.Z` footer to force the next version, preserve that footer in the squash commit message when merging to `main` (squash defaults often keep only the title).
+
 #### Historical: v0.9.0 (manual tag)
 
 v0.9.0 was tagged manually before Release Please:

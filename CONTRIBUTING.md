@@ -134,6 +134,11 @@ Prefer read-only status first. Destructive or disruptive actions require confirm
 Releases use [Release Please](.github/workflows/release-please.yml). Prefer
 Conventional Commits so the generated `CHANGELOG.md` stays useful.
 
+When squash-merging a PR that must force a version (or bootstrap a release),
+keep any `Release-As: X.Y.Z` footer in the **squash commit message** on
+`main`. Dropping that footer leaves Release Please with no user-facing
+commits and it will skip opening a release PR.
+
 Before announcing a release:
 
 1. Merge the Release Please release PR (it bumps `package.json`, updates
