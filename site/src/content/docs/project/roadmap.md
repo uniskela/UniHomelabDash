@@ -23,7 +23,7 @@ homelab platform.
 - Fast asynchronous container inventory, cache, cooldown, and filters
 - Container layout, grouping, hidden-item, prefixed-search, and saved-view preferences
 - Public GitHub Pages website and core operator/contributor documentation
-- UX polish pass (unreleased): consistent status colours, calmer containers
+- UX polish pass (pending v0.9.1): consistent status colours, calmer containers
   view with manual refresh, restructured Settings, larger touch targets, and a
   clean automated accessibility scan
 

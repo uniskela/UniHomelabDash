@@ -31,6 +31,14 @@ If port 3000 is already in use:
 HOST_PORT=3003 docker compose up --build
 ```
 
+### Upgrading from v0.9.0 (to pending v0.9.1)
+
+Once `v0.9.1` is published:
+
+1. Pull or rebuild: `docker compose up --build -d`.
+2. No database schema migration or new environment variable is required.
+3. Expect calmer status colours, Settings section grouping, Containers **Refresh** / **Display options**, and larger touch targets on phones. Behaviour and provider permissions are unchanged.
+
 ### Upgrading from v0.8.x
 
 1. Pull or rebuild: `docker compose up --build -d`.
@@ -175,6 +183,7 @@ volumes:
 | `REGISTRY_TOKEN` | Optional | GitHub PAT with `write:packages` (defaults to the automatic workflow token) |
 | `DOCKERHUB_USERNAME` | For Docker Hub push | Docker Hub namespace (`uniskela`) |
 | `DOCKERHUB_TOKEN` | For Docker Hub push | Docker Hub access token |
+| `RELEASE_PLEASE_TOKEN` | Optional | PAT for Release Please so created tags/releases can trigger other workflows (falls back to `GITHUB_TOKEN`) |
 
 Secret names must be alphanumeric or underscore only, and cannot start with `GITHUB_`. Use `REGISTRY_TOKEN` for a custom GHCR PAT — not `GITHUB_TOKEN`.
 
@@ -182,7 +191,55 @@ For the first GHCR push, set **Settings → Actions → General → Workflow per
 
 ### Maintainer release checklist
 
-After the v0.9.0 PR is merged to the default branch, tag the merge commit and push the tag:
+Releases are managed with [Release Please](https://github.com/googleapis/release-please)
+(`.github/workflows/release-please.yml`, `release-please-config.json`,
+`.release-please-manifest.json`). Prefer Conventional Commits (`feat:`, `fix:`,
+`docs:`, …) so changelog sections stay accurate.
+
+#### Publish v0.9.1 (UX polish)
+
+1. Merge the Release Please setup / docs prep PR to `main` if it is not already merged.
+2. Confirm Release Please opened a release PR that bumps `package.json` to `0.9.1` and updates `CHANGELOG.md`.
+3. Review the changelog (should cover Phase 7.6 UX polish), then merge the release PR.
+4. Confirm tag `v0.9.1` and the GitHub Release exist.
+5. Confirm the [Docker image workflow](.github/workflows/docker-image.yml) published `v0.9.1` / `0.9.1` / `latest`. If it did not run (Actions token chaining), manually start **Build Docker Image** (`workflow_dispatch`) and select tag `v0.9.1` as the ref. Set repository secret `RELEASE_PLEASE_TOKEN` (PAT with contents + pull-requests) before future releases so tag creation can trigger image builds automatically.
+
+Release title:
+
+```text
+UniHomelabDash v0.9.1
+```
+
+Suggested release highlights (Release Please will also generate commit-based notes):
+
+```markdown
+## Highlights
+
+- Consistent status colours across dashboard, services, and containers.
+- Calmer Containers page: manual Refresh, filters first, Display options on demand.
+- Settings grouped into Integrations / Account / App & checks / Advanced.
+- Larger touch targets, reduced-motion support, and accessibility fixes.
+
+## Upgrade notes
+
+- Rebuild/restart as usual (`docker compose up --build -d`). No schema migration or new environment variable is required.
+- Provider permissions and actions are unchanged from v0.9.0.
+
+## Container images
+
+- `docker pull ghcr.io/uniskela/unihomelabdash:v0.9.1`
+- `docker pull ghcr.io/uniskela/unihomelabdash:0.9.1`
+- `docker pull uniskela/unihomelabdash:v0.9.1`
+- `docker pull uniskela/unihomelabdash:0.9.1`
+```
+
+#### Ongoing releases
+
+After each meaningful `feat` / `fix` land on `main`, Release Please opens or updates a release PR. Merge that PR to tag and publish. Optional secret `RELEASE_PLEASE_TOKEN` lets the created tag trigger image builds under a non-`GITHUB_TOKEN` identity.
+
+#### Historical: v0.9.0 (manual tag)
+
+v0.9.0 was tagged manually before Release Please:
 
 ```bash
 git switch main
@@ -191,45 +248,7 @@ git tag -a v0.9.0 -m "v0.9.0"
 git push origin v0.9.0
 ```
 
-Publish a GitHub Release from tag `v0.9.0`.
-
-Release title:
-
-```text
-UniHomelabDash v0.9.0
-```
-
-Release description:
-
-```markdown
-## Highlights
-
-- Container Control Centre: Overview / Metrics / Logs drawer with inspect and live stats.
-- Saved container views (versioned workspace) plus improved log reader.
-- Opt-in Portainer container start/stop/restart with confirmation (provider, endpoint, state).
-- Label value allowlist; inspect never exposes env, cmd, healthcheck output, or bind sources.
-
-## Upgrade notes
-
-- Rebuild/restart as usual (`docker compose up --build -d`). No schema migration or new environment variable is required.
-- Existing services, users, container preferences, and provider credentials are preserved. View prefs auto-upgrade to the versioned workspace.
-- Portainer remains read-only until **Allow container actions** is enabled. Stack actions remain unavailable.
-
-## Verification
-
-- npm run lint
-- npm run typecheck
-- npm test
-- npm run build
-- npm audit
-
-## Container images
-
-- `docker pull ghcr.io/uniskela/unihomelabdash:v0.9.0`
-- `docker pull ghcr.io/uniskela/unihomelabdash:0.9.0`
-- `docker pull uniskela/unihomelabdash:v0.9.0`
-- `docker pull uniskela/unihomelabdash:0.9.0`
-```
+Publish a GitHub Release from tag `v0.9.0` if recreating notes.
 
 ### Maintainer-only: internal infrastructure
 
@@ -254,6 +273,7 @@ Do not document or share internal hostnames in issues, PRs, or release notes int
 - Aggregated container status across enabled Docker and Portainer integrations
 - Container Control Centre drawer (Overview / Metrics / Logs) with inspect and short-lived live stats
 - Saved container views (filters, layout, density, visible fields) persisted in settings
+- Consistent status colours, calmer Containers controls, and grouped Settings (upcoming in v0.9.1)
 - Optional container start/stop/restart with confirmation prompts for Docker and Portainer (disabled by default)
 - Improved container logs reader with line-count and severity filters
 - Manual container list refresh, with filters up front and display options on demand

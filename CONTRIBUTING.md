@@ -131,10 +131,18 @@ Prefer read-only status first. Destructive or disruptive actions require confirm
 
 ## Release checklist (maintainers)
 
+Releases use [Release Please](.github/workflows/release-please.yml). Prefer
+Conventional Commits so the generated `CHANGELOG.md` stays useful.
+
 Before announcing a release:
 
-1. Create and push a Git tag `vX.Y.Z` on GitHub (triggers GHCR and Docker Hub builds when secrets are configured).
+1. Merge the Release Please release PR (it bumps `package.json`, updates
+   `CHANGELOG.md`, and on merge creates tag `vX.Y.Z` plus the GitHub Release).
 2. Confirm the [GitHub Actions docker workflow](.github/workflows/docker-image.yml) succeeded.
+   If the tag was created with the default `GITHUB_TOKEN` and the image job did
+   not run, manually start the Docker workflow (`workflow_dispatch`) and select
+   the release tag as the ref. Set `RELEASE_PLEASE_TOKEN` before future releases
+   so tag creation can trigger image builds automatically.
 3. In GitHub **Packages** → `unihomelabdash` → **Package settings**, connect the package to `uniskela/UniHomelabDash` and verify OCI labels (title, source, license) appear on GHCR.
 4. Verify pulls work (GHCR and [Docker Hub](https://hub.docker.com/r/uniskela/unihomelabdash)):
    - `docker pull ghcr.io/uniskela/unihomelabdash:vX.Y.Z`
