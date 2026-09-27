@@ -2,7 +2,10 @@
 
 ## [0.9.1](https://github.com/uniskela/UniHomelabDash/compare/v0.9.0...v0.9.1) (2026-09-27)
 
+### Features
+
+* UX polish pass: consistent status colours, calmer Containers (manual Refresh, filters first, Display options on demand), restructured Settings, larger touch targets, reduced-motion support, and accessibility fixes ([#55](https://github.com/uniskela/UniHomelabDash/pull/55))
 
 ### Miscellaneous
 
-* force Release Please 0.9.1 after squash dropped Release-As ([4d6d339](https://github.com/uniskela/UniHomelabDash/commit/4d6d339534534d5bafe516a22fa1df9eb05cfb6a))
+* Add Release Please and force the 0.9.1 release after a squash merge dropped `Release-As` ([#56](https://github.com/uniskela/UniHomelabDash/pull/56), [#57](https://github.com/uniskela/UniHomelabDash/pull/57))
