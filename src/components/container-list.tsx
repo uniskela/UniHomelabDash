@@ -1,12 +1,13 @@
 "use client";
 
-import { Box, Eye, Settings, ShieldAlert, X } from "lucide-react";
+import { Box, CircleCheck, CircleStop, Eye, Search, Settings } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ContainerCard } from "@/components/container-card";
 import { ContainerControlDrawer } from "@/components/container-control-drawer";
 import { ContainerInventoryToolbar } from "@/components/container-inventory-toolbar";
 import { ContainerSavedViewManager } from "@/components/container-saved-view-manager";
 import { EmptyState } from "@/components/empty-state";
+import { InlineNotice } from "@/components/inline-notice";
 import { StatTile, StatTileGrid } from "@/components/stat-tile";
 import { useContainerViewPreferences } from "@/components/use-container-view-preferences";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ export function ContainerList({
   initialPreferences = defaultContainerWorkspacePreferences,
   initialSearchQuery = "",
   onRefresh,
+  refreshing = false,
 }: {
   containers: ProviderResource[];
   error?: string | null;
@@ -55,6 +57,7 @@ export function ContainerList({
   initialPreferences?: ContainerWorkspacePreferences;
   initialSearchQuery?: string;
   onRefresh?: () => void;
+  refreshing?: boolean;
 }) {
   const { preferences, saveError, update } = useContainerViewPreferences(initialPreferences);
   const [draft, setDraft] = useState<ContainerSavedView>(() =>
@@ -127,6 +130,10 @@ export function ContainerList({
     });
   }
 
+  function clearFilters() {
+    setDraft((current) => ({ ...current, search: "", status: "all", host: "", provider: "" }));
+  }
+
   function unhideAll() {
     update({ ...preferences, hidden: [] });
     setShowHidden(false);
@@ -138,8 +145,8 @@ export function ContainerList({
         icon={Box}
         title="No container integrations"
         description="Enable Docker or Portainer in Settings to list containers here."
-        actionLabel="Open integration settings"
-        actionHref="/settings"
+        actionLabel="Set up an integration"
+        actionHref="/settings#integrations"
       />
     );
   }
@@ -150,8 +157,8 @@ export function ContainerList({
         icon={Settings}
         title="Cannot reach containers"
         description={`${error} Check your Docker or Portainer integration settings and try again.`}
-        actionLabel="Review settings"
-        actionHref="/settings"
+        actionLabel="Review integrations"
+        actionHref="/settings#integrations"
       />
     );
   }
@@ -161,7 +168,9 @@ export function ContainerList({
       <EmptyState
         icon={Box}
         title="No containers found"
-        description="Configured integrations responded successfully but returned an empty container list."
+        description="Your integrations responded, but they did not report any containers."
+        actionLabel={onRefresh ? "Refresh" : undefined}
+        onAction={onRefresh}
       />
     );
   }
@@ -182,29 +191,16 @@ export function ContainerList({
   return (
     <>
       {warning && dismissedWarning !== warning ? (
-        <div
-          className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-100/90"
-          role="status"
+        <InlineNotice
+          onDismiss={() => setDismissedWarning(warning)}
+          dismissLabel="Dismiss container warning"
         >
-          <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-300" />
-          <p className="min-w-0 flex-1">
-            Some integrations failed while loading containers. Healthy results are still shown.{" "}
-            {warning}
-          </p>
-          <Button
-            type="button"
-            size="icon-sm"
-            variant="ghost"
-            className="-mt-1 -mr-1 shrink-0 text-amber-100/70 hover:bg-amber-500/10 hover:text-amber-100"
-            onClick={() => setDismissedWarning(warning)}
-            aria-label="Dismiss container warning"
-          >
-            <X />
-          </Button>
-        </div>
+          Some integrations failed while loading containers. Healthy results are still shown.{" "}
+          {warning}
+        </InlineNotice>
       ) : null}
 
-      <StatTileGrid>
+      <StatTileGrid label="Container summary">
         <StatTile
           icon={<Box />}
           label="Total"
@@ -212,13 +208,13 @@ export function ContainerList({
           detail={concealed.length > 0 ? `${concealed.length} hidden` : undefined}
         />
         <StatTile
-          icon={<Box />}
+          icon={<CircleCheck />}
           label="Running"
           value={runningCount.toString()}
-          tone="healthy"
+          tone={runningCount > 0 ? "success" : "neutral"}
         />
         <StatTile
-          icon={<Box />}
+          icon={<CircleStop />}
           label="Stopped"
           value={stoppedCount.toString()}
           tone={stoppedCount > 0 ? "warning" : "neutral"}
@@ -240,6 +236,10 @@ export function ContainerList({
           hostOptions={hostOptions}
           providerOptions={providerOptions}
           resultSummary={resultSummary}
+          filtersActive={filtersActive}
+          onClearFilters={clearFilters}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
         />
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
@@ -250,20 +250,21 @@ export function ContainerList({
               </span>
               <Button
                 type="button"
-                size="xs"
+                size="sm"
                 variant="outline"
                 onClick={() => setShowHidden((current) => !current)}
+                aria-pressed={showHidden}
               >
-                <Eye />
+                <Eye aria-hidden />
                 {showHidden ? "Hide hidden" : "Show hidden"}
               </Button>
-              <Button type="button" size="xs" variant="ghost" onClick={unhideAll}>
+              <Button type="button" size="sm" variant="ghost" onClick={unhideAll}>
                 Unhide all
               </Button>
             </>
           ) : null}
           {saveError ? (
-            <span className="text-amber-300" role="status">
+            <span className="text-warning" role="status">
               {saveError}
             </span>
           ) : null}
@@ -301,11 +302,17 @@ export function ContainerList({
       </div>
 
       {filteredContainers.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {concealed.length > 0 && !showHidden
-            ? "No containers match this filter. Some containers are hidden."
-            : "No containers match this filter."}
-        </p>
+        <EmptyState
+          icon={Search}
+          title="No containers match"
+          description={
+            concealed.length > 0 && !showHidden
+              ? "Adjust the search or filters. Some containers are also hidden."
+              : "Adjust the search or filters to see more containers."
+          }
+          actionLabel={filtersActive ? "Clear filters" : undefined}
+          onAction={filtersActive ? clearFilters : undefined}
+        />
       ) : null}
 
       <ContainerControlDrawer

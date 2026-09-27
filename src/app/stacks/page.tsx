@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Layers3, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { AsyncStackList } from "@/components/async-stack-list";
+import { IntegrationCountBadge } from "@/components/integration-count-badge";
 import { PageHeader } from "@/components/page-header";
 import { WorkloadTabs } from "@/components/workload-tabs";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireAuth } from "@/lib/auth/session-user";
 import { getPortainerProvidersAction } from "@/lib/providers/actions";
@@ -17,32 +17,18 @@ export default async function StacksPage() {
   const enabledProviders = providers.filter((provider) => provider.enabled);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="Portainer"
+        eyebrow="Workloads"
         title="Stacks"
-        description="Read-only Portainer stack lifecycle status across supported Docker endpoints. Stack actions and inferred container health are not included."
+        description="Read-only Portainer stack status across supported Docker endpoints. Stack actions are not available yet."
         actions={
           <>
-            <Badge
-              variant="outline"
-              className={
-                enabledProviders.length > 0
-                  ? "border-rose-400/40 bg-rose-400/10 text-rose-300"
-                  : "text-muted-foreground"
-              }
-            >
-              <Layers3 className="size-3" />
-              {enabledProviders.length === 0
-                ? "Disabled"
-                : enabledProviders.length === 1
-                  ? "1 integration"
-                  : `${enabledProviders.length} integrations`}
-            </Badge>
+            <IntegrationCountBadge count={enabledProviders.length} />
             <Button variant="outline" size="sm" asChild>
-              <Link href="/settings">
-                <Settings />
-                Integration settings
+              <Link href="/settings#integrations">
+                <Settings aria-hidden />
+                Integrations
               </Link>
             </Button>
           </>

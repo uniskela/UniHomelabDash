@@ -35,13 +35,13 @@ export function ContainerCard({
   const compact = density === "compact";
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <button
         type="button"
         onClick={onOpen}
         className={cn(
-          "w-full rounded-xl border border-border/80 bg-card/80 text-left transition hover:border-primary/20 hover:bg-card",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+          "w-full rounded-xl border border-border/80 bg-card/80 text-left transition-colors outline-none hover:border-foreground/20 hover:bg-card",
+          "focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:pr-12",
           view === "tiles"
             ? compact
               ? "p-2.5 pr-9"
@@ -63,12 +63,12 @@ export function ContainerCard({
         type="button"
         size="icon-sm"
         variant="ghost"
-        className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+        className="absolute top-2 right-2 text-muted-foreground hover:text-foreground pointer-coarse:top-1 pointer-coarse:right-1"
         onClick={onToggleHidden}
         title={hidden ? "Show this container" : "Hide this container"}
         aria-label={hidden ? `Show ${container.name}` : `Hide ${container.name}`}
       >
-        {hidden ? <Eye /> : <EyeOff />}
+        {hidden ? <Eye aria-hidden /> : <EyeOff aria-hidden />}
       </Button>
     </div>
   );

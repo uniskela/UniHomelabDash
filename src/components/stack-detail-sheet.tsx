@@ -111,7 +111,7 @@ function ContainerContent({
   if (state.kind === "loading") {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-border/80 bg-muted/20 p-4 text-sm text-muted-foreground">
-        <LoaderCircle className="size-4 animate-spin text-rose-300" />
+        <LoaderCircle className="size-4 animate-spin text-primary" />
         Loading read-only container membership…
       </div>
     );

@@ -169,17 +169,14 @@ export function ContainerLogReader({
       ) : (
         <pre
           className={cn(
-            "max-h-[min(28rem,50dvh)] overflow-auto rounded-lg border border-emerald-500/20 bg-background/70 p-3 font-mono text-xs leading-relaxed",
+            "max-h-[min(28rem,50dvh)] overflow-auto rounded-lg border border-border/70 bg-background/70 py-2 font-mono text-xs leading-relaxed",
             wrap ? "whitespace-pre-wrap break-words" : "whitespace-pre"
           )}
         >
           {lines.map((line, index) => (
             <span
               key={`${index}-${line.slice(0, 24)}`}
-              className={cn(
-                "block",
-                severityClass(line)
-              )}
+              className={cn("block border-l-2 px-3", severityClass(line))}
             >
               {line || " "}
             </span>
@@ -187,9 +184,10 @@ export function ContainerLogReader({
         </pre>
       )}
 
-      <p className="flex items-center gap-1.5 text-[0.65rem] text-muted-foreground">
-        <WrapText className="size-3" />
-        Warn/error keywords are highlighted. Copy and download use the filtered text only.
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <WrapText aria-hidden className="size-3.5 shrink-0" />
+        Lines with warning or error keywords are marked with a coloured edge. Copy and download use
+        the filtered text only.
       </p>
     </div>
   );
@@ -197,10 +195,10 @@ export function ContainerLogReader({
 
 function severityClass(line: string) {
   if (errorPattern.test(line)) {
-    return "text-rose-200/95 bg-rose-500/10";
+    return "border-destructive bg-destructive/10 font-medium text-foreground";
   }
   if (warningPattern.test(line)) {
-    return "text-amber-200/90 bg-amber-500/10";
+    return "border-warning bg-warning/10 text-foreground";
   }
-  return "text-foreground/90";
+  return "border-transparent text-foreground/90";
 }

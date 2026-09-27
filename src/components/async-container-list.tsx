@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Box, LoaderCircle } from "lucide-react";
 import { ContainerList } from "@/components/container-list";
 import {
   defaultContainerViewPreferences,
@@ -60,6 +59,7 @@ function EnabledContainerList({
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadedOnce, setLoadedOnce] = useState(false);
   const [refreshToken, setRefreshToken] = useState(0);
 
   const refresh = useCallback(() => {
@@ -73,7 +73,8 @@ function EnabledContainerList({
     async function load() {
       setLoading(true);
       try {
-        const response = await fetch("/api/containers", {
+        const url = refreshToken === 0 ? "/api/containers" : "/api/containers?refresh=1";
+        const response = await fetch(url, {
           signal: controller.signal,
           cache: "no-store",
         });
@@ -105,6 +106,7 @@ function EnabledContainerList({
       } finally {
         if (active) {
           setLoading(false);
+          setLoadedOnce(true);
         }
       }
     }
@@ -117,19 +119,8 @@ function EnabledContainerList({
     };
   }, [refreshToken]);
 
-  if (loading && containers.length === 0) {
-    return (
-      <div className="flex items-center gap-3 rounded-xl border border-border/80 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
-        <LoaderCircle className="size-4 animate-spin text-rose-300" />
-        <div className="space-y-1">
-          <p className="font-medium text-foreground">Loading containers…</p>
-          <p>
-            Fetching Docker and Portainer status. Healthy endpoints appear as soon as they respond.
-          </p>
-        </div>
-        <Box className="ml-auto size-4 opacity-40" />
-      </div>
-    );
+  if (!loadedOnce) {
+    return <ContainerListSkeleton />;
   }
 
   return (
@@ -142,6 +133,30 @@ function EnabledContainerList({
       initialPreferences={initialPreferences}
       initialSearchQuery={initialSearchQuery}
       onRefresh={refresh}
+      refreshing={loading}
     />
+  );
+}
+
+function ContainerListSkeleton() {
+  return (
+    <div className="space-y-6" aria-busy="true">
+      <p role="status" className="text-sm text-muted-foreground">
+        Loading containers from Docker and Portainer…
+      </p>
+      <div aria-hidden className="space-y-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="h-20 animate-pulse rounded-xl bg-muted/50 sm:h-24" />
+          ))}
+        </div>
+        <div className="h-8 animate-pulse rounded-lg bg-muted/50 pointer-coarse:h-10" />
+        <div className="grid gap-3">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className="h-24 animate-pulse rounded-xl bg-muted/40" />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

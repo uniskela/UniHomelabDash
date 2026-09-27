@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { useId, useMemo, useState } from "react";
+import { RefreshCw, Search, Settings2, SlidersHorizontal } from "lucide-react";
 import { ControlSelect } from "@/components/control-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,21 +74,33 @@ const fieldLabels: Record<ContainerVisibleField, string> = {
   createdAt: "Created",
 };
 
+type SelectOption = { value: string; label: string };
+
 export function ContainerInventoryToolbar({
   draft,
   onDraftChange,
   hostOptions,
   providerOptions,
   resultSummary,
+  filtersActive = false,
+  onClearFilters,
+  onRefresh,
+  refreshing = false,
 }: {
   draft: ContainerSavedView;
   onDraftChange: (next: ContainerSavedView) => void;
   hostOptions: string[];
   providerOptions: string[];
   resultSummary?: string | null;
+  filtersActive?: boolean;
+  onClearFilters?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }) {
   const [showSearchTips, setShowSearchTips] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [displayOpen, setDisplayOpen] = useState(false);
+  const displayPanelId = useId();
 
   const hostSelectOptions = useMemo(
     () => [
@@ -117,159 +129,239 @@ export function ContainerInventoryToolbar({
     patch({ visibleFields: next });
   }
 
-  const filters = (
-    <PresentationControls
-      draft={draft}
-      hostSelectOptions={hostSelectOptions}
-      providerSelectOptions={providerSelectOptions}
-      onPatch={patch}
-      onToggleField={toggleField}
-      includeStatus
-    />
-  );
-
   return (
     <div className="space-y-3">
-      <div className="space-y-2">
-        <div className="flex gap-2">
-          <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={draft.search}
-              maxLength={maxSearchLength}
-              onChange={(event) => patch({ search: event.target.value })}
-              placeholder="Search containers, or try host:nas name:immich"
-              aria-label="Search containers"
-              className="pl-8"
-            />
-          </div>
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            className="shrink-0 sm:hidden"
-            onClick={() => setFiltersOpen(true)}
-            aria-label="Open filters"
-          >
-            <SlidersHorizontal />
-          </Button>
+      <div className="flex gap-2">
+        <div className="relative min-w-0 flex-1">
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            type="search"
+            value={draft.search}
+            maxLength={maxSearchLength}
+            onChange={(event) => patch({ search: event.target.value })}
+            placeholder="Search name, image, host, or port"
+            aria-label="Search containers"
+            className="pl-8"
+          />
         </div>
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            size="xs"
-            variant="ghost"
-            className="text-muted-foreground"
-            onClick={() => setShowSearchTips((current) => !current)}
-            aria-expanded={showSearchTips}
-          >
-            {showSearchTips ? "Hide search tips" : "Search tips"}
-          </Button>
-        </div>
-        {showSearchTips ? <SearchTips /> : null}
+        <Button
+          type="button"
+          size="icon"
+          variant="outline"
+          className="shrink-0 sm:hidden"
+          onClick={() => setFiltersOpen(true)}
+          aria-label={filtersActive ? "Filters and display (filters active)" : "Filters and display"}
+        >
+          <SlidersHorizontal />
+        </Button>
+        {onRefresh ? (
+          <>
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              className="shrink-0 sm:hidden"
+              onClick={onRefresh}
+              disabled={refreshing}
+              aria-label={refreshing ? "Refreshing containers" : "Refresh containers"}
+            >
+              <RefreshCw className={cn(refreshing && "animate-spin")} />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="hidden shrink-0 sm:inline-flex"
+              onClick={onRefresh}
+              disabled={refreshing}
+            >
+              <RefreshCw aria-hidden className={cn(refreshing && "animate-spin")} />
+              {refreshing ? "Refreshing…" : "Refresh"}
+            </Button>
+          </>
+        ) : null}
       </div>
 
-      <div className="hidden sm:block">{filters}</div>
+      <div>
+        <Button
+          type="button"
+          size="xs"
+          variant="link"
+          className="h-auto px-0 text-xs text-muted-foreground hover:text-foreground"
+          onClick={() => setShowSearchTips((current) => !current)}
+          aria-expanded={showSearchTips}
+          aria-controls="container-search-tips"
+        >
+          {showSearchTips ? "Hide search tips" : "Search tips: host:, name:, image:…"}
+        </Button>
+      </div>
+      {showSearchTips ? <SearchTips /> : null}
 
-      {resultSummary ? (
-        <p className="text-xs text-muted-foreground">{resultSummary}</p>
+      <div className="hidden space-y-3 sm:block">
+        <div className="flex flex-wrap items-end gap-3">
+          <FilterControls
+            draft={draft}
+            hostSelectOptions={hostSelectOptions}
+            providerSelectOptions={providerSelectOptions}
+            onPatch={patch}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-muted-foreground"
+            onClick={() => setDisplayOpen((current) => !current)}
+            aria-expanded={displayOpen}
+            aria-controls={displayPanelId}
+          >
+            <Settings2 aria-hidden />
+            {displayOpen ? "Hide display options" : "Display options"}
+          </Button>
+        </div>
+        {displayOpen ? (
+          <div
+            id={displayPanelId}
+            className="rounded-lg border border-border/70 bg-muted/10 p-3"
+          >
+            <DisplayControls draft={draft} onPatch={patch} onToggleField={toggleField} />
+          </div>
+        ) : null}
+      </div>
+
+      {resultSummary || filtersActive ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          {resultSummary ? <p role="status">{resultSummary}</p> : null}
+          {filtersActive && onClearFilters ? (
+            <Button
+              type="button"
+              size="xs"
+              variant="link"
+              className="h-auto px-0 text-xs"
+              onClick={onClearFilters}
+            >
+              Clear filters
+            </Button>
+          ) : null}
+        </div>
       ) : null}
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
         <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-2xl">
           <SheetHeader>
-            <SheetTitle>Filters & presentation</SheetTitle>
-            <SheetDescription>
-              Narrow the inventory and choose how container cards are shown.
-            </SheetDescription>
+            <SheetTitle>Filters and display</SheetTitle>
+            <SheetDescription>Narrow the list and choose how containers are shown.</SheetDescription>
           </SheetHeader>
-          <div className="space-y-4 px-4 pb-6">{filters}</div>
+          <div className="space-y-6 px-4 pb-6">
+            <fieldset className="space-y-3">
+              <legend className="mb-2 text-sm font-medium">Filter</legend>
+              <div className="grid gap-3">
+                <FilterControls
+                  draft={draft}
+                  hostSelectOptions={hostSelectOptions}
+                  providerSelectOptions={providerSelectOptions}
+                  onPatch={patch}
+                />
+              </div>
+            </fieldset>
+            <fieldset className="space-y-3">
+              <legend className="mb-2 text-sm font-medium">Display</legend>
+              <DisplayControls draft={draft} onPatch={patch} onToggleField={toggleField} />
+            </fieldset>
+            <Button type="button" className="w-full" onClick={() => setFiltersOpen(false)}>
+              Done
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
     </div>
   );
 }
 
-function PresentationControls({
+function FilterControls({
   draft,
   hostSelectOptions,
   providerSelectOptions,
   onPatch,
-  onToggleField,
-  includeStatus,
 }: {
   draft: ContainerSavedView;
-  hostSelectOptions: Array<{ value: string; label: string }>;
-  providerSelectOptions: Array<{ value: string; label: string }>;
+  hostSelectOptions: SelectOption[];
+  providerSelectOptions: SelectOption[];
   onPatch: (partial: Partial<ContainerSavedView>) => void;
-  onToggleField: (field: ContainerVisibleField) => void;
-  includeStatus?: boolean;
 }) {
   return (
-    <div className="space-y-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-        {includeStatus ? (
-          <ControlSelect
-            label="Status"
-            value={draft.status}
-            options={statusOptions}
-            onChange={(status) => onPatch({ status })}
-            className="min-w-[9rem]"
-          />
-        ) : null}
-        <ControlSelect
-          label="Host"
-          value={draft.host}
-          options={hostSelectOptions}
-          onChange={(host) => onPatch({ host })}
-          className="min-w-[10rem] flex-1 sm:max-w-xs"
-        />
-        <ControlSelect
-          label="Provider"
-          value={draft.provider}
-          options={providerSelectOptions}
-          onChange={(provider) => onPatch({ provider })}
-          className="min-w-[10rem] flex-1 sm:max-w-xs"
-        />
+    <>
+      <ControlSelect
+        label="Status"
+        value={draft.status}
+        options={statusOptions}
+        onChange={(status) => onPatch({ status })}
+        className="sm:w-40"
+      />
+      <ControlSelect
+        label="Host"
+        value={draft.host}
+        options={hostSelectOptions}
+        onChange={(host) => onPatch({ host })}
+        className="sm:w-48"
+      />
+      <ControlSelect
+        label="Provider"
+        value={draft.provider}
+        options={providerSelectOptions}
+        onChange={(provider) => onPatch({ provider })}
+        className="sm:w-48"
+      />
+    </>
+  );
+}
+
+function DisplayControls({
+  draft,
+  onPatch,
+  onToggleField,
+}: {
+  draft: ContainerSavedView;
+  onPatch: (partial: Partial<ContainerSavedView>) => void;
+  onToggleField: (field: ContainerVisibleField) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <ControlSelect
           label="Sort by"
           value={draft.sortField}
           options={sortFieldOptions}
           onChange={(sortField) => onPatch({ sortField })}
-          className="min-w-[8rem]"
         />
         <ControlSelect
           label="Direction"
           value={draft.sortDirection}
           options={sortDirectionOptions}
           onChange={(sortDirection) => onPatch({ sortDirection })}
-          className="min-w-[8rem]"
         />
         <ControlSelect
           label="View as"
           value={draft.view}
           options={viewOptions}
           onChange={(view) => onPatch({ view })}
-          className="min-w-[7rem]"
         />
         <ControlSelect
           label="Grouped by"
           value={draft.groupBy}
           options={groupOptions}
           onChange={(groupBy) => onPatch({ groupBy })}
-          className="min-w-[9rem]"
         />
         <ControlSelect
           label="Density"
           value={draft.density}
           options={densityOptions}
           onChange={(density) => onPatch({ density })}
-          className="min-w-[8rem]"
         />
       </div>
 
       <fieldset className="space-y-2">
-        <legend className="text-xs font-medium text-foreground">Visible fields</legend>
+        <legend className="text-xs font-medium text-foreground">Show on cards</legend>
         <div className="flex flex-wrap gap-2">
           {containerVisibleFields.map((field) => {
             const active = draft.visibleFields.includes(field);
@@ -277,7 +369,7 @@ function PresentationControls({
               <Button
                 key={field}
                 type="button"
-                size="xs"
+                size="sm"
                 variant={active ? "secondary" : "outline"}
                 onClick={() => onToggleField(field)}
                 aria-pressed={active}
@@ -295,16 +387,19 @@ function PresentationControls({
 
 function SearchTips() {
   return (
-    <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground">
+    <div
+      id="container-search-tips"
+      className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground"
+    >
       <p>
-        Type plain text to search names, images, hosts, and ports. Add a prefix to target one
-        field, and combine as many terms as you like.
+        Plain text searches names, images, hosts, and ports. Add a prefix to target one field,
+        and combine as many terms as you like.
       </p>
       <div className="flex flex-wrap gap-1">
         {containerQueryPrefixes.map((prefix) => (
           <code
             key={prefix}
-            className="rounded-md bg-background px-1.5 py-0.5 font-mono text-[0.65rem] text-foreground"
+            className="rounded-md bg-background px-1.5 py-0.5 font-mono text-[0.7rem] text-foreground"
           >
             {prefix}
           </code>
