@@ -179,10 +179,6 @@ export function getProviderByType(type: ProviderType) {
   return getDb().select().from(providers).where(eq(providers.type, type)).get();
 }
 
-export function isDockerProviderEnabled() {
-  return listProvidersByType("docker").some((row) => row.enabled);
-}
-
 export function isDockerActionsEnabled() {
   return listProvidersByType("docker").some((row) => row.enabled && !row.readOnly);
 }

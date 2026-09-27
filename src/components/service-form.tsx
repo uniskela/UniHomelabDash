@@ -48,6 +48,7 @@ export function ServiceForm({
           maxLength={80}
           defaultValue={service?.name ?? defaults?.name}
           placeholder="Jellyfin"
+          autoComplete="off"
         />
       </Field>
 
@@ -59,6 +60,7 @@ export function ServiceForm({
           required
           defaultValue={service?.url}
           placeholder="https://jellyfin.example.local"
+          autoComplete="off"
         />
       </Field>
 
@@ -73,11 +75,12 @@ export function ServiceForm({
           />
         </Field>
 
-        <Field label="Icon text" htmlFor="icon">
+        <Field label="Icon" htmlFor="icon" hint="An emoji or 1–2 letters.">
           <Input
             id="icon"
             name="icon"
             maxLength={8}
+            aria-describedby="icon-hint"
             defaultValue={service?.icon ?? defaults?.icon}
             placeholder="JF"
           />
@@ -97,12 +100,14 @@ export function ServiceForm({
       <Field
         label="Health check URL"
         htmlFor="healthUrl"
-        hint="Optional. Use the service URL or a dedicated endpoint such as /health. Leave empty to skip checks."
+        hint="Optional. Use the service URL or an endpoint such as /health. Leave empty to skip checks."
       >
         <Input
           id="healthUrl"
           name="healthUrl"
           type="url"
+          aria-describedby="healthUrl-hint"
+          autoComplete="off"
           defaultValue={service?.healthUrl ?? defaults?.healthUrl}
           placeholder="https://jellyfin.example.local/health"
         />
@@ -120,7 +125,10 @@ export function ServiceForm({
       </Field>
 
       {state.message ? (
-        <p className={state.ok ? "text-sm text-muted-foreground" : "text-sm text-destructive"}>
+        <p
+          className={state.ok ? "text-sm text-muted-foreground" : "text-sm text-destructive"}
+          role={state.ok ? "status" : "alert"}
+        >
           {state.message}
         </p>
       ) : null}
@@ -149,10 +157,19 @@ function Field({
     <div className="space-y-2">
       <Label htmlFor={htmlFor}>
         {label}
-        {required ? <span className="text-destructive"> *</span> : null}
+        {required ? (
+          <span className="text-destructive">
+            <span aria-hidden> *</span>
+            <span className="sr-only"> (required)</span>
+          </span>
+        ) : null}
       </Label>
       {children}
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? (
+        <p id={`${htmlFor}-hint`} className="text-xs text-muted-foreground">
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
 }
