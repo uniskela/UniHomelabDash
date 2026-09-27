@@ -214,7 +214,7 @@ async function main() {
       await page.waitForSelector(capture.waitFor, { timeout: 15000 });
 
       if (capture.name === "add-service") {
-        await page.locator('[data-slot="sheet-content"]').waitFor({
+        await page.locator('[data-slot="dialog-content"]').waitFor({
           state: "visible",
           timeout: 15000,
         });

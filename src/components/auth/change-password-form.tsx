@@ -22,7 +22,7 @@ export function ChangePasswordForm() {
   return (
     <form ref={formRef} action={formAction} className="space-y-3 border-t border-border pt-4">
       <div className="space-y-1">
-        <div className="text-sm font-medium text-foreground">Change password</div>
+        <h3 className="text-sm font-medium text-foreground">Change password</h3>
         <p className="text-sm text-muted-foreground">
           Update your admin password while signed in.
         </p>

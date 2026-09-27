@@ -5,7 +5,7 @@ import { listContainerResources } from "@/lib/providers/runtime";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await requireAuth();
   } catch (error) {
@@ -15,7 +15,8 @@ export async function GET() {
     throw error;
   }
 
-  const result = await listContainerResources();
+  const bypassCache = new URL(request.url).searchParams.get("refresh") === "1";
+  const result = await listContainerResources({ bypassCache });
 
   return NextResponse.json({
     containers: result.resources,

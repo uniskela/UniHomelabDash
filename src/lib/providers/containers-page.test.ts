@@ -9,6 +9,12 @@ test("containers list API route requires auth", () => {
   assert.ok(source.includes("listContainerResources"));
 });
 
+test("containers list API route bypasses the cache only for explicit refreshes", () => {
+  const source = readFileSync(join(process.cwd(), "src/app/api/containers/route.ts"), "utf8");
+  assert.ok(source.includes('searchParams.get("refresh") === "1"'));
+  assert.ok(source.includes("listContainerResources({ bypassCache })"));
+});
+
 test("containers page loads shell without blocking on inventory", () => {
   const source = readFileSync(join(process.cwd(), "src/app/containers/page.tsx"), "utf8");
   assert.ok(source.includes("await requireAuth()"));

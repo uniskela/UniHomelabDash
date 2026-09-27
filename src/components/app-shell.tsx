@@ -49,12 +49,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
-      <main
-        id="main-content"
-        className="mx-auto w-full max-w-7xl px-4 pb-24 pt-5 sm:px-6 lg:ml-64 lg:px-8 lg:pb-8"
-      >
-        {children}
-      </main>
+      <div className="lg:pl-64">
+        <main
+          id="main-content"
+          className="mx-auto w-full max-w-7xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-5 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8"
+        >
+          {children}
+        </main>
+      </div>
 
       <nav
         className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur lg:hidden"
@@ -100,11 +102,11 @@ function NavLink({
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
-        active && "border-primary bg-primary/5 text-foreground"
+        "flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
+        active && "bg-primary/10 font-medium text-foreground hover:bg-primary/15"
       )}
     >
-      <Icon className="size-4" />
+      <Icon className={cn("size-4", active && "text-primary")} />
       {item.label}
     </Link>
   );
@@ -124,11 +126,11 @@ function MobileNavLink({
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs text-muted-foreground",
-        active && "bg-primary/5 font-semibold text-primary"
+        "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs text-muted-foreground transition-colors outline-none active:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
+        active && "bg-primary/10 font-semibold text-foreground"
       )}
     >
-      <Icon className="size-4" />
+      <Icon className={cn("size-5", active && "text-primary")} />
       <span className="truncate">{item.label}</span>
     </Link>
   );

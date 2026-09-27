@@ -118,7 +118,7 @@ export function ContainerMetricsPanel({
     <div className={cn("space-y-4", className)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-medium">
-          <Activity className="size-4 text-cyan-300" />
+          <Activity aria-hidden className="size-4 text-muted-foreground" />
           Resource snapshot
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -159,7 +159,7 @@ export function ContainerMetricsPanel({
       ) : stats ? (
         <>
           {errorMessage ? (
-            <p className="text-xs text-amber-300" role="status">
+            <p className="text-xs text-warning" role="status">
               {errorMessage} Showing last successful sample.
             </p>
           ) : refreshing ? (
@@ -167,33 +167,29 @@ export function ContainerMetricsPanel({
               Refreshing snapshot…
             </p>
           ) : null}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <MetricTile label="CPU" value={formatPercent(stats.cpuPercent)} tone="rose" />
+          <dl className="grid grid-cols-2 gap-3">
+            <MetricTile label="CPU" value={formatPercent(stats.cpuPercent)} />
             <MetricTile
               label="Memory"
               value={formatMemory(stats)}
               detail={formatPercent(stats.memoryPercent)}
-              tone="cyan"
             />
             <MetricTile
               label="Network RX / TX"
               value={`${formatBytes(stats.networkRxBytes)} / ${formatBytes(stats.networkTxBytes)}`}
-              tone="emerald"
             />
             <MetricTile
               label="Block read / write"
               value={`${formatBytes(stats.blockReadBytes)} / ${formatBytes(stats.blockWriteBytes)}`}
-              tone="amber"
             />
-            <MetricTile label="PIDs" value={formatNumber(stats.pids)} tone="rose" />
+            <MetricTile label="PIDs" value={formatNumber(stats.pids)} />
             <MetricTile
               label="Sampled"
               value={formatTimestamp(stats.sampledAt)}
-              tone="cyan"
             />
-          </div>
+          </dl>
           {live ? (
-            <p className="text-[0.65rem] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Live refresh every 5s while the Metrics tab and browser tab are visible. Stops after
               three consecutive failures.
             </p>
@@ -225,25 +221,16 @@ function MetricTile({
   label,
   value,
   detail,
-  tone,
 }: {
   label: string;
   value: string;
   detail?: string | null;
-  tone: "rose" | "cyan" | "amber" | "emerald";
 }) {
-  const toneClass = {
-    rose: "border-rose-500/20 bg-rose-500/5 text-rose-200/80",
-    cyan: "border-cyan-500/20 bg-cyan-500/5 text-cyan-200/80",
-    amber: "border-amber-500/20 bg-amber-500/5 text-amber-200/80",
-    emerald: "border-emerald-500/20 bg-emerald-500/5 text-emerald-200/80",
-  }[tone];
-
   return (
-    <div className={cn("space-y-1 rounded-lg border p-3", toneClass)}>
-      <div className="font-mono text-[0.65rem] uppercase tracking-wide">{label}</div>
-      <div className="text-sm text-foreground">{value}</div>
-      {detail ? <div className="text-xs text-muted-foreground">{detail}</div> : null}
+    <div className="min-w-0 space-y-1 rounded-lg border border-border/70 bg-muted/10 p-3">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="text-sm font-medium text-foreground tabular-nums">{value}</dd>
+      {detail ? <dd className="text-xs text-muted-foreground tabular-nums">{detail}</dd> : null}
     </div>
   );
 }
