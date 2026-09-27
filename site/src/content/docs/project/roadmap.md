@@ -20,12 +20,11 @@ homelab platform.
 - v0.7.0 read-only Portainer stack lifecycle status
 - v0.8.0 endpoint-aware stack availability and read-only container membership
 - v0.9.0 Container Control Centre: control drawer, saved views, improved logs
+- v0.9.1 UX polish: consistent status colours, calmer Containers with manual
+  refresh, restructured Settings, larger touch targets, and accessibility fixes
 - Fast asynchronous container inventory, cache, cooldown, and filters
 - Container layout, grouping, hidden-item, prefixed-search, and saved-view preferences
 - Public GitHub Pages website and core operator/contributor documentation
-- UX polish pass (pending v0.9.1): consistent status colours, calmer containers
-  view with manual refresh, restructured Settings, larger touch targets, and a
-  clean automated accessibility scan
 
 ## Current focus
 
