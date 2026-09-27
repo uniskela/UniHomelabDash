@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2](https://github.com/uniskela/UniHomelabDash/compare/v0.9.1...v0.9.2) (2026-09-27)
+
+
+### Documentation
+
+* mark v0.9.1 as shipped after release ([#59](https://github.com/uniskela/UniHomelabDash/issues/59)) ([9c080e1](https://github.com/uniskela/UniHomelabDash/commit/9c080e1ffd99396d1dc0ab592fb510bee027ecdc))
+
 ## [0.9.1](https://github.com/uniskela/UniHomelabDash/compare/v0.9.0...v0.9.1) (2026-09-27)
 
 ### Features
