@@ -173,23 +173,19 @@ export function ContainerMetricsPanel({
               label="Memory"
               value={formatMemory(stats)}
               detail={formatPercent(stats.memoryPercent)}
-             
             />
             <MetricTile
               label="Network RX / TX"
               value={`${formatBytes(stats.networkRxBytes)} / ${formatBytes(stats.networkTxBytes)}`}
-             
             />
             <MetricTile
               label="Block read / write"
               value={`${formatBytes(stats.blockReadBytes)} / ${formatBytes(stats.blockWriteBytes)}`}
-             
             />
             <MetricTile label="PIDs" value={formatNumber(stats.pids)} />
             <MetricTile
               label="Sampled"
               value={formatTimestamp(stats.sampledAt)}
-             
             />
           </dl>
           {live ? (

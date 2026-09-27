@@ -230,7 +230,9 @@ export function ContainerControlDrawer({
                     <Box className="size-5" />
                   </span>
                   <div className="min-w-0 space-y-1">
-                    <SheetTitle className="truncate text-lg">{container.name}</SheetTitle>
+                    <SheetTitle className="truncate text-lg" title={container.name}>
+                      {container.name}
+                    </SheetTitle>
                     <SheetDescription className="truncate font-mono text-xs">
                       {containerProviderCaption(container)} · {container.image}
                     </SheetDescription>
@@ -446,11 +448,16 @@ function OverviewPanel({
 }) {
   if (state.kind === "loading" || state.kind === "idle") {
     return (
-      <div aria-hidden className="grid gap-3 sm:grid-cols-2">
-        {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="h-16 animate-pulse rounded-lg bg-muted/40" />
-        ))}
-      </div>
+      <>
+        <p role="status" className="sr-only">
+          Loading container details…
+        </p>
+        <div aria-hidden className="grid gap-3 sm:grid-cols-2">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className="h-16 animate-pulse rounded-lg bg-muted/40" />
+          ))}
+        </div>
+      </>
     );
   }
 

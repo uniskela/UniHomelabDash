@@ -101,6 +101,7 @@ export function ContainerInventoryToolbar({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [displayOpen, setDisplayOpen] = useState(false);
   const displayPanelId = useId();
+  const searchTipsId = useId();
 
   const hostSelectOptions = useMemo(
     () => [
@@ -189,15 +190,15 @@ export function ContainerInventoryToolbar({
           type="button"
           size="xs"
           variant="link"
-          className="h-auto px-0 text-xs text-muted-foreground hover:text-foreground"
+          className="h-auto px-0 text-xs text-muted-foreground hover:text-foreground pointer-coarse:px-0"
           onClick={() => setShowSearchTips((current) => !current)}
           aria-expanded={showSearchTips}
-          aria-controls="container-search-tips"
+          aria-controls={searchTipsId}
         >
           {showSearchTips ? "Hide search tips" : "Search tips: host:, name:, image:…"}
         </Button>
       </div>
-      {showSearchTips ? <SearchTips /> : null}
+      {showSearchTips ? <SearchTips id={searchTipsId} /> : null}
 
       <div className="hidden space-y-3 sm:block">
         <div className="flex flex-wrap items-end gap-3">
@@ -231,13 +232,13 @@ export function ContainerInventoryToolbar({
 
       {resultSummary || filtersActive ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          {resultSummary ? <p role="status">{resultSummary}</p> : null}
+          {resultSummary ? <p>{resultSummary}</p> : null}
           {filtersActive && onClearFilters ? (
             <Button
               type="button"
               size="xs"
               variant="link"
-              className="h-auto px-0 text-xs"
+              className="h-auto px-0 text-xs pointer-coarse:px-0"
               onClick={onClearFilters}
             >
               Clear filters
@@ -385,10 +386,10 @@ function DisplayControls({
   );
 }
 
-function SearchTips() {
+function SearchTips({ id }: { id: string }) {
   return (
     <div
-      id="container-search-tips"
+      id={id}
       className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3 text-xs text-muted-foreground"
     >
       <p>

@@ -144,9 +144,9 @@ export function ServiceCard({
                 disabled={!service.healthUrl}
                 icon={<HeartPulse aria-hidden />}
                 pendingLabel="Checking…"
-                aria-label={`Check health of ${service.name}`}
               >
                 Check
+                <span className="sr-only"> health of {service.name}</span>
               </PendingSubmitButton>
             </form>
 

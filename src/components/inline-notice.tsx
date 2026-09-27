@@ -13,12 +13,11 @@ export function InlineNotice({
   dismissLabel?: string;
 }) {
   return (
-    <div
-      role="status"
-      className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-sm"
-    >
+    <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-sm">
       <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0 text-warning" />
-      <div className="min-w-0 flex-1 break-words">{children}</div>
+      <div role="status" className="min-w-0 flex-1 break-words">
+        {children}
+      </div>
       {onDismiss ? (
         <Button
           type="button"
