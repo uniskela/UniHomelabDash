@@ -54,6 +54,21 @@ Logs may contain sensitive application data. Common secret patterns are
 redacted, but no redactor can guarantee complete removal. Review output before
 sharing it.
 
+## Dependency security status
+
+The app requires Next.js `^16.3.6` (and matching `eslint-config-next`) and
+`sharp` `^0.35.5`, with npm `overrides` for transitive advisories in
+`baseline-browser-mapping`, `browserslist`, `fast-uri`, `hono`, `js-yaml`, and
+`qs`. The docs site requires Astro `^7.3.5` and the same `sharp` floor, plus
+overrides for `devalue`, `fast-uri`, `js-yaml`, and `svgo`. Lockfiles record the
+exact resolved versions; `npm audit` should report zero vulnerabilities after a
+clean install. Results are point-in-time—continue tracking upstream advisories.
+
+Stable `drizzle-kit` previously pulled a vulnerable nested `esbuild` through
+deprecated `@esbuild-kit/*` packages. An npm `overrides` entry forces
+`esbuild ^0.25.12` for development tooling. The production container does not
+run drizzle-kit or the esbuild development server.
+
 ## Report a vulnerability
 
 Use [GitHub Security Advisories](https://github.com/uniskela/UniHomelabDash/security/advisories/new).
