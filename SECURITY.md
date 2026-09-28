@@ -131,7 +131,7 @@ For other bugs, open a [GitHub issue](https://github.com/uniskela/UniHomelabDash
 
 ## Dependency security status
 
-The v0.7.0 dependency refresh updates Next.js to 16.3.0 and resolves the previously documented transitive PostCSS, sharp, nanoid, brace-expansion, fast-uri, Hono, and js-yaml advisories. `npm audit` reported zero vulnerabilities when the v0.7.0 release candidate was prepared on 2026-08-10. Audit results are point-in-time; operators should continue tracking new upstream advisories.
+The app requires Next.js `^16.3.6` (and matching `eslint-config-next`) and `sharp` `^0.35.5`, with npm `overrides` for transitive advisories in `baseline-browser-mapping`, `browserslist`, `fast-uri`, `hono`, `js-yaml`, and `qs`. The docs site (`site/`) requires Astro `^7.3.5` and the same `sharp` floor, plus overrides for `devalue`, `fast-uri`, `js-yaml`, and `svgo`. Lockfiles record the exact resolved versions used for installs; `npm audit` should report zero vulnerabilities after installing from those lockfiles. Results are point-in-time, so operators should continue tracking new upstream advisories.
 
 ### esbuild (drizzle-kit dev tooling)
 
