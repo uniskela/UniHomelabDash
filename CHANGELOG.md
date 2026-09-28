@@ -5,8 +5,7 @@
 
 ### Bug Fixes
 
-* resolve npm supply-chain advisories from Semgrep SCA ([b107361](https://github.com/uniskela/UniHomelabDash/commit/b107361dacbdf34e5fc9ba0b2d8f18c12d478b2f))
-* resolve Semgrep/npm supply-chain advisories ([74bfa33](https://github.com/uniskela/UniHomelabDash/commit/74bfa332967e5112a7e9b008538dcacd065188fe))
+* resolve Semgrep/npm supply-chain advisories ([#62](https://github.com/uniskela/UniHomelabDash/pull/62)) ([74bfa33](https://github.com/uniskela/UniHomelabDash/commit/74bfa332967e5112a7e9b008538dcacd065188fe))
 
 ## [0.9.2](https://github.com/uniskela/UniHomelabDash/compare/v0.9.1...v0.9.2) (2026-09-27)
 
