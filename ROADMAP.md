@@ -420,6 +420,24 @@ Success criteria:
 
 ---
 
+## Phase 7.6 — UX Polish Pass (v0.9.1)
+
+Status: Completed in v0.9.1
+
+Goal: Make the shipped surfaces easier to scan and use on phones before adding alerts.
+
+Completed in v0.9.1:
+
+* Shared status colours: green for healthy/running/active/connected, amber for warning, red for stopped/critical; brand rose reserved for actions
+* Desktop layout no longer scrolls sideways beside the sidebar; container cards no longer overflow on phones
+* Dashboard shows each degraded service once; service cards open only through the explicit **Open** link
+* Pending feedback on health checks, deletes, and adding integrations
+* Settings grouped into Integrations / Account / App & checks / Advanced with jump links and collapsed setup guidance
+* Containers: manual **Refresh** (bypasses the list cache), filters up front, **Display options** on demand, calmer control drawer with **Technical details** disclosure
+* 40px+ touch targets on coarse pointers, real card headings, reduced-motion support, and a clean axe-core scan across all pages
+
+---
+
 ## Phase 8 — Alerts and Activity Feed
 
 Status: Planned
@@ -676,7 +694,8 @@ The first meaningful release should include:
 * Docker Compose deployment
 * Screenshots in README
 
-That baseline shipped. Current product focus after v0.9.0 Container Control Centre:
+That baseline shipped. After v0.9.0 Container Control Centre and v0.9.1 UX
+polish, current product focus:
 
 * Alerts and activity feed foundation
 * Portainer stack action safety (restart/redeploy deferred)

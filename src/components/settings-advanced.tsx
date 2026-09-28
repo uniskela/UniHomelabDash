@@ -28,7 +28,7 @@ export function SettingsAdvanced({
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Database className="size-5" />
+              <Database aria-hidden className="size-5" />
               Advanced
             </CardTitle>
             <CardDescription>
@@ -41,16 +41,17 @@ export function SettingsAdvanced({
             size="sm"
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
+            aria-controls="settings-advanced-content"
           >
             {open ? "Hide" : "Show"}
-            <ChevronDown className={cn("transition", open && "rotate-180")} />
+            <ChevronDown aria-hidden className={cn("transition-transform", open && "rotate-180")} />
           </Button>
         </div>
       </CardHeader>
       {open ? (
-        <CardContent className="space-y-4 pt-0 text-sm">
+        <CardContent id="settings-advanced-content" className="space-y-4 pt-0 text-sm">
           <div>
-            <div className="text-muted-foreground">Database path</div>
+            <h3 className="text-muted-foreground">Database path</h3>
             <code className="mt-1 block overflow-x-auto rounded-lg bg-muted px-3 py-2 text-xs">
               {databasePath}
             </code>
@@ -63,13 +64,13 @@ export function SettingsAdvanced({
           <Separator />
 
           <div>
-            <div className="mb-2 flex items-center gap-2 font-medium">
-              <ServerOff className="size-4" />
+            <h3 className="mb-2 flex items-center gap-2 font-medium">
+              <ServerOff aria-hidden className="size-4" />
               Integration roadmap
-            </div>
+            </h3>
             <ul className="grid gap-2 text-muted-foreground sm:grid-cols-3">
               <li className="rounded-lg border bg-muted/30 p-3">Docker (status, logs, actions)</li>
-              <li className="rounded-lg border bg-muted/30 p-3">Portainer read-only containers</li>
+              <li className="rounded-lg border bg-muted/30 p-3">Portainer (containers, actions, stacks)</li>
               <li className="rounded-lg border bg-muted/30 p-3">Alerts, Proxmox, media apps</li>
             </ul>
             <p className="mt-2 text-muted-foreground">

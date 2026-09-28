@@ -22,7 +22,7 @@ export function WorkloadTabs({ active }: { active: "containers" | "stacks" }) {
             href={item.href}
             aria-current={selected ? "page" : undefined}
             className={cn(
-              "flex min-h-9 items-center gap-2 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "flex min-h-9 items-center gap-2 rounded-md px-3 text-sm pointer-coarse:min-h-10 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               selected && "bg-background font-medium text-foreground shadow-sm"
             )}
           >

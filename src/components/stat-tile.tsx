@@ -1,20 +1,5 @@
+import { toneIconClasses, toneSurfaceClasses, type StatusTone } from "@/components/status-tone";
 import { cn } from "@/lib/utils";
-
-type StatTone = "neutral" | "healthy" | "warning" | "danger";
-
-const toneClasses: Record<StatTone, string> = {
-  neutral: "border-border/60 bg-card/80",
-  healthy: "border-rose-400/20 bg-rose-400/5",
-  warning: "border-amber-500/30 bg-amber-500/5",
-  danger: "border-destructive/30 bg-destructive/5",
-};
-
-const iconToneClasses: Record<StatTone, string> = {
-  neutral: "bg-muted text-muted-foreground",
-  healthy: "bg-rose-400/10 text-rose-300",
-  warning: "bg-amber-500/10 text-amber-300",
-  danger: "bg-destructive/10 text-destructive",
-};
 
 export function StatTile({
   icon,
@@ -27,25 +12,23 @@ export function StatTile({
   label: string;
   value: string;
   detail?: string;
-  tone?: StatTone;
+  tone?: StatusTone;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-xl border p-4 transition-colors",
-        toneClasses[tone]
-      )}
-    >
+    <div className={cn("min-w-0 rounded-xl border p-3 sm:p-4", toneSurfaceClasses[tone])}>
       <div className="flex items-start justify-between gap-3">
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="text-3xl font-semibold tracking-tight">{value}</p>
-          {detail ? <p className="text-xs text-muted-foreground">{detail}</p> : null}
+        <div className="min-w-0 space-y-1 sm:space-y-2">
+          <p className="text-xs leading-tight text-muted-foreground sm:text-sm">{label}</p>
+          <p className="text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl">{value}</p>
+          {detail ? (
+            <p className="truncate text-xs text-muted-foreground">{detail}</p>
+          ) : null}
         </div>
         <span
+          aria-hidden
           className={cn(
-            "grid size-10 shrink-0 place-items-center rounded-lg [&_svg]:size-4",
-            iconToneClasses[tone]
+            "hidden size-10 shrink-0 place-items-center rounded-lg sm:grid [&_svg]:size-4",
+            toneIconClasses[tone]
           )}
         >
           {icon}
@@ -55,6 +38,18 @@ export function StatTile({
   );
 }
 
-export function StatTileGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-3 sm:grid-cols-3">{children}</div>;
+export function StatTileGrid({
+  children,
+  className,
+  label,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  label?: string;
+}) {
+  return (
+    <section aria-label={label} className={cn("grid grid-cols-3 gap-2 sm:gap-3", className)}>
+      {children}
+    </section>
+  );
 }

@@ -1,65 +1,59 @@
 import type { HealthStatus } from "@/lib/services/types";
+import type { StackStatus } from "@/lib/providers/types";
 import { Badge } from "@/components/ui/badge";
+import { toneBadgeClasses, type StatusTone } from "@/components/status-tone";
 import { cn } from "@/lib/utils";
 
-type ContainerState =
-  | "running"
-  | "paused"
-  | "restarting"
-  | "exited"
-  | "dead"
-  | "created"
-  | "unknown";
+const healthTones: Record<HealthStatus, StatusTone> = {
+  healthy: "success",
+  degraded: "warning",
+  unknown: "neutral",
+};
 
-function statusClasses(kind: "health" | "container", value: string) {
-  if (kind === "health") {
-    switch (value as HealthStatus) {
-      case "healthy":
-        return "border-rose-400/40 bg-rose-400/10 text-rose-300";
-      case "degraded":
-        return "border-amber-500/40 bg-amber-500/10 text-amber-300";
-      default:
-        return "border-border bg-muted/40 text-muted-foreground";
-    }
-  }
+const containerTones: Record<string, StatusTone> = {
+  running: "success",
+  paused: "warning",
+  restarting: "warning",
+  exited: "danger",
+  dead: "danger",
+};
 
-  switch (value as ContainerState) {
-    case "running":
-      return "border-rose-400/40 bg-rose-400/10 text-rose-300";
-    case "exited":
-    case "dead":
-      return "border-destructive/40 bg-destructive/10 text-destructive";
-    case "paused":
-    case "restarting":
-      return "border-amber-500/40 bg-amber-500/10 text-amber-300";
-    default:
-      return "border-border bg-muted/40 text-muted-foreground";
-  }
-}
+const stackTones: Record<StackStatus, StatusTone> = {
+  active: "success",
+  inactive: "warning",
+  unavailable: "danger",
+  unknown: "neutral",
+};
 
 export function StatusBadge({
-  kind,
-  value,
+  tone,
+  label,
   className,
 }: {
-  kind: "health" | "container";
-  value: string;
+  tone: StatusTone;
+  label: string;
   className?: string;
 }) {
   return (
-    <Badge
-      variant="outline"
-      className={cn("capitalize", statusClasses(kind, value), className)}
-    >
-      {value}
+    <Badge variant="outline" className={cn(toneBadgeClasses[tone], className)}>
+      <span aria-hidden className="size-1.5 rounded-full bg-current" />
+      {sentenceCase(label)}
     </Badge>
   );
 }
 
 export function HealthBadge({ status }: { status: HealthStatus }) {
-  return <StatusBadge kind="health" value={status} />;
+  return <StatusBadge tone={healthTones[status] ?? "neutral"} label={status} />;
 }
 
 export function ContainerStatusBadge({ status }: { status: string }) {
-  return <StatusBadge kind="container" value={status} />;
+  return <StatusBadge tone={containerTones[status] ?? "neutral"} label={status} />;
+}
+
+export function StackStatusBadge({ status }: { status: StackStatus }) {
+  return <StatusBadge tone={stackTones[status] ?? "neutral"} label={status} />;
+}
+
+function sentenceCase(value: string) {
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
 }

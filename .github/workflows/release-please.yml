@@ -1,0 +1,31 @@
+# Opens/updates a Release Please PR on pushes to main, and publishes
+# GitHub Releases + tags when that release PR is merged.
+#
+# Optional secret RELEASE_PLEASE_TOKEN: a PAT (or fine-grained token) with
+# contents + pull-requests write. Prefer this over GITHUB_TOKEN so the
+# created tag/release can trigger the Docker image workflow.
+# Without it, GITHUB_TOKEN still works for Release Please itself; you may
+# need to re-run Build Docker Image after a release is published.
+
+name: release-please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Please
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN != '' && secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

@@ -159,7 +159,7 @@ export function ContainerSavedViewManager({
   return (
     <>
       <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-2">
+        <div role="group" aria-label="Saved views" className="flex flex-wrap items-center gap-2">
           {builtinChips.map((id) => {
             const builtin = builtinViewDefinition(id);
             const selected = workspace.activeViewId === id;
@@ -170,6 +170,7 @@ export function ContainerSavedViewManager({
                 size="sm"
                 variant={selected ? "secondary" : "outline"}
                 onClick={() => onSelectView(id)}
+                aria-pressed={selected}
               >
                 {builtin.name}
               </Button>
@@ -184,58 +185,67 @@ export function ContainerSavedViewManager({
                 size="sm"
                 variant={selected ? "secondary" : "outline"}
                 onClick={() => onSelectView(view.id)}
-                className={cn(selected && modified && "ring-1 ring-amber-400/40")}
+                aria-pressed={selected}
+                className={cn(selected && modified && "ring-1 ring-warning/40")}
               >
                 {view.name}
                 {selected && modified ? (
-                  <span className="ml-1 text-[0.65rem] text-amber-300">•</span>
+                  <span aria-hidden className="ml-1 text-warning">•</span>
                 ) : null}
               </Button>
             );
           })}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {!activeIsBuiltin && modified ? (
-            <Button type="button" size="xs" variant="secondary" onClick={saveChanges}>
-              <Check />
-              Save changes
+        {modified || !activeIsBuiltin ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {!activeIsBuiltin && modified ? (
+              <Button type="button" size="sm" variant="secondary" onClick={saveChanges}>
+                <Check />
+                Save changes
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={openSaveAs}
+              disabled={atViewLimit}
+              title={atViewLimit ? `Maximum of ${maxUserViews} saved views` : undefined}
+            >
+              <BookmarkPlus />
+              {activeIsBuiltin ? "Save as view" : "Save as new"}
             </Button>
-          ) : null}
-          <Button
-            type="button"
-            size="xs"
-            variant="outline"
-            onClick={openSaveAs}
-            disabled={atViewLimit}
-            title={atViewLimit ? `Maximum of ${maxUserViews} saved views` : undefined}
-          >
-            <BookmarkPlus />
-            Save as
-          </Button>
-          {!activeIsBuiltin ? (
-            <>
-              <Button type="button" size="xs" variant="outline" onClick={openRename}>
-                <Pencil />
-                Rename
-              </Button>
-              <Button type="button" size="xs" variant="ghost" onClick={openDelete}>
-                <Trash2 />
-                Delete
-              </Button>
-            </>
-          ) : null}
-          {modified ? (
-            <span className="text-xs text-amber-300" role="status">
-              Unsaved changes
-            </span>
-          ) : null}
-          {atViewLimit ? (
-            <span className="text-xs text-muted-foreground">
-              {maxUserViews}/{maxUserViews} views used
-            </span>
-          ) : null}
-        </div>
+            {!activeIsBuiltin ? (
+              <>
+                <Button type="button" size="sm" variant="outline" onClick={openRename}>
+                  <Pencil />
+                  Rename
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={openDelete}
+                >
+                  <Trash2 />
+                  Delete
+                </Button>
+              </>
+            ) : null}
+            {modified ? (
+              <span className="text-xs text-warning" role="status">
+                Unsaved changes
+              </span>
+            ) : null}
+            {atViewLimit ? (
+              <span className="text-xs text-muted-foreground">
+                {maxUserViews}/{maxUserViews} views used
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <Dialog open={dialog === "save-as"} onOpenChange={(open) => !open && setDialog(null)}>

@@ -21,7 +21,9 @@ enabled.
 | Health-check URL | Address fetched by the server when you run a check |
 
 Edit or delete services from the **Services** page overflow menu. The dashboard
-is optimized for quick status and opening applications.
+is optimized for quick status and opening applications. **Open** always opens
+the service in a new tab; tapping elsewhere on a card does nothing, so scrolling
+on a phone never launches an app by accident.
 
 ## Health states
 
@@ -30,12 +32,15 @@ is optimized for quick status and opening applications.
 - **Unknown** — no check has run yet, or no health URL is configured.
 
 The last-checked timestamp helps distinguish a current result from old state.
-Use **Check all** when you want a fresh snapshot.
+Use **Check all** when you want a fresh snapshot. Check buttons show progress
+while a check runs. On the **Services** page, a card without a health URL links
+straight to its edit form.
 
 ## Attention-first behavior
 
-Cards needing attention are presented before healthy cards so a phone-sized
-dashboard answers the most important question first. This is a status view, not
+Degraded services appear once, in a **Needs attention** section above the rest
+(listed under **Other services**), so a phone-sized dashboard answers the most
+important question first. This is a status view, not
 a monitoring system: checks do not run in the background and there are no alert
 notifications yet.
 

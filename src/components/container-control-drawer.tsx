@@ -9,10 +9,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Box, LayoutDashboard, Play, RotateCcw, Square } from "lucide-react";
+import { Box, LayoutDashboard, Play, RotateCcw, Settings, Square } from "lucide-react";
 import { ContainerLogReader, type LogTailCount } from "@/components/container-log-reader";
 import { ContainerMetricsPanel } from "@/components/container-metrics-panel";
-import { ContainerStatusBadge } from "@/components/status-badge";
+import { Disclosure } from "@/components/disclosure";
+import { ContainerStatusBadge, StatusBadge } from "@/components/status-badge";
+import type { StatusTone } from "@/components/status-tone";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +24,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -49,6 +50,7 @@ import {
 import { buildContainerServiceDefaults } from "@/lib/providers/docker/dashboard-prefill";
 import type {
   ContainerDetailResource,
+  ContainerHealthStatus,
   ContainerLabelEntry,
   ProviderResource,
 } from "@/lib/providers/types";
@@ -219,25 +221,28 @@ export function ContainerControlDrawer({
         >
           {container ? (
             <>
-              <SheetHeader className="border-b border-rose-500/20 bg-gradient-to-br from-rose-500/15 via-cyan-500/10 to-transparent pr-12">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-rose-500/15 text-rose-200 ring-1 ring-rose-400/30">
-                      <Box className="size-5" />
-                    </span>
-                    <div className="min-w-0 space-y-1">
-                      <SheetTitle>{container.name}</SheetTitle>
-                      <SheetDescription className="font-mono text-xs">
-                        {containerProviderCaption(container)} · {container.image}
-                      </SheetDescription>
-                      <div className="pt-1">
-                        <ContainerStatusBadge status={detail?.state ?? container.status} />
-                      </div>
-                    </div>
+              <SheetHeader className="gap-3 border-b pr-12">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span
+                    aria-hidden
+                    className="grid size-11 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground ring-1 ring-border/60"
+                  >
+                    <Box className="size-5" />
+                  </span>
+                  <div className="min-w-0 space-y-1">
+                    <SheetTitle className="truncate text-lg" title={container.name}>
+                      {container.name}
+                    </SheetTitle>
+                    <SheetDescription className="truncate font-mono text-xs">
+                      {containerProviderCaption(container)} · {container.image}
+                    </SheetDescription>
                   </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <ContainerStatusBadge status={detail?.state ?? container.status} />
                   <Button asChild size="sm" variant="outline">
                     <Link href={buildAddServiceHref(container)}>
-                      <LayoutDashboard />
+                      <LayoutDashboard aria-hidden />
                       Add to dashboard
                     </Link>
                   </Button>
@@ -285,11 +290,10 @@ export function ContainerControlDrawer({
               </div>
 
               {showActions ? (
-                <SheetFooter className="flex-row flex-wrap gap-2 border-t border-rose-500/20 bg-rose-500/5">
+                <SheetFooter className="flex-row flex-wrap gap-2 border-t bg-muted/20 pb-[calc(1rem+env(safe-area-inset-bottom))]">
                   {isStartableContainer(detail?.state ?? container.status) ? (
                     <Button
                       type="button"
-                      size="sm"
                       variant="secondary"
                       onClick={() => {
                         setSubmittedAction(null);
@@ -305,7 +309,6 @@ export function ContainerControlDrawer({
                     <>
                       <Button
                         type="button"
-                        size="sm"
                         variant="outline"
                         onClick={() => {
                           setSubmittedAction(null);
@@ -318,7 +321,6 @@ export function ContainerControlDrawer({
                       </Button>
                       <Button
                         type="button"
-                        size="sm"
                         variant="outline"
                         onClick={() => {
                           setSubmittedAction(null);
@@ -332,7 +334,17 @@ export function ContainerControlDrawer({
                     </>
                   ) : null}
                 </SheetFooter>
-              ) : null}
+              ) : (
+                <SheetFooter className="flex-row flex-wrap items-center justify-between gap-2 border-t bg-muted/20 pb-[calc(1rem+env(safe-area-inset-bottom))] text-xs text-muted-foreground">
+                  <p>Read-only. Start, stop, and restart are off for this integration.</p>
+                  <Button asChild size="sm" variant="ghost">
+                    <Link href="/settings#integrations">
+                      <Settings aria-hidden />
+                      Integration settings
+                    </Link>
+                  </Button>
+                </SheetFooter>
+              )}
             </>
           ) : null}
         </SheetContent>
@@ -435,7 +447,18 @@ function OverviewPanel({
   fallback: ProviderResource;
 }) {
   if (state.kind === "loading" || state.kind === "idle") {
-    return <p className="text-sm text-muted-foreground">Loading container details…</p>;
+    return (
+      <>
+        <p role="status" className="sr-only">
+          Loading container details…
+        </p>
+        <div aria-hidden className="grid gap-3 sm:grid-cols-2">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className="h-16 animate-pulse rounded-lg bg-muted/40" />
+          ))}
+        </div>
+      </>
+    );
   }
 
   if (state.kind === "unauthenticated") {
@@ -473,173 +496,177 @@ function OverviewPanel({
 
 function FallbackOverview({ container }: { container: ProviderResource }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <DetailRow label="State" value={container.status} tone="rose" />
-      {container.summary ? <DetailRow label="Status" value={container.summary} tone="cyan" /> : null}
+    <dl className="grid gap-3 sm:grid-cols-2">
+      <DetailRow label="State" value={container.status} />
+      {container.summary ? <DetailRow label="Status" value={container.summary} /> : null}
       {container.createdAt ? (
-        <DetailRow
-          label="Created"
-          value={new Date(container.createdAt).toLocaleString()}
-          tone="amber"
-        />
+        <DetailRow label="Created" value={new Date(container.createdAt).toLocaleString()} />
       ) : null}
       {container.ports?.length ? (
-        <DetailRow label="Ports" value={container.ports.join(", ")} tone="cyan" />
+        <DetailRow label="Ports" value={container.ports.join(", ")} mono />
       ) : null}
-    </div>
+    </dl>
   );
 }
+
+const healthTones: Record<ContainerHealthStatus, StatusTone> = {
+  healthy: "success",
+  starting: "warning",
+  unhealthy: "danger",
+  none: "neutral",
+  unknown: "neutral",
+};
+
+const healthLabels: Record<ContainerHealthStatus, string> = {
+  healthy: "Healthy",
+  starting: "Starting",
+  unhealthy: "Unhealthy",
+  none: "No health check",
+  unknown: "Unknown",
+};
 
 function DetailOverview({ detail }: { detail: ContainerDetailResource }) {
   return (
     <div className="space-y-4 text-sm">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <DetailRow label="Lifecycle" value={detail.state} tone="rose" />
-        <DetailRow label="Status text" value={detail.status || "—"} tone="cyan" />
-        <DetailRow label="Health" value={detail.health} tone="emerald" />
-        <DetailRow label="Image" value={detail.image} tone="amber" />
-        {detail.platform ? <DetailRow label="Platform" value={detail.platform} tone="cyan" /> : null}
-        {detail.createdAt ? (
-          <DetailRow label="Created" value={formatDate(detail.createdAt)} tone="amber" />
-        ) : null}
+      <dl className="grid gap-3 sm:grid-cols-2">
+        <DetailRow
+          label="Health"
+          value={
+            <StatusBadge
+              tone={healthTones[detail.health] ?? "neutral"}
+              label={healthLabels[detail.health] ?? detail.health}
+            />
+          }
+        />
+        <DetailRow label="Status" value={detail.status || "—"} />
+        <DetailRow label="Image" value={detail.image} mono className="sm:col-span-2" />
         {detail.startedAt ? (
-          <DetailRow label="Started" value={formatDate(detail.startedAt)} tone="rose" />
+          <DetailRow label="Started" value={formatDate(detail.startedAt)} />
         ) : null}
-        {detail.finishedAt ? (
-          <DetailRow label="Finished" value={formatDate(detail.finishedAt)} tone="cyan" />
+        {detail.createdAt ? (
+          <DetailRow label="Created" value={formatDate(detail.createdAt)} />
         ) : null}
-        {detail.restartPolicy ? (
-          <DetailRow
-            label="Restart policy"
-            value={
-              detail.restartPolicy.maximumRetryCount != null
-                ? `${detail.restartPolicy.name} (max ${detail.restartPolicy.maximumRetryCount})`
-                : detail.restartPolicy.name
-            }
-            tone="amber"
-          />
-        ) : null}
-      </div>
+        <DetailRow
+          label="Ports"
+          value={detail.ports.length ? detail.ports.join(", ") : "No published ports"}
+          mono={detail.ports.length > 0}
+          className="sm:col-span-2"
+        />
+      </dl>
 
-      <Section title="Ports" tone="cyan">
-        {detail.ports.length ? (
-          <ul className="space-y-1">
-            {detail.ports.map((port, index) => (
-              <li key={`${port}-${index}`} className="font-mono text-xs">
-                {port}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-muted-foreground">No published ports.</p>
-        )}
-      </Section>
+      <Disclosure
+        summary="Technical details"
+        description="Restart policy, networks, mounts, limits, and labels."
+      >
+        <div className="space-y-4">
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <DetailRow label="Lifecycle" value={detail.state} />
+            {detail.platform ? <DetailRow label="Platform" value={detail.platform} /> : null}
+            {detail.restartPolicy ? (
+              <DetailRow
+                label="Restart policy"
+                value={
+                  detail.restartPolicy.maximumRetryCount != null
+                    ? `${detail.restartPolicy.name} (max ${detail.restartPolicy.maximumRetryCount})`
+                    : detail.restartPolicy.name
+                }
+              />
+            ) : null}
+            {detail.finishedAt ? (
+              <DetailRow label="Finished" value={formatDate(detail.finishedAt)} />
+            ) : null}
+          </dl>
 
-      <Section title="Networks" tone="rose">
-        {detail.networks.length ? (
-          <ul className="space-y-1">
-            {detail.networks.map((network) => (
-              <li key={network} className="font-mono text-xs">
-                {network}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-muted-foreground">No networks reported.</p>
-        )}
-      </Section>
+          <Section title="Networks">
+            {detail.networks.length ? (
+              <ul className="space-y-1">
+                {detail.networks.map((network) => (
+                  <li key={network} className="font-mono text-xs">
+                    {network}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-muted-foreground">No networks reported.</p>
+            )}
+          </Section>
 
-      <Section title="Mounts" tone="amber">
-        {detail.mounts.length ? (
-          <ul className="space-y-2">
-            {detail.mounts.map((mount, index) => (
-              <li key={`${mount.destination}-${index}`} className="font-mono text-xs">
-                <span className="text-foreground">{mount.destination}</span>
-                <span className="text-muted-foreground">
-                  {" "}
-                  · {mount.type}
-                  {mount.readOnly ? " · read-only" : ""}
-                  {mount.name ? ` · ${mount.name}` : ""}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-muted-foreground">No safe mount metadata.</p>
-        )}
-      </Section>
+          <Section title="Mounts">
+            {detail.mounts.length ? (
+              <ul className="space-y-2">
+                {detail.mounts.map((mount, index) => (
+                  <li key={`${mount.destination}-${index}`} className="font-mono text-xs">
+                    <span className="text-foreground">{mount.destination}</span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      · {mount.type}
+                      {mount.readOnly ? " · read-only" : ""}
+                      {mount.name ? ` · ${mount.name}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-muted-foreground">No safe mount metadata.</p>
+            )}
+          </Section>
 
-      <Section title="Limits" tone="emerald">
-        <dl className="grid gap-2 sm:grid-cols-2">
-          <LimitRow label="Memory" value={formatLimitBytes(detail.limits.memoryBytes)} />
-          <LimitRow label="nanoCPUs" value={formatLimitNumber(detail.limits.nanoCpus)} />
-          <LimitRow label="CPU shares" value={formatLimitNumber(detail.limits.cpuShares)} />
-          <LimitRow label="PIDs limit" value={formatLimitNumber(detail.limits.pidsLimit)} />
-        </dl>
-      </Section>
+          <Section title="Limits">
+            <dl className="grid grid-cols-2 gap-2">
+              <LimitRow label="Memory" value={formatLimitBytes(detail.limits.memoryBytes)} />
+              <LimitRow label="nanoCPUs" value={formatLimitNumber(detail.limits.nanoCpus)} />
+              <LimitRow label="CPU shares" value={formatLimitNumber(detail.limits.cpuShares)} />
+              <LimitRow label="PIDs limit" value={formatLimitNumber(detail.limits.pidsLimit)} />
+            </dl>
+          </Section>
 
-      <Section title="Labels" tone="amber">
-        {detail.labels.length ? (
-          <ul className="space-y-1">
-            {detail.labels.map((entry) => (
-              <LabelRow key={entry.key} entry={entry} />
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-muted-foreground">No labels.</p>
-        )}
-      </Section>
+          <Section title="Labels">
+            {detail.labels.length ? (
+              <ul className="space-y-1">
+                {detail.labels.map((entry) => (
+                  <LabelRow key={entry.key} entry={entry} />
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-muted-foreground">No labels.</p>
+            )}
+          </Section>
+        </div>
+      </Disclosure>
     </div>
   );
 }
 
-function Section({
-  title,
-  tone,
-  children,
-}: {
-  title: string;
-  tone: "rose" | "cyan" | "amber" | "emerald";
-  children: ReactNode;
-}) {
-  const toneClass = {
-    rose: "border-rose-500/20 bg-rose-500/5 text-rose-200/80",
-    cyan: "border-cyan-500/20 bg-cyan-500/5 text-cyan-200/80",
-    amber: "border-amber-500/20 bg-amber-500/5 text-amber-200/80",
-    emerald: "border-emerald-500/20 bg-emerald-500/5 text-emerald-200/80",
-  }[tone];
-
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <>
-      <Separator />
-      <div className={cn("space-y-2 rounded-lg border p-3", toneClass)}>
-        <div className="font-mono text-xs uppercase tracking-wide">{title}</div>
-        <div className="text-foreground">{children}</div>
+    <section className="space-y-2">
+      <h3 className="text-xs font-medium text-muted-foreground">{title}</h3>
+      <div className="rounded-lg border border-border/70 bg-muted/10 p-3 text-foreground">
+        {children}
       </div>
-    </>
+    </section>
   );
 }
 
 function DetailRow({
   label,
   value,
-  tone = "rose",
+  mono = false,
+  className,
 }: {
   label: string;
-  value: string;
-  tone?: "rose" | "cyan" | "amber" | "emerald";
+  value: ReactNode;
+  mono?: boolean;
+  className?: string;
 }) {
-  const toneClass = {
-    rose: "border-rose-500/20 bg-rose-500/5 text-rose-200/80",
-    cyan: "border-cyan-500/20 bg-cyan-500/5 text-cyan-200/80",
-    amber: "border-amber-500/20 bg-amber-500/5 text-amber-200/80",
-    emerald: "border-emerald-500/20 bg-emerald-500/5 text-emerald-200/80",
-  }[tone];
-
   return (
-    <div className={cn("space-y-1 rounded-lg border p-3", toneClass)}>
-      <div className="font-mono text-xs uppercase tracking-wide">{label}</div>
-      <div className="break-words text-foreground">{value}</div>
+    <div
+      className={cn("min-w-0 space-y-1 rounded-lg border border-border/70 bg-muted/10 p-3", className)}
+    >
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className={cn("text-foreground", mono ? "font-mono text-xs break-all" : "break-words")}>
+        {value}
+      </dd>
     </div>
   );
 }

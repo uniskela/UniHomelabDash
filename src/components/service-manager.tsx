@@ -6,6 +6,7 @@ import type { ManualService } from "@/lib/services/types";
 import { checkAllServiceHealthAction } from "@/lib/services/actions";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,17 +42,22 @@ export function ServiceManager({
         description="Keep your most-used homelab links, notes, and health checks in one place."
         actions={
           <>
-            <form action={checkAllServiceHealthAction}>
-              <Button type="submit" variant="outline">
-                <HeartPulse />
-                Check all
-              </Button>
-            </form>
+            {services.length > 0 ? (
+              <form action={checkAllServiceHealthAction}>
+                <PendingSubmitButton
+                  variant="outline"
+                  icon={<HeartPulse aria-hidden />}
+                  pendingLabel="Checking…"
+                >
+                  Check all
+                </PendingSubmitButton>
+              </form>
+            ) : null}
 
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
                 <Button>
-                  <Plus />
+                  <Plus aria-hidden />
                   Add service
                 </Button>
               </DialogTrigger>
@@ -73,14 +79,19 @@ export function ServiceManager({
         <EmptyState
           icon={Server}
           title="Start with one service"
-          description="Add the first service you want at your fingertips."
+          description="Save a link to an app you open often. You can add a health check URL now or later."
           actionLabel="Add first service"
           onAction={() => setCreateOpen(true)}
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {services.map((service) => (
-            <ServiceCard key={service.id} service={service} onEdit={setEditing} />
+            <ServiceCard
+              key={service.id}
+              service={service}
+              onEdit={setEditing}
+              headingLevel="h2"
+            />
           ))}
         </div>
       )}

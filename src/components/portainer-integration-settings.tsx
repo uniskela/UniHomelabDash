@@ -1,8 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
-import { CheckCircle2, Plus, ShieldAlert, Trash2, XCircle } from "lucide-react";
+import { Plus, ShieldAlert, Trash2 } from "lucide-react";
+import { Disclosure } from "@/components/disclosure";
+import { ConnectionState, ToggleRow } from "@/components/integration-settings-shared";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   configurePortainerProviderAction,
@@ -32,24 +33,27 @@ export function PortainerIntegrationSettings({
   providers: ProviderPublicView[];
 }) {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1 text-sm text-muted-foreground">
-          <p>Configure one or more Portainer API connections.</p>
-          <p>Container actions are opt-in and disabled by default.</p>
+    <section aria-labelledby="portainer-integrations-heading" className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <h3 id="portainer-integrations-heading" className="text-base font-medium">
+            Portainer
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Connect with a base URL and API access token. Actions stay off until you allow them.
+          </p>
         </div>
         <form action={createPortainerProviderAction}>
-          <Button type="submit" size="sm">
-            <Plus />
-            Add Portainer integration
-          </Button>
+          <PendingSubmitButton size="sm" icon={<Plus aria-hidden />} pendingLabel="Adding…">
+            Add Portainer
+          </PendingSubmitButton>
         </form>
       </div>
 
       {providers.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border/80 bg-muted/20 p-5 text-sm text-muted-foreground">
-          No Portainer integrations configured yet. Add one with a base URL and API access token.
-        </div>
+        <p className="rounded-lg border border-dashed border-border/80 bg-muted/10 p-4 text-sm text-muted-foreground">
+          No Portainer integrations yet.
+        </p>
       ) : (
         <div className="grid gap-4">
           {providers.map((provider) => (
@@ -58,22 +62,17 @@ export function PortainerIntegrationSettings({
         </div>
       )}
 
-      <div className="rounded-xl border border-border/80 bg-card/40 p-4 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">Security guidance</p>
-        <ul className="mt-2 list-disc space-y-2 pl-5">
+      <Disclosure
+        summary="Security guidance"
+        description="How to scope the Portainer token safely."
+      >
+        <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
           <li>Use a dedicated Portainer user and least-privilege team permissions.</li>
           <li>Prefer HTTPS on port 9443 and avoid exposing Portainer publicly.</li>
           <li>Token and optional CA certificate are encrypted server-side.</li>
         </ul>
-      </div>
-
-      <Link
-        href="/containers"
-        className="inline-flex text-sm text-foreground underline underline-offset-4"
-      >
-        Open containers page
-      </Link>
-    </div>
+      </Disclosure>
+    </section>
   );
 }
 
@@ -101,12 +100,12 @@ function PortainerIntegrationCard({ provider }: { provider: ProviderPublicView }
   const testFormId = `portainer-test-form-${provider.id}`;
 
   return (
-    <div className="space-y-5 rounded-xl border border-border/80 bg-muted/10 p-4">
+    <div className="space-y-5 rounded-xl border border-border/80 bg-card p-4">
       <form action={configureAction} className="space-y-5">
         <input type="hidden" name="providerId" value={provider.id} />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-2">
+          <div className="min-w-0 flex-1 space-y-2 sm:max-w-sm">
             <Label htmlFor={`portainer-name-${provider.id}`}>Integration name</Label>
             <Input
               id={`portainer-name-${provider.id}`}
@@ -160,14 +159,14 @@ function PortainerIntegrationCard({ provider }: { provider: ProviderPublicView }
             className="font-mono text-sm"
           />
           {baseUrl.startsWith("http://") ? (
-            <p className="flex items-center gap-2 text-xs text-amber-300">
+            <p className="flex items-center gap-2 text-xs text-warning">
               <ShieldAlert className="size-3.5 shrink-0" />
               HTTP detected. Prefer HTTPS whenever possible.
             </p>
           ) : null}
         </div>
 
-        <div className="space-y-2 rounded-xl border border-border/80 bg-muted/20 p-4">
+        <div className="space-y-2 rounded-lg border border-border/70 bg-muted/10 p-3 sm:p-4">
           <Label htmlFor={`portainer-token-${provider.id}`}>Access token</Label>
           <Input
             id={`portainer-token-${provider.id}`}
@@ -246,6 +245,7 @@ function PortainerIntegrationCard({ provider }: { provider: ProviderPublicView }
 
       {provider.enabled ? (
         <ConnectionState
+          targetLabel="Portainer"
           statusOk={statusOk}
           statusMessage={statusMessage}
           lastTestedAt={provider.lastTestedAt}
@@ -274,85 +274,6 @@ function PortainerIntegrationCard({ provider }: { provider: ProviderPublicView }
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function ToggleRow({
-  id,
-  label,
-  description,
-  checked,
-  onCheckedChange,
-  disabled,
-  hiddenName,
-}: {
-  id: string;
-  label: string;
-  description: string;
-  checked: boolean;
-  onCheckedChange: (value: boolean) => void;
-  disabled: boolean;
-  hiddenName: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-border/80 bg-muted/20 p-4">
-      <div className="space-y-1">
-        <Label htmlFor={id} className="text-sm font-medium">
-          {label}
-        </Label>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
-      <input type="hidden" name={hiddenName} value={checked ? "true" : "false"} />
-    </div>
-  );
-}
-
-function ConnectionState({
-  statusOk,
-  statusMessage,
-  lastTestedAt,
-}: {
-  statusOk: boolean;
-  statusMessage: string;
-  lastTestedAt: string | null;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-xl border p-4",
-        statusOk
-          ? "border-rose-400/20 bg-rose-400/5"
-          : statusMessage
-            ? "border-destructive/30 bg-destructive/5"
-            : "border-border/80 bg-muted/20"
-      )}
-    >
-      <div className="flex items-start gap-3">
-        {statusOk ? (
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-rose-300" />
-        ) : statusMessage ? (
-          <XCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
-        ) : (
-          <ShieldAlert className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-        )}
-        <div className="space-y-1 text-sm">
-          <p className="font-medium">
-            {statusOk ? "Connected to Portainer" : statusMessage ? "Connection issue" : "Ready to test"}
-          </p>
-          {lastTestedAt ? (
-            <p className="text-muted-foreground">
-              Last tested {new Date(lastTestedAt).toLocaleString()}
-            </p>
-          ) : null}
-          {statusMessage ? (
-            <p className={statusOk ? "text-muted-foreground" : "text-destructive"} role="alert">
-              {statusMessage}
-            </p>
-          ) : null}
-        </div>
-      </div>
     </div>
   );
 }

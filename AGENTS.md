@@ -321,6 +321,9 @@ A feature is done when:
 v0.9.0 shipped: Container Control Centre (inspect/stats drawer, saved views,
 improved logs, opt-in Portainer container start/stop/restart).
 
+v0.9.1 shipped: UX polish pass (consistent status colours, calmer Containers,
+restructured Settings, mobile touch targets, accessibility fixes).
+
 Next focus (see ROADMAP.md):
 
 * Alerts and activity feed foundation
