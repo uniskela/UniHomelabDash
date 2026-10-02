@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.4](https://github.com/uniskela/UniHomelabDash/compare/v0.9.3...v0.9.4) (2026-10-02)
+
+
+### Documentation
+
+* dedupe 0.9.3 changelog supply-chain fix entry ([aa064fe](https://github.com/uniskela/UniHomelabDash/commit/aa064feeb4f9038117c9676fee30e5b2729fdca8))
+
 ## [0.9.3](https://github.com/uniskela/UniHomelabDash/compare/v0.9.2...v0.9.3) (2026-09-28)
 
 
