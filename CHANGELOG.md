@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.4](https://github.com/uniskela/UniHomelabDash/compare/v0.9.3...v0.9.4) (2026-10-09)
+
+
+### Documentation
+
+* classify Starlight guides apart from internal plans and agent notes ([91b7ef4](https://github.com/uniskela/UniHomelabDash/commit/91b7ef400390ed5e897d1bf831fd67c49aefb639))
+* dedupe 0.9.3 changelog supply-chain fix entry ([aa064fe](https://github.com/uniskela/UniHomelabDash/commit/aa064feeb4f9038117c9676fee30e5b2729fdca8))
+* keep Starlight guides separate from internal plans and agent notes ([a13c164](https://github.com/uniskela/UniHomelabDash/commit/a13c1640658b5bc724979a57072dd999e6fc552f))
+
 ## [0.9.3](https://github.com/uniskela/UniHomelabDash/compare/v0.9.2...v0.9.3) (2026-09-28)
 
 
