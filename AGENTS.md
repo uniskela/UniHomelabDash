@@ -83,7 +83,7 @@ Suggested folders (future monorepo option):
 /docs
 ```
 
-**Current repo layout:** a single Next.js app at the repository root with API routes, `src/`, and `docs/`. A monorepo split can come later if the project outgrows one app.
+**Current repo layout:** a single Next.js app at the repository root with API routes, `src/`, and `docs/`. A monorepo split can come later if the project outgrows one app. Documentation audiences are split in [docs/README.md](docs/README.md): publishable guides stay in `site/src/content/docs/`, plans in `docs/internal/`, and agent notes in `docs/agents/`.
 
 ## Provider System
 
@@ -273,8 +273,8 @@ When modifying this project (contributors and automation alike):
 8. Write code that is easy for a solo maintainer to understand.
 9. Update ROADMAP.md when features are completed or changed.
 10. For every version release, update all relevant repository documentation and the documentation website under `site/` in the same change. Keep version references, release status, shipped features, setup instructions, and upgrade guidance aligned with the released application.
-11. For user-facing, operator-facing, setup, configuration, architecture, or other documented-behaviour changes, update both the relevant repository documentation and corresponding `site/` pages in the same change.
-12. For internal-only changes, explicitly check for documentation impact. Do not make artificial documentation edits when documented behaviour has not changed.
+11. For user-facing, operator-facing, setup, configuration, architecture, or other documented-behaviour changes, update both the relevant repository documentation and corresponding `site/` pages in the same change. Register each publishable guide in `docs/manifest.json` and keep its existing slug.
+12. For internal-only changes, explicitly check for documentation impact. Do not make artificial documentation edits when documented behaviour has not changed. Keep plans in `docs/internal/` and agent notes in `docs/agents/` or root `AGENTS.md`; do not put them in the Starlight tree or the publication manifest.
 
 Human contributors should also read [CONTRIBUTING.md](CONTRIBUTING.md).
 

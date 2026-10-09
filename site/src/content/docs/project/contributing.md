@@ -45,6 +45,10 @@ npm install --prefix site
 npm run site:dev
 ```
 
+Publishable guides stay in this Starlight tree. Register each page in
+`docs/manifest.json` and keep its existing slug. Plans and agent notes stay in
+`docs/internal/` and `docs/agents/` and are not part of the site.
+
 When changing the site:
 
 ```bash
