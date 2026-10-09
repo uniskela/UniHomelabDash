@@ -40,7 +40,10 @@ npm run site:dev
 ```
 
 Open the URL printed by Astro. The production build uses the
-`/UniHomelabDash/` project path.
+`/UniHomelabDash/` project path. Publishable guides stay in
+`site/src/content/docs/`. Register each page in `docs/manifest.json` and keep
+its existing slug. Plans stay in `docs/internal/` and agent notes stay in
+`docs/agents/` or root `AGENTS.md`.
 
 ### Docker Compose
 

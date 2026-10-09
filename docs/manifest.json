@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "pages": [
+    {
+      "source": "README.md",
+      "slug": "readme",
+      "kind": "readme"
+    },
+    {
+      "source": "site/src/content/docs/getting-started/docker-quick-start.md",
+      "slug": "getting-started/docker-quick-start",
+      "group": "Getting Started",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/getting-started/first-run.md",
+      "slug": "getting-started/first-run",
+      "group": "Getting Started",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/getting-started/overview.mdx",
+      "slug": "getting-started/overview",
+      "group": "Getting Started",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/getting-started/upgrading.md",
+      "slug": "getting-started/upgrading",
+      "group": "Getting Started",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/integrations/docker.md",
+      "slug": "integrations/docker",
+      "group": "Integrations",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/integrations/manual-services.md",
+      "slug": "integrations/manual-services",
+      "group": "Integrations",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/integrations/portainer.md",
+      "slug": "integrations/portainer",
+      "group": "Integrations",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/operations/backup-and-recovery.md",
+      "slug": "operations/backup-and-recovery",
+      "group": "Operations",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/operations/configuration.md",
+      "slug": "operations/configuration",
+      "group": "Operations",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/operations/security.md",
+      "slug": "operations/security",
+      "group": "Operations",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/operations/troubleshooting.md",
+      "slug": "operations/troubleshooting",
+      "group": "Operations",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/project/architecture.md",
+      "slug": "project/architecture",
+      "group": "Project",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/project/brand-and-community.md",
+      "slug": "project/brand-and-community",
+      "group": "Project",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/project/contributing.md",
+      "slug": "project/contributing",
+      "group": "Project",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/project/provider-model.md",
+      "slug": "project/provider-model",
+      "group": "Project",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/project/roadmap.md",
+      "slug": "project/roadmap",
+      "group": "Project",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/using/containers-and-logs.md",
+      "slug": "using/containers-and-logs",
+      "group": "Using",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/using/install-the-pwa.md",
+      "slug": "using/install-the-pwa",
+      "group": "Using",
+      "kind": "doc"
+    },
+    {
+      "source": "site/src/content/docs/using/services-and-health.md",
+      "slug": "using/services-and-health",
+      "group": "Using",
+      "kind": "doc"
+    }
+  ]
+}
